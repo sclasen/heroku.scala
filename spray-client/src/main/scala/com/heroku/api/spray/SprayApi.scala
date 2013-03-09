@@ -35,6 +35,15 @@ object SprayApi extends DefaultJsonProtocol with NullOptions {
 
   implicit val appListFrom:FromJson[List[HerokuApp]] = from[List[HerokuApp]]
 
+  implicit val upadateAccount = jsonFormat2(UpdateAccount)
+
+  implicit val updateAcctTo:ToJson[UpdateAccount] = to[UpdateAccount]
+
+  implicit val account = jsonFormat9(Account)
+
+  implicit val acctFrom:FromJson[Account] = from[Account]
+
+
   def from[T](implicit f:JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
   }
@@ -51,6 +60,8 @@ class SprayApi(system: ActorSystem) extends Api {
   import SprayApi._
 
   val connection = DefaultHttpClient(system)
+
+  val log = system.log
 
   val conduit = system.actorOf(
     props = Props(new HttpConduit(connection, endpoint, port = 443, sslEnabled = true))
@@ -74,6 +85,7 @@ class SprayApi(system: ActorSystem) extends Api {
     val headers = getHeaders(request) ++ List(auth)
     pipeline(HttpRequest(method, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
+        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
@@ -85,6 +97,7 @@ class SprayApi(system: ActorSystem) extends Api {
     val headers = getHeaders(request) ++ List(auth)
     pipeline(HttpRequest(method, request.endpoint, headers, HttpBody(`application/json`, to.toJson(request.body)), `HTTP/1.1`)).map {
       resp =>
+        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
@@ -98,6 +111,7 @@ class SprayApi(system: ActorSystem) extends Api {
     val headers = getHeaders(request) ++ List(auth) ++ range
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
+        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
