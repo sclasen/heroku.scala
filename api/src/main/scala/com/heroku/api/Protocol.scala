@@ -1,21 +1,31 @@
 package com.heroku.api
 
+trait ToJson[T] {
+  def toJson(t: T): String
+}
+
+trait FromJson[T] {
+  def fromJson(json: String): T
+}
+
 case class ErrorResponse(id: String, message: String)
 
-case class PartialResponse[T](list: List[T], nextRange: Option[String]){
+case class PartialResponse[T](list: List[T], nextRange: Option[String]) {
   def isComplete = nextRange.isEmpty
 }
 
-import Request._
-
 object Request {
   val v3json = "application/vnd.heroku+json; version=3"
-  val json = "application/json"
   val expect200 = Set(200)
   val expect201 = Set(201)
+  val GET = "GET"
+  val PUT = "PUT"
+  val POST = "POST"
+  val DELETE = "DELETE"
 }
 
 trait BaseRequest {
+
   def expect: Set[Int]
 
   def endpoint: String
@@ -24,7 +34,6 @@ trait BaseRequest {
 
   def extraHeaders: Map[String, String]
 
-  def accept = v3json
 }
 
 trait Request[O] extends BaseRequest {
@@ -42,10 +51,7 @@ trait RequestWithBody[I, O] extends Request[O] {
 
   def body: I
 
-  def jsonBody(implicit t: ToJson[I]): String = t.toJson(body)
-
 }
-
 
 trait ListRequest[T] extends BaseRequest {
 

@@ -1,7 +1,7 @@
 package com.heroku.api.spray
 
 import spray.json._
-import spray.http.HttpHeaders.{Accept, RawHeader}
+import _root_.spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
 import spray.can.client.DefaultHttpClient
@@ -10,11 +10,11 @@ import spray.http._
 import spray.http.HttpMethods._
 import com.heroku.api._
 import concurrent.Future
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ Props, ActorSystem }
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
 
-object SprayApi extends DefaultJsonProtocol with NullOptions {
+object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
   implicit val errorFormat = jsonFormat2(ErrorResponse)
 
   implicit val createAppFormat = jsonFormat3(CreateApp)
@@ -25,35 +25,33 @@ object SprayApi extends DefaultJsonProtocol with NullOptions {
 
   implicit val appFormat = jsonFormat12(HerokuApp)
 
-  implicit val errFrom: FromJson[ErrorResponse] = from[ErrorResponse]
-
-  implicit val createAppTo: ToJson[CreateApp] = to[CreateApp]
-
-  implicit val updateAppTo: ToJson[UpdateApp] = to[UpdateApp]
-
-  implicit val appFrom:FromJson[HerokuApp] = from[HerokuApp]
-
-  implicit val appListFrom:FromJson[List[HerokuApp]] = from[List[HerokuApp]]
-
-  implicit val upadateAccount = jsonFormat2(UpdateAccount)
-
-  implicit val updateAcctTo:ToJson[UpdateAccount] = to[UpdateAccount]
+  implicit val updateAccount = jsonFormat2(UpdateAccount)
 
   implicit val account = jsonFormat9(Account)
 
-  implicit val acctFrom:FromJson[Account] = from[Account]
+  implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
+  implicit val createAppToJson: ToJson[CreateApp] = to[CreateApp]
 
-  def from[T](implicit f:JsonFormat[T]) = new FromJson[T] {
+  implicit val updateAppToJson: ToJson[UpdateApp] = to[UpdateApp]
+
+  implicit val appFromJson: FromJson[HerokuApp] = from[HerokuApp]
+
+  implicit val appListFromJson: FromJson[List[HerokuApp]] = from[List[HerokuApp]]
+
+  implicit val accountFromJson: FromJson[Account] = from[Account]
+
+  implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
+
+  def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
   }
 
-  def to[T](implicit f:JsonFormat[T]) = new ToJson[T] {
+  def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T): String = t.toJson.prettyPrint
   }
 
 }
-
 
 class SprayApi(system: ActorSystem) extends Api {
 
@@ -77,15 +75,17 @@ class SprayApi(system: ActorSystem) extends Api {
 
   def creds(key: String) = BasicHttpCredentials("", key)
 
+  def auth(key: String) = Authorization(creds(key))
+
+  def rangeHeader(range: String) = RawHeader("Range", range)
+
   def endpoint: String = "api.heroku.com"
 
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
-    val auth = RawHeader("AUTHORIZATION", creds(key).value)
-    val headers = getHeaders(request) ++ List(auth)
+    val headers = getHeaders(request, key)
     pipeline(HttpRequest(method, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
@@ -93,25 +93,21 @@ class SprayApi(system: ActorSystem) extends Api {
 
   def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = {
     val method = getMethod(request)
-    val auth = RawHeader("AUTHORIZATION", creds(key).value)
-    val headers = getHeaders(request) ++ List(auth)
+    val headers = getHeaders(request, key)
     pipeline(HttpRequest(method, request.endpoint, headers, HttpBody(`application/json`, to.toJson(request.body)), `HTTP/1.1`)).map {
       resp =>
-        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
   }
 
   def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]] = {
-    val auth = RawHeader("AUTHORIZATION", creds(key).value)
     val range = request.range.map {
-      r => List(RawHeader("Range", r))
+      r => List(rangeHeader(r))
     }.getOrElse(Nil)
-    val headers = getHeaders(request) ++ List(auth) ++ range
+    val headers = getHeaders(request, key) ++ range
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        log.info(s"response: ${resp.entity.asString}")
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
     }
@@ -119,18 +115,17 @@ class SprayApi(system: ActorSystem) extends Api {
 
   def getMethod(req: BaseRequest): HttpMethod = {
     req.method match {
-      case "GET" => GET
-      case "PUT" => PUT
-      case "POST" => POST
-      case "DELETE" => DELETE
+      case Request.GET => GET
+      case Request.PUT => PUT
+      case Request.POST => POST
+      case Request.DELETE => DELETE
     }
   }
 
-  def getHeaders(req: BaseRequest): List[HttpHeader] = {
+  def getHeaders(req: BaseRequest, key: String): List[HttpHeader] = {
     req.extraHeaders.map {
       case (k, v) => RawHeader(k, v)
-    }.toList ++ List(accept)
+    }.toList ++ List(accept, auth(key))
   }
-
 
 }
