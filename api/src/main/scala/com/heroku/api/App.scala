@@ -37,6 +37,8 @@ case class AppCreate(body: CreateApp, extraHeaders: Map[String, String] = Map.em
 case class AppList(range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[HerokuApp] {
   val endpoint = "/apps"
   val method = GET
+
+  def nextRequest(nextRange:String): ListRequest[HerokuApp] = this.copy(range = Some(nextRange))
 }
 
 case class AppInfo(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[HerokuApp] {

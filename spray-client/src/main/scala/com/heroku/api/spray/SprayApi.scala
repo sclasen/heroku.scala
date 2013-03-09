@@ -71,8 +71,6 @@ class SprayApi(system: ActorSystem) extends Api {
 
   val accept = Accept(ApiMediaType)
 
-  implicit val ctx = system.dispatcher
-
   def creds(key: String) = BasicHttpCredentials("", key)
 
   def auth(key: String) = Authorization(creds(key))
@@ -80,6 +78,8 @@ class SprayApi(system: ActorSystem) extends Api {
   def rangeHeader(range: String) = RawHeader("Range", range)
 
   def endpoint: String = "api.heroku.com"
+
+  implicit val executionContext = system.dispatcher
 
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)

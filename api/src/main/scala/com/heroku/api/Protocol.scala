@@ -68,5 +68,7 @@ trait ListRequest[T] extends BaseRequest {
       Left(e.fromJson(body))
     }
   }
+
+  def nextRequest(nextRange:String):ListRequest[T]
 }
 
