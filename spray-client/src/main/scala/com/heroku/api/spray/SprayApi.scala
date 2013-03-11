@@ -14,6 +14,8 @@ import akka.actor.{Props, ActorSystem}
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
 
+//TODO Factor out the Body case classes so that they dont inherit NullOptions.
+
 object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit val errorFormat = jsonFormat2(ErrorResponse)
 
@@ -48,6 +50,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit val dynoRelease = jsonFormat1(DynoRelease)
 
   implicit val dyno = jsonFormat9(Dyno)
+
+  implicit val updateFormationBody = jsonFormat1(UpdateFormationBody)
+
+  implicit val formation = jsonFormat5(Formation)
 
   /*ApiJson impl*/
 
@@ -94,6 +100,12 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit def dynoReleaseFromJson: FromJson[DynoRelease] = from[DynoRelease]
 
   implicit def dynoFromJson: FromJson[Dyno] = from[Dyno]
+
+  implicit def formationFromJson: FromJson[Formation] = from[Formation]
+
+  implicit def formationListFromJson: FromJson[List[Formation]] = from[List[Formation]]
+
+  implicit def updateFormationBodyToJson: ToJson[UpdateFormationBody] = to[UpdateFormationBody]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
