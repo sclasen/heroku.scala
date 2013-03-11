@@ -59,16 +59,16 @@ trait ListRequest[T] extends BaseRequest {
 
   def range: Option[String]
 
-  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[ErrorResponse, PartialResponse[T]] = {
+  def getResponse(status: Int, headers: Map[String, String], nextRange: Option[String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[ErrorResponse, PartialResponse[T]] = {
     if (status == 200) {
       Right(PartialResponse(f.fromJson(body), None))
     } else if (status == 206) {
-      Right(PartialResponse(f.fromJson(body), headers.get("Next-Range")))
+      Right(PartialResponse(f.fromJson(body), nextRange))
     } else {
       Left(e.fromJson(body))
     }
   }
 
-  def nextRequest(nextRange:String):ListRequest[T]
+  def nextRequest(nextRange: String): ListRequest[T]
 }
 

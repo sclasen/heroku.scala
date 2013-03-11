@@ -109,7 +109,7 @@ class SprayApi(system: ActorSystem) extends Api {
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
+        request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value),resp.entity.asString)
     }
   }
 
@@ -126,6 +126,14 @@ class SprayApi(system: ActorSystem) extends Api {
     req.extraHeaders.map {
       case (k, v) => RawHeader(k, v)
     }.toList ++ List(accept, auth(key))
+  }
+
+  case class NextRange(next:String) extends HttpHeader{
+    def name: String = "Next-Range"
+
+    def lowercaseName: String = "next-range"
+
+    def value: String = next
   }
 
 }
