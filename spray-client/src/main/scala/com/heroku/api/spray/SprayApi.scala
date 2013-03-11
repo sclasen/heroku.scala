@@ -37,6 +37,12 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val configVars = mapFormat[String,String]
 
+  implicit val domainApp = jsonFormat1(DomainApp)
+
+  implicit val domain = jsonFormat5(Domain)
+
+  implicit val createDomain = jsonFormat1(CreateDomainBody)
+
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
@@ -60,6 +66,13 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
   implicit def collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
 
   implicit def collaboratorFromJson: FromJson[Collaborator] = from[Collaborator]
+
+  implicit def domainAppFromJson: FromJson[DomainApp] = from[DomainApp]
+
+  implicit def domainFromJson: FromJson[Domain] = from[Domain]
+
+  implicit def createDomainBodyToJson: ToJson[CreateDomainBody] = to[CreateDomainBody]
+
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
