@@ -1,7 +1,7 @@
 package com.heroku.api.spray
 
 import spray.json._
-import spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
+import spray.http.HttpHeaders.{Authorization, Accept, RawHeader}
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
 import spray.can.client.DefaultHttpClient
@@ -10,11 +10,11 @@ import spray.http._
 import spray.http.HttpMethods._
 import com.heroku.api._
 import concurrent.Future
-import akka.actor.{ Props, ActorSystem }
+import akka.actor.{Props, ActorSystem}
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
 
-object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
+object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit val errorFormat = jsonFormat2(ErrorResponse)
 
   implicit val createAppFormat = jsonFormat3(CreateAppBody)
@@ -35,7 +35,7 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val collaborator = jsonFormat3(Collaborator)
 
-  implicit val configVars = mapFormat[String,String]
+  implicit val configVars = mapFormat[String, Option[String]]
 
   implicit val domainApp = jsonFormat1(DomainApp)
 
@@ -65,9 +65,17 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
 
-  implicit val configFromJson:FromJson[Map[String,String]] = from[Map[String,String]]
+  implicit val configFromJson: FromJson[Map[String, String]] = from[Map[String, String]]
 
-  implicit val configToJson:ToJson[Map[String,String]] = to[Map[String,String]]
+  implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
+
+  implicit val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
+    def toJson(t: Map[String, String]): String = {
+      nullSafeConfigToJson.toJson(t.map {
+        case (k, v) => k -> Option(v)
+      })
+    }
+  }
 
   implicit def collaboratorBodyToJson: ToJson[CollaboratorBody] = to[CollaboratorBody]
 
@@ -153,7 +161,7 @@ class SprayApi(system: ActorSystem) extends Api {
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value),resp.entity.asString)
+        request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
     }
   }
 
@@ -172,7 +180,7 @@ class SprayApi(system: ActorSystem) extends Api {
     }.toList ++ List(accept, auth(key))
   }
 
-  case class NextRange(next:String) extends HttpHeader{
+  case class NextRange(next: String) extends HttpHeader {
     def name: String = "Next-Range"
 
     def lowercaseName: String = "next-range"
