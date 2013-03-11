@@ -10,7 +10,7 @@ import com.heroku.api.spray._
 import com.heroku.api.spray.SprayApi._
 import akka.actor._
 
-val system = new ActorSystem("api")
+val system = ActorSystem("api")
 
 val api = new SprayApi(system)
 

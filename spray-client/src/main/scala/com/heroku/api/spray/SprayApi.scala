@@ -1,7 +1,7 @@
 package com.heroku.api.spray
 
 import spray.json._
-import _root_.spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
+import spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
 import spray.can.client.DefaultHttpClient
@@ -35,6 +35,8 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val collaborator = jsonFormat3(Collaborator)
 
+  implicit val configVars = mapFormat[String,String]
+
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
@@ -48,6 +50,10 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
   implicit val accountFromJson: FromJson[Account] = from[Account]
 
   implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
+
+  implicit val configFromJson:FromJson[Map[String,String]] = from[Map[String,String]]
+
+  implicit val configToJson:ToJson[Map[String,String]] = to[Map[String,String]]
 
   implicit def collaboratorBodyToJson: ToJson[CollaboratorBody] = to[CollaboratorBody]
 
