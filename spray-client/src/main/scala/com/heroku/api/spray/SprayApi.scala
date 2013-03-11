@@ -55,6 +55,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
 
   implicit val formation = jsonFormat5(Formation)
 
+  implicit val key = jsonFormat5(Key)
+
+  implicit val createKey = jsonFormat1(CreateKeyBody)
+
   /*ApiJson impl*/
 
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
@@ -106,6 +110,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit def formationListFromJson: FromJson[List[Formation]] = from[List[Formation]]
 
   implicit def updateFormationBodyToJson: ToJson[UpdateFormationBody] = to[UpdateFormationBody]
+
+  implicit def keyFromJson: FromJson[Key] = from[Key]
+
+  implicit def createKeyBodyToJson: ToJson[CreateKeyBody] = to[CreateKeyBody]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
