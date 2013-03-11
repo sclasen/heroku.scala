@@ -17,9 +17,9 @@ import com.heroku.api.ErrorResponse
 object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
   implicit val errorFormat = jsonFormat2(ErrorResponse)
 
-  implicit val createAppFormat = jsonFormat3(CreateApp)
+  implicit val createAppFormat = jsonFormat3(CreateAppBody)
 
-  implicit val updateAppFormat = jsonFormat3(UpdateApp)
+  implicit val updateAppFormat = jsonFormat3(UpdateAppBody)
 
   implicit val appOwnerFormat = jsonFormat2(AppOwner)
 
@@ -29,11 +29,17 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val account = jsonFormat9(Account)
 
+  implicit val collabBody = jsonFormat1(CollaboratorBody)
+
+  implicit val collabedUser = jsonFormat2(CollaboratedUser)
+
+  implicit val collaborator = jsonFormat3(Collaborator)
+
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
-  implicit val createAppToJson: ToJson[CreateApp] = to[CreateApp]
+  implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
 
-  implicit val updateAppToJson: ToJson[UpdateApp] = to[UpdateApp]
+  implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = to[UpdateAppBody]
 
   implicit val appFromJson: FromJson[HerokuApp] = from[HerokuApp]
 
@@ -42,6 +48,12 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
   implicit val accountFromJson: FromJson[Account] = from[Account]
 
   implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
+
+  implicit def collaboratorBodyToJson: ToJson[CollaboratorBody] = to[CollaboratorBody]
+
+  implicit def collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
+
+  implicit def collaboratorFromJson: FromJson[Collaborator] = from[Collaborator]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]

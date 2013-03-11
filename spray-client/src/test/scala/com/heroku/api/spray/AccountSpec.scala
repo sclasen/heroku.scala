@@ -4,7 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import akka.actor.ActorSystem
 import com.heroku.api._
-import com.heroku.api.CreateApp
+import com.heroku.api.CreateAppBody
 import com.heroku.api.AppUpdate
 import com.heroku.api.AppList
 import scala.Some
