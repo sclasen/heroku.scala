@@ -43,6 +43,14 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit val createDomain = jsonFormat1(CreateDomainBody)
 
+  implicit val createDyno = jsonFormat2(CreateDynoBody)
+
+  implicit val dynoRelease = jsonFormat1(DynoRelease)
+
+  implicit val dyno = jsonFormat9(Dyno)
+
+  /*ApiJson impl*/
+
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
@@ -73,6 +81,11 @@ object SprayApi extends DefaultJsonProtocol /*with NullOptions*/ with ApiJson {
 
   implicit def createDomainBodyToJson: ToJson[CreateDomainBody] = to[CreateDomainBody]
 
+  implicit def createDynoBodyToJson: ToJson[CreateDynoBody] = to[CreateDynoBody]
+
+  implicit def dynoReleaseFromJson: FromJson[DynoRelease] = from[DynoRelease]
+
+  implicit def dynoFromJson: FromJson[Dyno] = from[Dyno]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]

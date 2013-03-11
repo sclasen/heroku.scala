@@ -23,6 +23,6 @@ trait Api {
   }
 }
 
-trait ApiJson extends HerokuAppJson with AccountJson with CollaboratorJson with ConfigVarJson with DomainJson{
+trait ApiJson extends HerokuAppJson with AccountJson with CollaboratorJson with ConfigVarJson with DomainJson with DynoJson{
   implicit def errorResponseFromJson: FromJson[ErrorResponse]
 }
