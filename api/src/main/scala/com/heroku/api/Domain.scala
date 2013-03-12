@@ -2,7 +2,6 @@ package com.heroku.api
 
 import com.heroku.api.Request._
 
-
 case class DomainApp(id: String)
 
 case class Domain(app: DomainApp, base: String, created_at: String, domain: String, id: String)

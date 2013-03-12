@@ -34,8 +34,8 @@ case class CollaboratorDelete(appId: String, collaboratorId: String, extraHeader
   val method: String = DELETE
 }
 
-trait CollaboratorJson{
-  implicit def collaboratorFromJson:FromJson[Collaborator]
-  implicit def collaboratedUserFromJson:FromJson[CollaboratedUser]
-  implicit def collaboratorBodyToJson:ToJson[CollaboratorBody]
+trait CollaboratorJson {
+  implicit def collaboratorFromJson: FromJson[Collaborator]
+  implicit def collaboratedUserFromJson: FromJson[CollaboratedUser]
+  implicit def collaboratorBodyToJson: ToJson[CollaboratorBody]
 }

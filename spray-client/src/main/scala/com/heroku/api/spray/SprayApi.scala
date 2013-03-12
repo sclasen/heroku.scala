@@ -1,7 +1,7 @@
 package com.heroku.api.spray
 
 import spray.json._
-import spray.http.HttpHeaders.{Authorization, Accept, RawHeader}
+import spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
 import spray.can.client.DefaultHttpClient
@@ -10,7 +10,7 @@ import spray.http._
 import spray.http.HttpMethods._
 import com.heroku.api._
 import concurrent.Future
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ Props, ActorSystem }
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
 

@@ -2,7 +2,6 @@ package com.heroku.api
 
 import com.heroku.api.Request._
 
-
 case class DynoRelease(id: String)
 
 case class Dyno(attach_url: Option[String], command: String, created_at: String, id: String, name: String, release: DynoRelease, state: String, `type`: String, updated_at: String)
@@ -35,10 +34,9 @@ case class DeleteDyno(appId: String, dynoId: String, extraHeaders: Map[String, S
   val method: String = DELETE
 }
 
-trait DynoJson{
-  implicit def createDynoBodyToJson:ToJson[CreateDynoBody]
-  implicit def dynoReleaseFromJson:FromJson[DynoRelease]
-  implicit def dynoFromJson:FromJson[Dyno]
+trait DynoJson {
+  implicit def createDynoBodyToJson: ToJson[CreateDynoBody]
+  implicit def dynoReleaseFromJson: FromJson[DynoRelease]
+  implicit def dynoFromJson: FromJson[Dyno]
 }
-
 

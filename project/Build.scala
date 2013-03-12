@@ -12,7 +12,7 @@ object Build extends Build {
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
       "spray repo" at "http://repo.spray.io")
-  ) ++ Defaults.defaultSettings ++ defaultScalariformSettings
+  ) ++ Defaults.defaultSettings ++ scalariformSettings
 
   val api = Project(
     id = "api",

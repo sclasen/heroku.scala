@@ -10,9 +10,7 @@ import com.heroku.api.AppList
 import scala.Some
 import com.heroku.api.AppCreate
 
-
 class AccountSpec extends WordSpec with MustMatchers {
-
 
   "Spray Api implementation of Account operations" must {
     "compile" in {

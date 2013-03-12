@@ -5,17 +5,17 @@ import Request._
 case class AppOwner(email: String, id: String)
 
 case class HerokuApp(buildpack_provided_description: Option[String],
-                     created_at: String,
-                     id: String,
-                     git_url: String,
-                     maintenance: Boolean,
-                     name: String,
-                     owner: AppOwner,
-                     released_at: Option[String],
-                     repo_size: Option[Int],
-                     slug_size: Option[Int],
-                     updated_at: Option[String],
-                     web_url: String)
+  created_at: String,
+  id: String,
+  git_url: String,
+  maintenance: Boolean,
+  name: String,
+  owner: AppOwner,
+  released_at: Option[String],
+  repo_size: Option[Int],
+  slug_size: Option[Int],
+  updated_at: Option[String],
+  web_url: String)
 
 case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[String] = None)
 
