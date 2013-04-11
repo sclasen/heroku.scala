@@ -5,7 +5,6 @@ import org.scalatest.matchers.MustMatchers
 import akka.actor.ActorSystem
 import com.heroku.api._
 
-
 class AppSpec extends WordSpec with MustMatchers {
 
   "Spray Api implementation of App operations" must {

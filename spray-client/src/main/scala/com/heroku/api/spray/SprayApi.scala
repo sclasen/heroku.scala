@@ -1,7 +1,7 @@
 package com.heroku.api.spray
 
 import spray.json._
-import spray.http.HttpHeaders.{ Authorization, Accept, RawHeader }
+import spray.http.HttpHeaders._
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
 import spray.can.client.DefaultHttpClient
@@ -129,7 +129,21 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
 
 }
 
-class SprayApi(system: ActorSystem) extends Api {
+class SprayApiCache extends ApiCache {
+  def put[T](request: Request[T], lastModified: String, response: T) {}
+
+  def getLastModified[T](request: Request[T]): Option[T] = None
+
+  def getCachedResponse[T](request: Request[T]): Option[T] = ???
+
+  def put[T](request: ListRequest[T], lastModified: String, response: PartialResponse[T]) {}
+
+  def getLastModified(request: BaseRequest): Option[String] = None
+
+  def getCachedResponse[T](request: ListRequest[T]): Option[PartialResponse[T]] = ???
+}
+
+class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
   import SprayApi._
 
@@ -156,14 +170,21 @@ class SprayApi(system: ActorSystem) extends Api {
   def endpoint: String = "api.heroku.com"
 
   implicit val executionContext = system.dispatcher
+  implicit val cache = apiCache
 
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
-    val headers = getHeaders(request, key)
+    val headers = getHeaders(request, key) ++ ifModified(request, cache)
     pipeline(HttpRequest(method, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
+        if (resp.status.value == 304) {
+          cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
+        } else {
+          val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
+          val response = request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
+          response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
+          response
+        }
     }
   }
 
@@ -181,11 +202,17 @@ class SprayApi(system: ActorSystem) extends Api {
     val range = request.range.map {
       r => List(rangeHeader(r))
     }.getOrElse(Nil)
-    val headers = getHeaders(request, key) ++ range
+    val headers = getHeaders(request, key) ++ range ++ ifModified(request, cache)
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
+        if (resp.status.value == 304) {
+          cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
+        } else {
+          val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
+          val response = request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
+          response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
+          response
+        }
     }
   }
 
@@ -204,12 +231,28 @@ class SprayApi(system: ActorSystem) extends Api {
     }.toList ++ List(accept, auth(key))
   }
 
+  def ifModified(req: Request[_], cache: ApiCache): List[HttpHeader] = {
+    cache.getLastModified(req).map(last => List(IfModifiedSince(last))).getOrElse(Nil)
+  }
+
+  def ifModified(req: ListRequest[_], cache: ApiCache): List[HttpHeader] = {
+    cache.getLastModified(req).map(last => List(IfModifiedSince(last))).getOrElse(Nil)
+  }
+
   case class NextRange(next: String) extends HttpHeader {
     def name: String = "Next-Range"
 
     def lowercaseName: String = "next-range"
 
     def value: String = next
+  }
+
+  case class IfModifiedSince(since: String) extends HttpHeader {
+    def name: String = "If-Modified-Since"
+
+    def lowercaseName: String = "if-modified-since"
+
+    def value: String = since
   }
 
 }

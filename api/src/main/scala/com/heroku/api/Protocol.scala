@@ -72,3 +72,19 @@ trait ListRequest[T] extends BaseRequest {
   def nextRequest(nextRange: String): ListRequest[T]
 }
 
+object ApiCacheError extends ErrorResponse("cache-error", "a 304 was returned but the response was not present in the cache")
+
+trait ApiCache {
+
+  def put[T](request: Request[T], lastModified: String, response: T)
+
+  def put[T](request: ListRequest[T], lastModified: String, response: PartialResponse[T])
+
+  def getLastModified(request: BaseRequest): Option[String]
+
+  def getCachedResponse[T](request: Request[T]): Option[T]
+
+  def getCachedResponse[T](request: ListRequest[T]): Option[PartialResponse[T]]
+
+}
+
