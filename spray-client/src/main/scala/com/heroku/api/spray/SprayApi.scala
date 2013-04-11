@@ -129,20 +129,6 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
 
 }
 
-class SprayApiCache extends ApiCache {
-  def put[T](request: Request[T], lastModified: String, response: T) {}
-
-  def getLastModified[T](request: Request[T]): Option[T] = None
-
-  def getCachedResponse[T](request: Request[T]): Option[T] = ???
-
-  def put[T](request: ListRequest[T], lastModified: String, response: PartialResponse[T]) {}
-
-  def getLastModified(request: BaseRequest): Option[String] = None
-
-  def getCachedResponse[T](request: ListRequest[T]): Option[PartialResponse[T]] = ???
-}
-
 class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
   import SprayApi._
