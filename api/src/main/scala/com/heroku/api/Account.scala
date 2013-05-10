@@ -12,10 +12,11 @@ case class Account(allow_tracking: Boolean,
   updated_at: String,
   verified: Boolean)
 
-case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None)
+case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[String] = None)
 
 trait AccountJson {
   implicit def accountFromJson: FromJson[Account]
+
   implicit def updateAccountToJson: ToJson[UpdateAccount]
 }
 
@@ -27,7 +28,7 @@ case class AccountInfo(extraHeaders: Map[String, String] = Map.empty) extends Re
 
 case class AccountUpdate(body: UpdateAccount, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateAccount, Account] {
   val endpoint = "/account"
-  val method = PUT
+  val method = PATCH
   val expect = expect200
 }
 

@@ -17,17 +17,22 @@ import com.heroku.api.ErrorResponse
 //TODO Factor out the Body case classes so that they dont inherit NullOptions.
 
 object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
+
+  implicit val userFormat = jsonFormat2(User)
+
   implicit val errorFormat = jsonFormat2(ErrorResponse)
+
+  implicit val appOwnerFormat = jsonFormat2(AppOwner)
 
   implicit val createAppFormat = jsonFormat3(CreateAppBody)
 
   implicit val updateAppFormat = jsonFormat3(UpdateAppBody)
 
-  implicit val appOwnerFormat = jsonFormat2(AppOwner)
+  implicit val appRegionFormat = jsonFormat2(AppRegion)
 
-  implicit val appFormat = jsonFormat12(HerokuApp)
+  implicit val appFormat = jsonFormat13(HerokuApp)
 
-  implicit val updateAccount = jsonFormat2(UpdateAccount)
+  implicit val updateAccount = jsonFormat3(UpdateAccount)
 
   implicit val account = jsonFormat9(Account)
 
@@ -61,13 +66,21 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
 
   implicit val logSession = jsonFormat2(LogSession)
 
+  implicit val region = jsonFormat5(Region)
+
+  implicit val release = jsonFormat6(Release)
+
   /*ApiJson impl*/
 
   implicit val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
 
+  implicit val userFromJson: FromJson[User] = from[User]
+
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
 
   implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = to[UpdateAppBody]
+
+  implicit val appOwnerToJson: ToJson[AppOwner] = to[AppOwner]
 
   implicit val appFromJson: FromJson[HerokuApp] = from[HerokuApp]
 
@@ -80,6 +93,14 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
   implicit val configFromJson: FromJson[Map[String, String]] = from[Map[String, String]]
 
   implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
+
+  implicit val regionFromJson: FromJson[Region] = from[Region]
+
+  implicit val regionListFromJson: FromJson[List[Region]] = from[List[Region]]
+
+  implicit val releaseFromJson: FromJson[Release] = from[Release]
+
+  implicit val releaseListFromJson: FromJson[List[Release]] = from[List[Release]]
 
   implicit val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
     def toJson(t: Map[String, String]): String = {

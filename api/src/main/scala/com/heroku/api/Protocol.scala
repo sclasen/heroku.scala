@@ -20,6 +20,7 @@ object Request {
   val expect201 = Set(201)
   val GET = "GET"
   val PUT = "PUT"
+  val PATCH = "PATCH"
   val POST = "POST"
   val DELETE = "DELETE"
 }
