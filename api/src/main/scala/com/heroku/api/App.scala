@@ -6,7 +6,7 @@ case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
   if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
 }
 
-case class AppRegion(email: String, id: String)
+case class AppRegion(name: String, id: String)
 
 case class HerokuApp(buildpack_provided_description: Option[String],
   created_at: String,

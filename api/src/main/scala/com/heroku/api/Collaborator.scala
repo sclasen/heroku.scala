@@ -24,7 +24,7 @@ case class CollaboratorList(appId: String, range: Option[String] = None, extraHe
 
 case class CollaboratorInfo(appId: String, collaboratorId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Collaborator] {
   val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/collaborators"
+  val endpoint: String = s"/apps/$appId/collaborators/$collaboratorId"
   val method: String = GET
 }
 
@@ -36,6 +36,7 @@ case class CollaboratorDelete(appId: String, collaboratorId: String, extraHeader
 
 trait CollaboratorJson {
   implicit def collaboratorFromJson: FromJson[Collaborator]
+  implicit def collaboratorListFromJson: FromJson[List[Collaborator]]
   implicit def collaboratedUserFromJson: FromJson[CollaboratedUser]
   implicit def collaboratorBodyToJson: ToJson[CollaboratorBody]
 }

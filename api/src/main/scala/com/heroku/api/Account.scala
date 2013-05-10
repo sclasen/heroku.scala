@@ -8,7 +8,7 @@ case class Account(allow_tracking: Boolean,
   created_at: String,
   email: String,
   id: String,
-  last_login: Double,
+  last_login: String,
   updated_at: String,
   verified: Boolean)
 

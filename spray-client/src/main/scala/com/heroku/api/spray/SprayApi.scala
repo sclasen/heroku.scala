@@ -116,6 +116,8 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiJson {
 
   implicit def collaboratorFromJson: FromJson[Collaborator] = from[Collaborator]
 
+  implicit def collaboratorListFromJson: FromJson[List[Collaborator]] = from[List[Collaborator]]
+
   implicit def domainAppFromJson: FromJson[DomainApp] = from[DomainApp]
 
   implicit def domainFromJson: FromJson[Domain] = from[Domain]
@@ -229,6 +231,7 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
       case Request.PUT => PUT
       case Request.POST => POST
       case Request.DELETE => DELETE
+      case Request.PATCH => PATCH
     }
   }
 
