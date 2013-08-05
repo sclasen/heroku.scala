@@ -26,8 +26,11 @@ case class UpdateFormation(appId: String, `type`: String, quantity: Int, extraHe
   val body = UpdateFormationBody(quantity)
 }
 
-trait FormationJson {
+trait FormationResponseJson {
   implicit def formationFromJson: FromJson[Formation]
   implicit def formationListFromJson: FromJson[List[Formation]]
+}
+
+trait FormationRequestJson {
   implicit def updateFormationBodyToJson: ToJson[UpdateFormationBody]
 }

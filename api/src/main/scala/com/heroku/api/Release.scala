@@ -17,7 +17,7 @@ case class ReleaseList(app_id_or_name: String, range: Option[String] = None, ext
   def nextRequest(nextRange: String): ListRequest[Release] = this.copy(range = Some(nextRange))
 }
 
-trait ReleaseJson {
+trait ReleaseResponseJson {
   def releaseFromJson: FromJson[Release]
 
   def releaseListFromJson: FromJson[List[Release]]

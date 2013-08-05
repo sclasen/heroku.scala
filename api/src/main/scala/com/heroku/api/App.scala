@@ -6,7 +6,11 @@ case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
   if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
 }
 
-case class AppRegion(name: String, id: String)
+case class AppRegion(name: Option[String] = None, id: Option[String] = None)
+
+object EU extends AppRegion(name = Some("eu"))
+
+object US extends AppRegion(name = Some("us"))
 
 case class HerokuApp(buildpack_provided_description: Option[String],
   created_at: String,
@@ -22,23 +26,27 @@ case class HerokuApp(buildpack_provided_description: Option[String],
   updated_at: Option[String],
   web_url: String)
 
-case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[String] = None)
+case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None)
 
 case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
 
-trait HerokuAppJson {
-  implicit def createAppBodyToJson: ToJson[CreateAppBody]
-
-  implicit def updateAppBodyToJson: ToJson[UpdateAppBody]
+trait HerokuAppResponseJson {
 
   implicit def appFromJson: FromJson[HerokuApp]
 
   implicit def appListFromJson: FromJson[List[HerokuApp]]
 
+}
+
+trait HerokuAppRequestJson {
+  implicit def createAppBodyToJson: ToJson[CreateAppBody]
+
+  implicit def updateAppBodyToJson: ToJson[UpdateAppBody]
+
   implicit def appOwnerToJson: ToJson[AppOwner]
 }
 
-case class AppCreate(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAppBody, HerokuApp] {
+case class AppCreate(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAppBody, HerokuApp] {
   val endpoint = "/apps"
   val expect = expect201
   val method = POST

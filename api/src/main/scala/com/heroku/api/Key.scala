@@ -32,7 +32,10 @@ case class DeleteKey(keyId: String, extraHeaders: Map[String, String] = Map.empt
   val expect = expect200
 }
 
-trait KeyJson {
+trait KeyResponseJson {
   implicit def keyFromJson: FromJson[Key]
+}
+
+trait KeyRequestJson {
   implicit def createKeyBodyToJson: ToJson[CreateKeyBody]
 }

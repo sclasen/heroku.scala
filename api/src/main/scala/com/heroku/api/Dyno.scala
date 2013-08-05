@@ -34,9 +34,12 @@ case class DeleteDyno(appId: String, dynoId: String, extraHeaders: Map[String, S
   val method: String = DELETE
 }
 
-trait DynoJson {
-  implicit def createDynoBodyToJson: ToJson[CreateDynoBody]
+trait DynoResponseJson {
   implicit def dynoReleaseFromJson: FromJson[DynoRelease]
   implicit def dynoFromJson: FromJson[Dyno]
+}
+
+trait DynoRequestJson {
+  implicit def createDynoBodyToJson: ToJson[CreateDynoBody]
 }
 

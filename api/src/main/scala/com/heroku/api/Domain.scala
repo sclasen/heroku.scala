@@ -34,8 +34,11 @@ case class DeleteDomain(appId: String, domainId: String, extraHeaders: Map[Strin
   val method = DELETE
 }
 
-trait DomainJson {
+trait DomainResponseJson {
   implicit def domainAppFromJson: FromJson[DomainApp]
   implicit def domainFromJson: FromJson[Domain]
+}
+
+trait DomainRequestJson {
   implicit def createDomainBodyToJson: ToJson[CreateDomainBody]
 }

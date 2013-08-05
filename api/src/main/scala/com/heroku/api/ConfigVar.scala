@@ -20,7 +20,10 @@ case class UpdateConfigVars(appId: String, configVars: Map[String, String], extr
   val body = configVars
 }
 
-trait ConfigVarJson {
-  implicit def configToJson: ToJson[Map[String, String]]
+trait ConfigVarResponseJson {
   implicit def configFromJson: FromJson[Map[String, String]]
+}
+
+trait ConfigVarRequestJson {
+  implicit def configToJson: ToJson[Map[String, String]]
 }

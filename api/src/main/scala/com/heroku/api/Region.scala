@@ -17,8 +17,8 @@ case class RegionList(range: Option[String] = None, extraHeaders: Map[String, St
   def nextRequest(nextRange: String): ListRequest[Region] = this.copy(range = Some(nextRange))
 }
 
-trait RegionJson {
-  implicit def regionFromJson: FromJson[Region]
-
+trait RegionResponseJson {
   implicit def regionListFromJson: FromJson[List[Region]]
+
+  implicit def regionFromJson: FromJson[Region]
 }

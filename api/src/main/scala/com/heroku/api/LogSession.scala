@@ -10,6 +10,6 @@ case class CreateLogSession(appId: String, extraHeaders: Map[String, String] = M
   val method = POST
 }
 
-trait LogSessionJson {
+trait LogSessionResponseJson {
   implicit def logSessionFromJson: FromJson[LogSession]
 }

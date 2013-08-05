@@ -23,12 +23,15 @@ trait Api {
   }
 }
 
-trait ApiJson extends HerokuAppJson with AccountJson with CollaboratorJson
-    with ConfigVarJson with DomainJson with DynoJson with FormationJson
-    with KeyJson with LogSessionJson with RegionJson with ReleaseJson {
+trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
+    with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
+    with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson {
   implicit def errorResponseFromJson: FromJson[ErrorResponse]
   implicit def userFromJson: FromJson[User]
 }
+
+trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with CollaboratorRequestJson with ConfigVarRequestJson
+  with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson
 
 case class User(id: String, email: String)
 
