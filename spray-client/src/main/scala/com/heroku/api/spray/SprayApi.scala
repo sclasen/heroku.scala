@@ -1,18 +1,23 @@
 package com.heroku.api.spray
 
+import _root_.spray.can.Http
+import _root_.spray.can.Http.{ HostConnectorInfo, HostConnectorSetup }
 import spray.json._
 import spray.http.HttpHeaders._
 import spray.http.MediaTypes._
 import spray.http.HttpProtocols._
-import spray.can.client.DefaultHttpClient
-import spray.client.HttpConduit
 import spray.http._
 import spray.http.HttpMethods._
+import spray.client.pipelining._
 import com.heroku.api._
-import concurrent.Future
+import scala.concurrent.{ Await, Future }
 import akka.actor.{ Props, ActorSystem }
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
+import concurrent.duration._
+import akka.io.IO
+import akka.pattern._
+import akka.util.Timeout
 
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
@@ -65,8 +70,7 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val createKeyBodyToJson: ToJson[CreateKeyBody] = to[CreateKeyBody]
 
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
-    def toJson(t: T): String = t.toJson.prettyPrint
-
+    def toJson(t: T): String = t.toJson.compactPrint
   }
 
 }
@@ -125,7 +129,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val createKeyBodyToJson: ToJson[CreateKeyBody] = SprayIgnoreNullJson.createKeyBodyToJson
 
-  implicit def configToJson: ToJson[Map[String, String]] = SprayIgnoreNullJson.configToJson
+  implicit val configToJson: ToJson[Map[String, String]] = SprayIgnoreNullJson.configToJson
 
   implicit val collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
 
@@ -167,7 +171,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val releaseListFromJson: FromJson[List[Release]] = from[List[Release]]
 
-  implicit def logSessionFromJson: FromJson[LogSession] = from[LogSession]
+  implicit val logSessionFromJson: FromJson[LogSession] = from[LogSession]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
@@ -179,17 +183,22 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
   import SprayApi._
 
-  val connection = DefaultHttpClient(system)
+  implicit val connTimeout = Timeout(10 seconds)
+  implicit val executionContext = system.dispatcher
+  implicit val cache = apiCache
+
+  val connection = {
+    implicit val s = system
+    Await.result((IO(Http) ? HostConnectorSetup(endpoint, port = 443, sslEncryption = true)).map {
+      case HostConnectorInfo(hostConnector, _) => hostConnector
+    }, connTimeout.duration)
+  }
 
   val log = system.log
 
-  val conduit = system.actorOf(
-    props = Props(new HttpConduit(connection, endpoint, port = 443, sslEnabled = true))
-  )
+  val pipeline = sendReceive(connection)
 
-  val pipeline = HttpConduit.sendReceive(conduit)
-
-  val ApiMediaType = MediaTypes.register(CustomMediaType(Request.v3json))
+  val ApiMediaType = MediaTypes.register(MediaType.custom(Request.v3json))
 
   val accept = Accept(ApiMediaType)
 
@@ -201,9 +210,6 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
   def endpoint: String = "api.heroku.com"
 
-  implicit val executionContext = system.dispatcher
-  implicit val cache = apiCache
-
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
     val headers = getHeaders(request, key) ++ ifModified(request, cache)
@@ -213,7 +219,7 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
           cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
         } else {
           val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-          val response = request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
+          val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
           response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
           response
         }
@@ -223,10 +229,10 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
   def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = {
     val method = getMethod(request)
     val headers = getHeaders(request, key)
-    pipeline(HttpRequest(method, request.endpoint, headers, HttpBody(`application/json`, to.toJson(request.body)), `HTTP/1.1`)).map {
+    pipeline(HttpRequest(method, request.endpoint, headers, HttpEntity(`application/json`, to.toJson(request.body).getBytes("UTF-8")), `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.value, responseHeaders, resp.entity.asString)
+        request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
     }
   }
 
@@ -241,7 +247,7 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
           cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
         } else {
           val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-          val response = request.getResponse(resp.status.value, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
+          val response = request.getResponse(resp.status.intValue, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
           response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
           response
         }
@@ -278,6 +284,8 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
     def lowercaseName: String = "next-range"
 
     def value: String = next
+
+    def render[R <: Rendering](r: R): r.type = r
   }
 
   case class IfModifiedSince(since: String) extends HttpHeader {
@@ -286,6 +294,8 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
     def lowercaseName: String = "if-modified-since"
 
     def value: String = since
+
+    def render[R <: Rendering](r: R): r.type = r
   }
 
 }
