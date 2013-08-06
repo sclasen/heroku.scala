@@ -24,7 +24,7 @@ object Build extends Build {
     id = "spray-client",
     base = file("spray-client"),
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
-  ).dependsOn(api)
+  ).settings( Defaults.itSettings : _*).configs( IntegrationTest ).dependsOn(api % "it->test;test->test;compile->compile")
 
   val root = Project(id = "heroku-scala-project", base = file("."), settings = buildSettings).aggregate(api, spray_client)
 

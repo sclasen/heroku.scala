@@ -66,7 +66,9 @@ case class HerokuApp(buildpack_provided_description: Option[String],
   repo_size: Option[Int],
   slug_size: Option[Int],
   updated_at: Option[String],
-  web_url: String)
+  web_url: String,
+  locked: Option[Boolean],
+  joined: Option[Boolean])
 
 trait HerokuAppResponseJson {
 

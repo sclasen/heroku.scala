@@ -24,9 +24,9 @@ object OAuthAuthorization {
 
   case class CreateAuthorizationClient(id: String)
 
-  case class CreateAuthorizationBody(scope: String, client: Option[CreateAuthorizationClient], description: Option[String])
+  case class CreateAuthorizationBody(scope: collection.immutable.List[String], client: Option[CreateAuthorizationClient], description: Option[String])
 
-  case class Create(scope: String, description: Option[String] = None, client_id: Option[String], extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
+  case class Create(scope: collection.immutable.List[String], description: Option[String] = None, client_id: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
     val endpoint = "/oauth/authorizations"
     val expect = expect201
     val method = POST
@@ -85,6 +85,10 @@ trait OAuthResponseJson {
   implicit def oauthTokenListFromJson: FromJson[List[OAuthToken]]
 }
 
+object OAuthClient {
+
+}
+
 case class OAuthClient(created_at: String,
   id: String,
   name: String,
@@ -98,6 +102,7 @@ object OAuthToken {
   case class AccessToken(expires_in: Long, id: String, token: String)
 
   case class RefreshToken(expires_in: Long, id: String, token: String)
+
 }
 
 case class OAuthToken(authorization: Authorization,

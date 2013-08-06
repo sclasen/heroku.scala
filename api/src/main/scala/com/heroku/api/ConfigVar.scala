@@ -12,7 +12,7 @@ object ConfigVar {
   case class Update(appId: String, configVars: Map[String, String], extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[Map[String, String], Map[String, String]] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appId/config-vars"
-    val method: String = PUT
+    val method: String = PATCH
     val body = configVars
   }
 

@@ -104,7 +104,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val appRegionFormat = jsonFormat2(AppRegion)
 
-  implicit val appFormat = jsonFormat13(HerokuApp.apply)
+  implicit val appFormat = jsonFormat15(HerokuApp.apply)
 
   implicit val account = jsonFormat8(Account.apply)
 
@@ -146,7 +146,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val oauthAuthorization = jsonFormat9(OAuthAuthorization.apply)
 
-  implicit val oauthClient = jsonFormat6(OAuthClient)
+  implicit val oauthClient = jsonFormat6(OAuthClient.apply)
 
   implicit val oauthTokenAuthorization = jsonFormat1(OAuthTokenAuthorization)
 
