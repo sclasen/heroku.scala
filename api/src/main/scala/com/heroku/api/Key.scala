@@ -1,10 +1,13 @@
 package com.heroku.api
 
 import com.heroku.api.Request._
+import com.heroku.api.Key.CreateKeyBody
+
+object Key {
+  case class CreateKeyBody(public_key: String)
+}
 
 case class Key(created_at: String, email: String, fingerprint: String, id: String, public_key: String)
-
-case class CreateKeyBody(public_key: String)
 
 case class CreateKey(publicKey: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateKeyBody, Key] {
   val expect: Set[Int] = expect201

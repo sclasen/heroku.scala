@@ -1,6 +1,7 @@
 package com.heroku.api
 
 import Request._
+import com.heroku.api.Account.{ PasswordChange, UpdateAccount }
 
 case class Account(allow_tracking: Boolean,
   beta: Option[Boolean],
@@ -11,12 +12,17 @@ case class Account(allow_tracking: Boolean,
   updated_at: String,
   verified: Option[Boolean])
 
-case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None)
+object Account {
 
-case class PasswordChange(current_password: String, password: String)
+  case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None)
+
+  case class PasswordChange(current_password: String, password: String)
+
+}
 
 trait AccountRequestJson {
   implicit def updateAccountToJson: ToJson[UpdateAccount]
+
   implicit def passwordChangeToJson: ToJson[PasswordChange]
 }
 

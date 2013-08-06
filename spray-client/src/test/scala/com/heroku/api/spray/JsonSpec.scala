@@ -66,7 +66,8 @@ class JsonSpec extends WordSpec with MustMatchers {
     "Region" -> implicitly[FromJson[Region]],
     "Release" -> implicitly[FromJson[Release]],
     "OAuth Authorization" -> implicitly[FromJson[OAuthAuthorization]],
-    "OAuth Client" -> implicitly[FromJson[OAuthClient]]
+    "OAuth Client" -> implicitly[FromJson[OAuthClient]],
+    "OAuth Token" -> implicitly[FromJson[OAuthToken]]
   )
 
   "Json" must {

@@ -1,10 +1,13 @@
 package com.heroku.api
 
 import com.heroku.api.Request._
+import com.heroku.api.Formation.UpdateFormationBody
+
+object Formation {
+  case class UpdateFormationBody(quantity: Int)
+}
 
 case class Formation(command: String, created_at: String, `type`: String, quantity: Int, updated_at: String)
-
-case class UpdateFormationBody(quantity: Int)
 
 case class ListFormation(appId: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Formation] {
   val endpoint: String = s"/apps/$appId/formation"

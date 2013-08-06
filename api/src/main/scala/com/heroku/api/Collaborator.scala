@@ -1,12 +1,14 @@
 package com.heroku.api
 
 import Request._
+import com.heroku.api.Collaborator.{ CollaboratorBody, CollaboratedUser }
 
-case class CollaboratedUser(email: String, id: String)
+object Collaborator {
+  case class CollaboratedUser(email: String, id: String)
+  case class CollaboratorBody(email: String)
+}
 
 case class Collaborator(created_at: String, id: String, user: CollaboratedUser)
-
-case class CollaboratorBody(email: String)
 
 case class CollaboratorCreate(appId: String, email: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CollaboratorBody, Collaborator] {
   val expect: Set[Int] = expect201

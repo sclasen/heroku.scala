@@ -1,10 +1,13 @@
 package com.heroku.api
 
 import com.heroku.api.Request._
+import com.heroku.api.Domain.CreateDomainBody
+
+object Domain {
+  case class CreateDomainBody(domain: String)
+}
 
 case class Domain(updated_at: String, created_at: String, hostname: String, id: String)
-
-case class CreateDomainBody(domain: String)
 
 case class CreateDomain(appId: String, domain: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateDomainBody, Domain] {
   val endpoint = s"/apps/$appId/domains"

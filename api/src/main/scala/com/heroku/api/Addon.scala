@@ -1,10 +1,7 @@
 package com.heroku.api
 
 import Request._
-
-case class AddonPlan(name: String)
-
-case class AddonAdd(config: Map[String, String], plan: AddonAdd)
+import com.heroku.api.Addon.AddonPlan
 
 case class Addon(
   config: Map[String, String],
@@ -13,11 +10,20 @@ case class Addon(
   plan: AddonPlan,
   updated_at: String)
 
+object Addon {
+
+  case class AddonPlan(name: String)
+
+  case class AddonAdd(config: Map[String, String], plan: AddonAdd)
+
+}
+
 trait AddonRequestJson {
 }
 
 trait AddonResponseJson {
   implicit def addonPlanFromJson: FromJson[AddonPlan]
+
   implicit def addonFromJson: FromJson[Addon]
 }
 
@@ -34,6 +40,7 @@ case class AddonInfo(appIdOrName: String, addonIdOrName: String, extraHeaders: M
 
 case class AddonList(appIdOrName: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Addon] {
   def nextRequest(nextRange: String): ListRequest[Addon] = this.copy(range = Some(nextRange))
+
   val endpoint: String = s"/apps/$appIdOrName/addons"
   val method: String = GET
 }

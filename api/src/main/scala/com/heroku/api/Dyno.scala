@@ -1,12 +1,15 @@
 package com.heroku.api
 
 import com.heroku.api.Request._
-
-case class DynoRelease(id: String)
+import com.heroku.api.Dyno.{ DynoRelease, CreateDynoBody }
 
 case class Dyno(attach_url: Option[String], command: String, created_at: String, id: String, name: String, release: DynoRelease, state: String, `type`: String, updated_at: String)
 
-case class CreateDynoBody(command: String, attach: Boolean = false)
+object Dyno {
+  case class CreateDynoBody(command: String, attach: Boolean = false)
+
+  case class DynoRelease(id: String)
+}
 
 case class CreateDyno(appId: String, command: String, attach: Boolean = false, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateDynoBody, Dyno] {
   val expect: Set[Int] = expect201

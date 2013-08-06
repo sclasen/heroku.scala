@@ -11,13 +11,21 @@ import spray.http.HttpMethods._
 import spray.client.pipelining._
 import com.heroku.api._
 import scala.concurrent.{ Await, Future }
-import akka.actor.{ Props, ActorSystem }
+import akka.actor.{ ActorSystem }
 import com.heroku.api.PartialResponse
 import com.heroku.api.ErrorResponse
 import concurrent.duration._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
+import com.heroku.api.Account.{ PasswordChange, UpdateAccount }
+import com.heroku.api.HerokuApp.{ AppOwner, UpdateAppBody, CreateAppBody, AppRegion }
+import com.heroku.api.Collaborator.{ CollaboratedUser, CollaboratorBody }
+import com.heroku.api.Domain.CreateDomainBody
+import com.heroku.api.Dyno.{ CreateDynoBody, DynoRelease }
+import com.heroku.api.Formation.UpdateFormationBody
+import com.heroku.api.Key.CreateKeyBody
+import com.heroku.api.OAuthToken.{ Authorization => OAuthTokenAuthorization }
 
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
@@ -87,25 +95,25 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val appRegionFormat = jsonFormat2(AppRegion)
 
-  implicit val appFormat = jsonFormat13(HerokuApp)
+  implicit val appFormat = jsonFormat13(HerokuApp.apply)
 
-  implicit val account = jsonFormat8(Account)
+  implicit val account = jsonFormat8(Account.apply)
 
   implicit val collabedUser = jsonFormat2(CollaboratedUser)
 
-  implicit val collaborator = jsonFormat3(Collaborator)
+  implicit val collaborator = jsonFormat3(Collaborator.apply)
 
   implicit val configVars = mapFormat[String, Option[String]]
 
-  implicit val domain = jsonFormat4(Domain)
+  implicit val domain = jsonFormat4(Domain.apply)
 
   implicit val dynoRelease = jsonFormat1(DynoRelease)
 
-  implicit val dyno = jsonFormat9(Dyno)
+  implicit val dyno = jsonFormat9(Dyno.apply)
 
-  implicit val formation = jsonFormat5(Formation)
+  implicit val formation = jsonFormat5(Formation.apply)
 
-  implicit val key = jsonFormat5(Key)
+  implicit val key = jsonFormat5(Key.apply)
 
   implicit val logSession = jsonFormat2(LogSession)
 
@@ -113,17 +121,27 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val release = jsonFormat6(Release)
 
-  implicit val oauthAuthorizationAccessToken = jsonFormat3(AuthorizationAccessToken)
+  implicit val oauthAuthorizationAccessToken = jsonFormat3(OAuthAuthorization.AccessToken)
 
-  implicit val oauthAuthorizationClient = jsonFormat3(AuthorizationClient)
+  implicit val oauthAuthorizationClient = jsonFormat3(OAuthAuthorization.Client)
 
-  implicit val oauthAuthorizationGrant = jsonFormat3(AuthorizationGrant)
+  implicit val oauthAuthorizationGrant = jsonFormat3(OAuthAuthorization.Grant)
 
-  implicit val oauthAuthorizationRefreshToken = jsonFormat3(AuthorizationRefreshToken)
+  implicit val oauthAuthorizationRefreshToken = jsonFormat3(OAuthAuthorization.RefreshToken)
 
-  implicit val oauthAuthorization = jsonFormat9(OAuthAuthorization)
+  implicit val oauthTokenAccessToken = jsonFormat3(OAuthToken.AccessToken)
+
+  implicit val oauthTokenRefreshToken = jsonFormat3(OAuthToken.RefreshToken)
+
+  implicit val oauthAuthorizationSession = jsonFormat1(OAuthAuthorization.Session)
+
+  implicit val oauthAuthorization = jsonFormat9(OAuthAuthorization.apply)
 
   implicit val oauthClient = jsonFormat6(OAuthClient)
+
+  implicit val oauthTokenAuthorization = jsonFormat1(OAuthTokenAuthorization)
+
+  implicit val oauthToken = jsonFormat7(OAuthToken.apply)
 
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = SprayIgnoreNullJson.createAppBodyToJson
 
@@ -190,6 +208,8 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val oauthAuthorizationFromJson: FromJson[OAuthAuthorization] = from[OAuthAuthorization]
 
   implicit val oauthClientFromJson: FromJson[OAuthClient] = from[OAuthClient]
+
+  implicit val oauthTokenFromJson: FromJson[OAuthToken] = from[OAuthToken]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]

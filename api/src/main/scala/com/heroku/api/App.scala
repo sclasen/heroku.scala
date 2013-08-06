@@ -1,16 +1,25 @@
 package com.heroku.api
 
 import Request._
+import com.heroku.api.HerokuApp.{ UpdateAppBody, CreateAppBody, AppOwner, AppRegion }
 
-case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
-  if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
+object HerokuApp {
+
+  case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
+    if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
+  }
+
+  case class AppRegion(name: Option[String] = None, id: Option[String] = None)
+
+  object EU extends AppRegion(name = Some("eu"))
+
+  object US extends AppRegion(name = Some("us"))
+
+  case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None)
+
+  case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
+
 }
-
-case class AppRegion(name: Option[String] = None, id: Option[String] = None)
-
-object EU extends AppRegion(name = Some("eu"))
-
-object US extends AppRegion(name = Some("us"))
 
 case class HerokuApp(buildpack_provided_description: Option[String],
   created_at: String,
@@ -25,10 +34,6 @@ case class HerokuApp(buildpack_provided_description: Option[String],
   slug_size: Option[Int],
   updated_at: Option[String],
   web_url: String)
-
-case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None)
-
-case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
 
 trait HerokuAppResponseJson {
 
