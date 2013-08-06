@@ -10,25 +10,25 @@ class AppSpec extends WordSpec with SprayApiSpec with MustMatchers {
   "Spray Api for Apps" must {
     "operate on Apps" in {
 
-      val app = await(api.execute(HerokuApp.Create(), apiKey))
+      val app = create(HerokuApp.Create())
 
-      val appList = await(api.executeListAll(HerokuApp.List(), apiKey))
+      val appList = listAll(HerokuApp.List())
 
       appList.contains(app) must be(true)
 
-      val infoByName = await(api.execute(HerokuApp.Info(app.name), apiKey))
+      val infoByName = info(HerokuApp.Info(app.name))
       infoByName must equal(app)
 
-      val infoById = await(api.execute(HerokuApp.Info(app.id), apiKey))
+      val infoById = info(HerokuApp.Info(app.id))
       infoById must equal(app)
 
       val newname = s"${app.name}-foo"
-      val updated = await(api.execute(HerokuApp.Update(app.id, Some(true), Some(newname)), apiKey))
+      val updated = update(HerokuApp.Update(app.id, Some(true), Some(newname)))
 
       updated.maintenance must be(true)
       updated.name must be(newname)
 
-      await(api.execute(HerokuApp.Delete(updated.id), apiKey))
+      delete(HerokuApp.Delete(updated.id))
 
 
     }

@@ -10,11 +10,11 @@ class CollaboratorSpec extends WordSpec with SprayApiSpec with MustMatchers {
   "Spray Api for Collaborator" must {
     "operate on Collaborators" in {
       val app = getApp
-      val collabList = await(api.executeList(Collaborator.List(app.id), apiKey))
+      val collabList = listPage(Collaborator.List(app.id))
       collabList.isComplete must be(true)
       collabList.list.isEmpty must be(false)
       val collab = collabList.list.head
-      val collabInfo = await(api.execute(Collaborator.Info(app.id, collab.id), apiKey))
+      val collabInfo = info(Collaborator.Info(app.id, collab.id))
       collabInfo must equal(collab)
     }
   }

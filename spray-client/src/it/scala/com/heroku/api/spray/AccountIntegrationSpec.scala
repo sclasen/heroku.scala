@@ -9,9 +9,9 @@ class AccountIntegrationSpec extends WordSpec with SprayApiSpec with MustMatcher
 
   "SprayApi for Account" must {
     "operate on the Account" in {
-      val info = await(api.execute(Account.Info(), apiKey))
-      val tracking = info.allow_tracking
-      val updated = await(api.execute(Account.Update(allow_tracking = Some(!tracking)), apiKey))
+      val acct = info(Account.Info())
+      val tracking = acct.allow_tracking
+      val updated = update(Account.Update(allow_tracking = Some(!tracking)))
       updated.allow_tracking must not be (tracking)
     }
   }

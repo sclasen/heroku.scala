@@ -186,6 +186,8 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val domainFromJson: FromJson[Domain] = from[Domain]
 
+  implicit val domainListFromJson: FromJson[List[Domain]] = from[List[Domain]]
+
   implicit val dynoReleaseFromJson: FromJson[DynoRelease] = from[DynoRelease]
 
   implicit val dynoFromJson: FromJson[Dyno] = from[Dyno]

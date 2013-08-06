@@ -11,13 +11,13 @@ class ConfigVarSpec extends WordSpec with SprayApiSpec with MustMatchers {
     "operate on ConfigVars" in {
       val app = getApp
       val now = System.currentTimeMillis().toString
-      val config = await(api.execute(ConfigVar.Update(app.id, Map("TIMESTAMP" -> now)), apiKey))
+      val config = update(ConfigVar.Update(app.id, Map("TIMESTAMP" -> now)))
       config("TIMESTAMP") must be(now)
-      val vars = await(api.execute(ConfigVar.Info(app.id), apiKey))
+      val vars = info(ConfigVar.Info(app.id))
       vars("TIMESTAMP") must be(now)
-      val config2 = await(api.execute(ConfigVar.Update(app.id, Map("TIMESTAMP" -> null)), apiKey))
+      val config2 = update(ConfigVar.Update(app.id, Map("TIMESTAMP" -> null)))
       config2.get("TIMESTAMP") must be(None)
-      val vars2 = await(api.execute(ConfigVar.Info(app.id), apiKey))
+      val vars2 = info(ConfigVar.Info(app.id))
       vars2.get("TIMESTAMP") must be(None)
     }
   }

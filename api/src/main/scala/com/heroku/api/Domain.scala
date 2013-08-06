@@ -4,13 +4,13 @@ import com.heroku.api.Request._
 import com.heroku.api.Domain.CreateDomainBody
 
 object Domain {
-  case class CreateDomainBody(domain: String)
+  case class CreateDomainBody(hostname: String)
 
-  case class Create(appId: String, domain: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateDomainBody, Domain] {
+  case class Create(appId: String, hostname: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateDomainBody, Domain] {
     val endpoint = s"/apps/$appId/domains"
     val expect = expect201
     val method = POST
-    val body = CreateDomainBody(domain)
+    val body = CreateDomainBody(hostname)
   }
 
   case class List(appId: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Domain] {
@@ -26,7 +26,7 @@ object Domain {
     val method = GET
   }
 
-  case class Domain(appId: String, domainId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Domain] {
+  case class Delete(appId: String, domainId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Domain] {
     val endpoint = s"/apps/$appId/domains/$domainId"
     val expect = expect200
     val method = DELETE
@@ -37,6 +37,8 @@ case class Domain(updated_at: String, created_at: String, hostname: String, id: 
 
 trait DomainResponseJson {
   implicit def domainFromJson: FromJson[Domain]
+
+  implicit def domainListFromJson: FromJson[List[Domain]]
 }
 
 trait DomainRequestJson {
