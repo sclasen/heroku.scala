@@ -27,6 +27,8 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
   implicit val updateAccount = jsonFormat3(UpdateAccount)
 
+  implicit val passwordChange = jsonFormat2(PasswordChange)
+
   implicit val createDomain = jsonFormat1(CreateDomainBody)
 
   implicit val createDyno = jsonFormat2(CreateDynoBody)
@@ -48,6 +50,8 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val appOwnerToJson: ToJson[AppOwner] = to[AppOwner]
 
   implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
+
+  implicit val passwordChangeToJson: ToJson[PasswordChange] = to[PasswordChange]
 
   implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
 
@@ -93,9 +97,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val configVars = mapFormat[String, Option[String]]
 
-  implicit val domainApp = jsonFormat1(DomainApp)
-
-  implicit val domain = jsonFormat5(Domain)
+  implicit val domain = jsonFormat4(Domain)
 
   implicit val dynoRelease = jsonFormat1(DynoRelease)
 
@@ -119,6 +121,8 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val updateAccountToJson: ToJson[UpdateAccount] = SprayIgnoreNullJson.updateAccountToJson
 
+  implicit val passwordChangeToJson: ToJson[PasswordChange] = SprayIgnoreNullJson.passwordChangeToJson
+
   implicit val collaboratorBodyToJson: ToJson[CollaboratorBody] = SprayIgnoreNullJson.collaboratorBodyToJson
 
   implicit val createDomainBodyToJson: ToJson[CreateDomainBody] = SprayIgnoreNullJson.createDomainBodyToJson
@@ -136,8 +140,6 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val collaboratorFromJson: FromJson[Collaborator] = from[Collaborator]
 
   implicit val collaboratorListFromJson: FromJson[List[Collaborator]] = from[List[Collaborator]]
-
-  implicit val domainAppFromJson: FromJson[DomainApp] = from[DomainApp]
 
   implicit val domainFromJson: FromJson[Domain] = from[Domain]
 

@@ -2,9 +2,7 @@ package com.heroku.api
 
 import com.heroku.api.Request._
 
-case class DomainApp(id: String)
-
-case class Domain(app: DomainApp, base: String, created_at: String, domain: String, id: String)
+case class Domain(updated_at: String, created_at: String, hostname: String, id: String)
 
 case class CreateDomainBody(domain: String)
 
@@ -35,7 +33,6 @@ case class DeleteDomain(appId: String, domainId: String, extraHeaders: Map[Strin
 }
 
 trait DomainResponseJson {
-  implicit def domainAppFromJson: FromJson[DomainApp]
   implicit def domainFromJson: FromJson[Domain]
 }
 

@@ -2,7 +2,7 @@ package com.heroku.api
 
 import Request._
 
-case class Release(created_at: String, description: String, id: String, name: String, updated_at: String, user: User)
+case class Release(created_at: String, description: String, id: String, version: Long, updated_at: String, user: User)
 
 case class ReleaseInfo(app_id_or_name: String, release_id_or_name: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Release] {
   val endpoint = s"/apps/$app_id_or_name/releases/$release_id_or_name"

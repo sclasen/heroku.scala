@@ -13,8 +13,11 @@ case class Account(allow_tracking: Boolean,
 
 case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None)
 
+case class PasswordChange(current_password: String, password: String)
+
 trait AccountRequestJson {
   implicit def updateAccountToJson: ToJson[UpdateAccount]
+  implicit def passwordChangeToJson: ToJson[PasswordChange]
 }
 
 trait AccountResponseJson {
@@ -32,5 +35,12 @@ case class AccountUpdate(allow_tracking: Option[Boolean] = None, email: Option[S
   val method = PATCH
   val expect = expect200
   val body = UpdateAccount(allow_tracking, email, beta)
+}
+
+case class AccountPaswordChange(current_password: String, password: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChange, Account] {
+  val endpoint = "/account/password"
+  val method = PUT
+  val expect = expect200
+  val body = PasswordChange(current_password, password)
 }
 
