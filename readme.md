@@ -16,7 +16,7 @@ val api = new SprayApi(system)
 
 val apiKey = ...
 
-api.execute(AppCreate(name = Some("my-app")), apiKey).map{
+api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map{
    case Left(ErrorResponse(_, msg)) => println(s"failed to create app: $msg")
    case Right(app) => println(s"created app: ${app.name}, id is ${app.id}")
 }
