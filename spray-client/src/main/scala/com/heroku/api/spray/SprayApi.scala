@@ -18,7 +18,7 @@ import concurrent.duration._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
-import com.heroku.api.Account.{ PasswordChange, UpdateAccount }
+import com.heroku.api.Account.{ PasswordChangeBody, UpdateBody }
 import com.heroku.api.HerokuApp.{ AppOwner, UpdateAppBody, CreateAppBody, AppRegion }
 import com.heroku.api.Collaborator.{ CollaboratedUser, CollaboratorBody }
 import com.heroku.api.Domain.CreateDomainBody
@@ -26,6 +26,7 @@ import com.heroku.api.Dyno.{ CreateDynoBody, DynoRelease }
 import com.heroku.api.Formation.UpdateFormationBody
 import com.heroku.api.Key.CreateKeyBody
 import com.heroku.api.OAuthToken.{ Authorization => OAuthTokenAuthorization }
+import com.heroku.api.OAuthAuthorization.{ CreateAuthorizationClient, CreateAuthorizationBody }
 
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
@@ -33,9 +34,9 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
   implicit val appRegionFormat = jsonFormat2(AppRegion)
 
-  implicit val updateAccount = jsonFormat3(UpdateAccount)
+  implicit val updateAccount = jsonFormat3(UpdateBody)
 
-  implicit val passwordChange = jsonFormat2(PasswordChange)
+  implicit val passwordChange = jsonFormat2(PasswordChangeBody)
 
   implicit val createDomain = jsonFormat1(CreateDomainBody)
 
@@ -51,15 +52,19 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
   implicit val createKey = jsonFormat1(CreateKeyBody)
 
+  implicit val createAuthClient = jsonFormat1(CreateAuthorizationClient)
+
+  implicit val createAuthBody = jsonFormat3(CreateAuthorizationBody)
+
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
 
   implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = to[UpdateAppBody]
 
   implicit val appOwnerToJson: ToJson[AppOwner] = to[AppOwner]
 
-  implicit val updateAccountToJson: ToJson[UpdateAccount] = to[UpdateAccount]
+  implicit val updateAccountToJson: ToJson[UpdateBody] = to[UpdateBody]
 
-  implicit val passwordChangeToJson: ToJson[PasswordChange] = to[PasswordChange]
+  implicit val passwordChangeToJson: ToJson[PasswordChangeBody] = to[PasswordChangeBody]
 
   implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
 
@@ -80,6 +85,10 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val updateFormationBodyToJson: ToJson[UpdateFormationBody] = to[UpdateFormationBody]
 
   implicit val createKeyBodyToJson: ToJson[CreateKeyBody] = to[CreateKeyBody]
+
+  implicit def oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient] = to[CreateAuthorizationClient]
+
+  implicit def oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody] = to[CreateAuthorizationBody]
 
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T): String = t.toJson.compactPrint
@@ -149,9 +158,9 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val appOwnerToJson: ToJson[AppOwner] = SprayIgnoreNullJson.appOwnerToJson
 
-  implicit val updateAccountToJson: ToJson[UpdateAccount] = SprayIgnoreNullJson.updateAccountToJson
+  implicit val updateAccountToJson: ToJson[UpdateBody] = SprayIgnoreNullJson.updateAccountToJson
 
-  implicit val passwordChangeToJson: ToJson[PasswordChange] = SprayIgnoreNullJson.passwordChangeToJson
+  implicit val passwordChangeToJson: ToJson[PasswordChangeBody] = SprayIgnoreNullJson.passwordChangeToJson
 
   implicit val collaboratorBodyToJson: ToJson[CollaboratorBody] = SprayIgnoreNullJson.collaboratorBodyToJson
 
@@ -164,6 +173,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val createKeyBodyToJson: ToJson[CreateKeyBody] = SprayIgnoreNullJson.createKeyBodyToJson
 
   implicit val configToJson: ToJson[Map[String, String]] = SprayIgnoreNullJson.configToJson
+
+  implicit val oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient] = SprayIgnoreNullJson.oauthCreateAuthoriztionClient
+
+  implicit val oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody] = SprayIgnoreNullJson.oauthcreateAuthorizationBody
 
   implicit val collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
 
@@ -207,12 +220,24 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val oauthAuthorizationFromJson: FromJson[OAuthAuthorization] = from[OAuthAuthorization]
 
+  implicit val oauthAuthorizationListFromJson: FromJson[List[OAuthAuthorization]] = from[List[OAuthAuthorization]]
+
   implicit val oauthClientFromJson: FromJson[OAuthClient] = from[OAuthClient]
 
   implicit val oauthTokenFromJson: FromJson[OAuthToken] = from[OAuthToken]
 
+  implicit val oauthClientListFromJson: FromJson[List[OAuthClient]] = from[List[OAuthClient]]
+
+  implicit val oauthTokenListFromJson: FromJson[List[OAuthToken]] = from[List[OAuthToken]]
+
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
-    def fromJson(json: String): T = JsonParser(json).convertTo[T]
+    def fromJson(json: String): T = try {
+      JsonParser(json).convertTo[T]
+    } catch {
+      case d: DeserializationException =>
+        println(json)
+        throw d
+    }
   }
 
 }

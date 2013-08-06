@@ -32,7 +32,7 @@ trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson wit
 }
 
 trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with CollaboratorRequestJson with ConfigVarRequestJson
-  with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson
+  with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson
 
 case class User(id: String, email: String)
 

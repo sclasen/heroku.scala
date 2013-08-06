@@ -55,6 +55,12 @@ class ReadIntegrationSpec extends WordSpec with MustMatchers {
       val vars = await(api.execute(ConfigVar.Info(app.id), apiKey))
       vars.isRight must be(true)
     }
+
+    "read oauth authorizations" in {
+      val auths = await(api.executeListAll(OAuthAuthorization.List(), apiKey))
+      auths.isRight must be(true)
+    }
+
   }
 
   def await[T](future: Future[T]): T = {

@@ -1,18 +1,18 @@
 package com.heroku.api
 
-import com.heroku.api.OAuthAuthorization._
 import com.heroku.api.Request._
 import com.heroku.api.OAuthAuthorization.Grant
 import com.heroku.api.OAuthAuthorization.Session
 import com.heroku.api.OAuthAuthorization.AccessToken
 import com.heroku.api.OAuthAuthorization.Client
+import com.heroku.api.OAuthAuthorization.CreateAuthorizationClient
+import com.heroku.api.OAuthAuthorization.CreateAuthorizationBody
 import com.heroku.api.OAuthAuthorization.RefreshToken
 import com.heroku.api.OAuthToken.Authorization
-import scala.Some
 
 object OAuthAuthorization {
 
-  case class AccessToken(expires_in: String, id: String, token: String)
+  case class AccessToken(expires_in: Option[String], id: String, token: String)
 
   case class Client(id: String, name: String, redirect_uri: String)
 
@@ -55,13 +55,13 @@ object OAuthAuthorization {
 }
 
 case class OAuthAuthorization(access_token: AccessToken,
-    client: Client,
+    client: Option[Client],
     created_at: String,
     description: String,
-    grant: Grant,
+    grant: Option[Grant],
     id: String,
-    refresh_token: RefreshToken,
-    scope: String,
+    refresh_token: Option[RefreshToken],
+    scope: collection.immutable.List[String],
     updated_at: String) {
 }
 
@@ -74,9 +74,15 @@ trait OAuthRequestJson {
 trait OAuthResponseJson {
   implicit def oauthAuthorizationFromJson: FromJson[OAuthAuthorization]
 
+  implicit def oauthAuthorizationListFromJson: FromJson[List[OAuthAuthorization]]
+
   implicit def oauthClientFromJson: FromJson[OAuthClient]
 
+  implicit def oauthClientListFromJson: FromJson[List[OAuthClient]]
+
   implicit def oauthTokenFromJson: FromJson[OAuthToken]
+
+  implicit def oauthTokenListFromJson: FromJson[List[OAuthToken]]
 }
 
 case class OAuthClient(created_at: String,

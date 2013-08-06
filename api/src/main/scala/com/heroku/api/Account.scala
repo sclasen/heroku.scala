@@ -1,7 +1,7 @@
 package com.heroku.api
 
 import Request._
-import com.heroku.api.Account.{ PasswordChange, UpdateAccount }
+import com.heroku.api.Account.{ PasswordChangeBody, UpdateBody }
 
 case class Account(allow_tracking: Boolean,
   beta: Option[Boolean],
@@ -14,9 +14,9 @@ case class Account(allow_tracking: Boolean,
 
 object Account {
 
-  case class UpdateAccount(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None)
+  case class UpdateBody(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None)
 
-  case class PasswordChange(current_password: String, password: String)
+  case class PasswordChangeBody(current_password: String, password: String)
 
   case class Info(extraHeaders: Map[String, String] = Map.empty) extends Request[Account] {
     val endpoint = "/account"
@@ -24,26 +24,26 @@ object Account {
     val expect = expect200
   }
 
-  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateAccount, Account] {
+  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateBody, Account] {
     val endpoint = "/account"
     val method = PATCH
     val expect = expect200
-    val body = UpdateAccount(allow_tracking, email, beta)
+    val body = UpdateBody(allow_tracking, email, beta)
   }
 
-  case class PasswordChangeRequest(current_password: String, password: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChange, Account] {
+  case class PasswordChangeRequest(current_password: String, password: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChangeBody, Account] {
     val endpoint = "/account/password"
     val method = PUT
     val expect = expect200
-    val body = PasswordChange(current_password, password)
+    val body = PasswordChangeBody(current_password, password)
   }
 
 }
 
 trait AccountRequestJson {
-  implicit def updateAccountToJson: ToJson[UpdateAccount]
+  implicit def updateAccountToJson: ToJson[UpdateBody]
 
-  implicit def passwordChangeToJson: ToJson[PasswordChange]
+  implicit def passwordChangeToJson: ToJson[PasswordChangeBody]
 }
 
 trait AccountResponseJson {
