@@ -13,15 +13,15 @@ class AppSpec extends WordSpec with MustMatchers {
       val system = ActorSystem("test")
       val api = new SprayApi(system)
       val key = "foo"
-      val create = AppCreate(stack = Some("cedar"))
+      val create = HerokuApp.Create(stack = Some("cedar"))
       api.execute(create, key)
-      val list = AppList()
+      val list = HerokuApp.List()
       api.executeList(list, key)
-      val update = AppUpdate("some-app", maintenance = Some(false))
+      val update = HerokuApp.Update("some-app", maintenance = Some(false))
       api.execute(update, key)
-      val info = AppInfo("some-app")
+      val info = HerokuApp.Info("some-app")
       api.execute(info, key)
-      val delete = AppDelete("some-app")
+      val delete = HerokuApp.Delete("some-app")
       api.execute(delete, key)
     }
   }

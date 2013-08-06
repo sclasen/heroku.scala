@@ -16,6 +16,19 @@ object Addon {
 
   case class AddonAdd(config: Map[String, String], plan: AddonAdd)
 
+  case class Info(appIdOrName: String, addonIdOrName: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Addon] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = s"/apps/$appIdOrName/addons/$addonIdOrName"
+    val method: String = GET
+  }
+
+  case class List(appIdOrName: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Addon] {
+    def nextRequest(nextRange: String): ListRequest[Addon] = this.copy(range = Some(nextRange))
+
+    val endpoint: String = s"/apps/$appIdOrName/addons"
+    val method: String = GET
+  }
+
 }
 
 trait AddonRequestJson {
@@ -31,17 +44,4 @@ trait AddonResponseJson {
   val endpoint: String = s"/apps/$appIdOrName/addons"
 
 }*/
-
-case class AddonInfo(appIdOrName: String, addonIdOrName: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Addon] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appIdOrName/addons/$addonIdOrName"
-  val method: String = GET
-}
-
-case class AddonList(appIdOrName: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Addon] {
-  def nextRequest(nextRange: String): ListRequest[Addon] = this.copy(range = Some(nextRange))
-
-  val endpoint: String = s"/apps/$appIdOrName/addons"
-  val method: String = GET
-}
 

@@ -1,23 +1,21 @@
 package com.heroku.api
 import Request._
 
-case class GetConfigVars(appId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Map[String, String]] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/config-vars"
-  val method: String = GET
-}
+object ConfigVar {
 
-case class GetConfigVar(appId: String, configVar: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Map[String, String]] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/config-vars/$configVar"
-  val method: String = GET
-}
+  case class Info(appId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Map[String, String]] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = s"/apps/$appId/config-vars"
+    val method: String = GET
+  }
 
-case class UpdateConfigVars(appId: String, configVars: Map[String, String], extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[Map[String, String], Map[String, String]] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/config-vars"
-  val method: String = PUT
-  val body = configVars
+  case class Update(appId: String, configVars: Map[String, String], extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[Map[String, String], Map[String, String]] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = s"/apps/$appId/config-vars"
+    val method: String = PUT
+    val body = configVars
+  }
+
 }
 
 trait ConfigVarResponseJson {

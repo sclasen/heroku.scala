@@ -1,11 +1,14 @@
 package com.heroku.api
 
-import com.heroku.api.OAuthAuthorization.RefreshToken
-import com.heroku.api.OAuthAuthorization.Client
+import com.heroku.api.OAuthAuthorization._
+import com.heroku.api.Request._
 import com.heroku.api.OAuthAuthorization.Grant
 import com.heroku.api.OAuthAuthorization.Session
-import com.heroku.api.OAuthToken.Authorization
 import com.heroku.api.OAuthAuthorization.AccessToken
+import com.heroku.api.OAuthAuthorization.Client
+import com.heroku.api.OAuthAuthorization.RefreshToken
+import com.heroku.api.OAuthToken.Authorization
+import scala.Some
 
 object OAuthAuthorization {
 
@@ -19,6 +22,36 @@ object OAuthAuthorization {
 
   case class Session(id: String)
 
+  case class CreateAuthorizationClient(id: String)
+
+  case class CreateAuthorizationBody(scope: String, client: Option[CreateAuthorizationClient], description: Option[String])
+
+  case class Create(scope: String, description: Option[String] = None, client_id: Option[String], extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
+    val endpoint = "/oauth/authorizations"
+    val expect = expect201
+    val method = POST
+    val body = CreateAuthorizationBody(scope, client_id.map(CreateAuthorizationClient), description)
+  }
+
+  case class List(range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[OAuthAuthorization] {
+    val endpoint = "/oauth/authorizations"
+    val method = GET
+
+    def nextRequest(nextRange: String): ListRequest[OAuthAuthorization] = this.copy(range = Some(nextRange))
+  }
+
+  case class Info(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
+    val endpoint = s"/oauth/authorizations/$id"
+    val expect = expect200
+    val method = GET
+  }
+
+  case class Delete(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
+    val endpoint = s"/oauth/authorizations/$id"
+    val expect = expect200
+    val method = DELETE
+  }
+
 }
 
 case class OAuthAuthorization(access_token: AccessToken,
@@ -30,6 +63,12 @@ case class OAuthAuthorization(access_token: AccessToken,
     refresh_token: RefreshToken,
     scope: String,
     updated_at: String) {
+}
+
+trait OAuthRequestJson {
+  implicit def oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient]
+
+  implicit def oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody]
 }
 
 trait OAuthResponseJson {

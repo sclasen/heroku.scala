@@ -6,35 +6,36 @@ import com.heroku.api.Collaborator.{ CollaboratorBody, CollaboratedUser }
 object Collaborator {
   case class CollaboratedUser(email: String, id: String)
   case class CollaboratorBody(email: String)
+
+  case class Create(appId: String, email: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CollaboratorBody, Collaborator] {
+    val expect: Set[Int] = expect201
+    val endpoint: String = s"/apps/$appId/collaborators"
+    val method: String = POST
+    val body: CollaboratorBody = CollaboratorBody(email)
+  }
+
+  case class List(appId: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Collaborator] {
+    val endpoint: String = s"/apps/$appId/collaborators"
+    val method: String = GET
+
+    def nextRequest(nextRange: String) = this.copy(range = Some(nextRange))
+  }
+
+  case class Info(appId: String, collaboratorId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Collaborator] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = s"/apps/$appId/collaborators/$collaboratorId"
+    val method: String = GET
+  }
+
+  case class Delete(appId: String, collaboratorId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Collaborator] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = s"/apps/$appId/collaborators"
+    val method: String = DELETE
+  }
+
 }
 
 case class Collaborator(created_at: String, id: String, user: CollaboratedUser)
-
-case class CollaboratorCreate(appId: String, email: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CollaboratorBody, Collaborator] {
-  val expect: Set[Int] = expect201
-  val endpoint: String = s"/apps/$appId/collaborators"
-  val method: String = POST
-  val body: CollaboratorBody = CollaboratorBody(email)
-}
-
-case class CollaboratorList(appId: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Collaborator] {
-  val endpoint: String = s"/apps/$appId/collaborators"
-  val method: String = GET
-
-  def nextRequest(nextRange: String) = this.copy(range = Some(nextRange))
-}
-
-case class CollaboratorInfo(appId: String, collaboratorId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Collaborator] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/collaborators/$collaboratorId"
-  val method: String = GET
-}
-
-case class CollaboratorDelete(appId: String, collaboratorId: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Collaborator] {
-  val expect: Set[Int] = expect200
-  val endpoint: String = s"/apps/$appId/collaborators"
-  val method: String = DELETE
-}
 
 trait CollaboratorResponseJson {
   implicit def collaboratorFromJson: FromJson[Collaborator]

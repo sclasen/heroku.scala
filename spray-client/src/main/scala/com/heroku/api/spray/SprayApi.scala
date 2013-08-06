@@ -115,11 +115,11 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val key = jsonFormat5(Key.apply)
 
-  implicit val logSession = jsonFormat2(LogSession)
+  implicit val logSession = jsonFormat2(LogSession.apply)
 
-  implicit val region = jsonFormat5(Region)
+  implicit val region = jsonFormat5(Region.apply)
 
-  implicit val release = jsonFormat6(Release)
+  implicit val release = jsonFormat6(Release.apply)
 
   implicit val oauthAuthorizationAccessToken = jsonFormat3(OAuthAuthorization.AccessToken)
 

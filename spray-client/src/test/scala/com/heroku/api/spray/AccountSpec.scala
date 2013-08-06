@@ -9,11 +9,11 @@ class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers {
 
   "Account endpoint" must {
     "return account info" in {
-      await(api.execute(AccountInfo(), apiKey))
+      await(api.execute(Account.Info(), apiKey))
     }
 
     "update account info" in {
-      await(api.execute(AccountInfo(), apiKey)).beta
+      await(api.execute(Account.Info(), apiKey)).beta
     }
   }
 
