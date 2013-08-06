@@ -26,9 +26,12 @@ class JsonSpec extends WordSpec with MustMatchers {
   def example(mf: Map[String, JsValue]): JsObject = {
     val (nested, unnested) = mf.keys.map {
       k =>
-        val exValue = mf(k).asJsObject.fields("example")
-        k -> exValue
-    }.partition(_._1.contains(":"))
+        val obj = mf(k).asJsObject
+        if (obj.fields("serialized").asInstanceOf[JsBoolean].value) {
+          val exValue = obj.fields("example")
+          Some(k -> exValue)
+        } else None
+    }.flatten.partition(_._1.contains(":"))
 
     JsObject((unnest(nested) ++ unnested).toMap)
   }
@@ -61,7 +64,9 @@ class JsonSpec extends WordSpec with MustMatchers {
     "Key" -> implicitly[FromJson[Key]],
     "Log Session" -> implicitly[FromJson[LogSession]],
     "Region" -> implicitly[FromJson[Region]],
-    "Release" -> implicitly[FromJson[Release]]
+    "Release" -> implicitly[FromJson[Release]],
+    "OAuth Authorization" -> implicitly[FromJson[OAuthAuthorization]],
+    "OAuth Client" -> implicitly[FromJson[OAuthClient]]
   )
 
   "Json" must {

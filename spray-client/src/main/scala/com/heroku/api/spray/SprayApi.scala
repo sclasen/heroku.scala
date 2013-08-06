@@ -113,6 +113,18 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val release = jsonFormat6(Release)
 
+  implicit val oauthAuthorizationAccessToken = jsonFormat3(AuthorizationAccessToken)
+
+  implicit val oauthAuthorizationClient = jsonFormat3(AuthorizationClient)
+
+  implicit val oauthAuthorizationGrant = jsonFormat3(AuthorizationGrant)
+
+  implicit val oauthAuthorizationRefreshToken = jsonFormat3(AuthorizationRefreshToken)
+
+  implicit val oauthAuthorization = jsonFormat9(OAuthAuthorization)
+
+  implicit val oauthClient = jsonFormat6(OAuthClient)
+
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = SprayIgnoreNullJson.createAppBodyToJson
 
   implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = SprayIgnoreNullJson.updateAppBodyToJson
@@ -174,6 +186,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val releaseListFromJson: FromJson[List[Release]] = from[List[Release]]
 
   implicit val logSessionFromJson: FromJson[LogSession] = from[LogSession]
+
+  implicit val oauthAuthorizationFromJson: FromJson[OAuthAuthorization] = from[OAuthAuthorization]
+
+  implicit def oauthClientFromJson: FromJson[OAuthClient] = from[OAuthClient]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
