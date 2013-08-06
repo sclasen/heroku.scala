@@ -61,8 +61,6 @@ trait ListRequest[T] extends BaseRequest {
   def range: Option[String]
 
   def getResponse(status: Int, headers: Map[String, String], nextRange: Option[String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[ErrorResponse, PartialResponse[T]] = {
-    println(status)
-    println(body)
     if (status == 200) {
       Right(PartialResponse(f.fromJson(body), None))
     } else if (status == 206) {
