@@ -189,7 +189,7 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val oauthAuthorizationFromJson: FromJson[OAuthAuthorization] = from[OAuthAuthorization]
 
-  implicit def oauthClientFromJson: FromJson[OAuthClient] = from[OAuthClient]
+  implicit val oauthClientFromJson: FromJson[OAuthClient] = from[OAuthClient]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = JsonParser(json).convertTo[T]
