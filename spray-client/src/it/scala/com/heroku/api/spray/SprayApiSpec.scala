@@ -9,6 +9,7 @@ import org.scalatest.matchers.MustMatchers
 import SprayApi._
 import scala.collection.mutable.ListBuffer
 import com.heroku.api.ErrorResponse
+import org.scalatest.exceptions.TestFailedException
 
 trait SprayApiSpec extends BeforeAndAfterAll {
   this: WordSpec with MustMatchers =>
@@ -19,35 +20,49 @@ trait SprayApiSpec extends BeforeAndAfterAll {
 
   def apiKey = sys.env("TEST_API_KEY")
 
+  def testCollaborator = sys.env("TEST_COLLABORATOR")
+
   val apps = ListBuffer.empty[HerokuApp]
 
   def await[T](future: Future[Either[ErrorResponse, T]], d: Duration = 5.seconds): T = {
     val resp = Await.result(future, d)
-    resp must be('right)
-    resp.right.get
+    if (resp.isLeft)
+      throw new TestFailedException(s"result was not right: ${resp.left.get}", 1)
+    else
+      resp.right.get
   }
 
-  def create[I,T](rwb: RequestWithBody[I, T])(implicit t:ToJson[I], f:FromJson[T]): T = {
+  def loggingFailure[T, U](log: T)(block: => U): U = {
+    try {
+      block
+    } catch {
+      case t: TestFailedException =>
+        println(s"$log failed")
+        throw t
+    }
+  }
+
+  def create[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
     await(api.execute(rwb, apiKey))
   }
 
-  def info[T](req: Request[T])(implicit f:FromJson[T]): T = {
+  def info[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req){
     await(api.execute(req, apiKey))
   }
 
-  def update[I,T](rwb: RequestWithBody[I, T])(implicit t:ToJson[I], f:FromJson[T]): T = {
+  def update[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb){
     await(api.execute(rwb, apiKey))
   }
 
-  def listAll[T](list:ListRequest[T])(implicit f:FromJson[List[T]]):List[T] = {
-    await(api.executeListAll(list,apiKey))
+  def listAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list){
+    await(api.executeListAll(list, apiKey))
   }
 
-  def listPage[T](list:ListRequest[T])(implicit f:FromJson[List[T]]):PartialResponse[T] = {
-    await(api.executeList(list,apiKey))
+  def listPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list){
+    await(api.executeList(list, apiKey))
   }
 
-  def delete[T](del:Request[T])(implicit f:FromJson[T]):T={
+  def delete[T](del: Request[T])(implicit f: FromJson[T]): T = loggingFailure(del){
     await(api.execute(del, apiKey))
   }
 

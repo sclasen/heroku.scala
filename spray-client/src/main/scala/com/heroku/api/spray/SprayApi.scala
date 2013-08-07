@@ -2,35 +2,47 @@ package com.heroku.api.spray
 
 import _root_.spray.can.Http
 import _root_.spray.can.Http.{ HostConnectorInfo, HostConnectorSetup }
-import spray.json._
-import spray.http.HttpHeaders._
-import spray.http.MediaTypes._
-import spray.http.HttpProtocols._
-import spray.http._
-import spray.http.HttpMethods._
-import spray.client.pipelining._
+import _root_.spray.json._
+import _root_.spray.http.HttpHeaders._
+import _root_.spray.http.MediaTypes._
+import _root_.spray.http.HttpProtocols._
+import _root_.spray.http._
+import _root_.spray.http.HttpMethods._
+import _root_.spray.client.pipelining._
 import com.heroku.api._
 import scala.concurrent.{ Await, Future }
-import akka.actor.{ ActorSystem }
-import com.heroku.api.PartialResponse
-import com.heroku.api.ErrorResponse
+import akka.actor.ActorSystem
 import concurrent.duration._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
-import com.heroku.api.Account.{ PasswordChangeBody, UpdateBody }
-import com.heroku.api.HerokuApp.{ AppOwner, UpdateAppBody, CreateAppBody, AppRegion }
-import com.heroku.api.Collaborator.{ CollaboratedUser, CollaboratorBody }
-import com.heroku.api.Domain.CreateDomainBody
-import com.heroku.api.Dyno.{ CreateDynoBody, DynoRelease }
-import com.heroku.api.Formation.UpdateFormationBody
-import com.heroku.api.Key.CreateKeyBody
 import com.heroku.api.OAuthToken.{ Authorization => OAuthTokenAuthorization }
-import com.heroku.api.OAuthAuthorization.{ CreateAuthorizationClient, CreateAuthorizationBody }
+import com.heroku.api.AppTransfer.{ State, CreateTransferBody }
+import com.heroku.api.Dyno.DynoRelease
+import com.heroku.api.HerokuApp.CreateAppBody
+import com.heroku.api.Formation.UpdateFormationBody
+import com.heroku.api.User
+import com.heroku.api.Key.CreateKeyBody
+import com.heroku.api.HerokuApp.UpdateAppBody
+import com.heroku.api.Collaborator.CollaboratorBody
+import com.heroku.api.HerokuApp.AppRegion
+import com.heroku.api.OAuthAuthorization.CreateAuthorizationBody
+import com.heroku.api.HerokuApp.AppOwner
+import com.heroku.api.PartialResponse
+import com.heroku.api.ErrorResponse
+import com.heroku.api.Account.UpdateBody
+import com.heroku.api.Account.PasswordChangeBody
+import com.heroku.api.Dyno.CreateDynoBody
+import com.heroku.api.OAuthAuthorization.CreateAuthorizationClient
+import com.heroku.api.UserBody
+import com.heroku.api.Collaborator.CollaboratedUser
+import com.heroku.api.Domain.CreateDomainBody
 
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
-  implicit val appOwnweFormat = jsonFormat2(AppOwner)
+  implicit val userBodyFormat = jsonFormat2(UserBody)
+
+  implicit val appOwnerFormat = jsonFormat2(AppOwner)
 
   implicit val appRegionFormat = jsonFormat2(AppRegion)
 
@@ -55,6 +67,12 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val createAuthClient = jsonFormat1(CreateAuthorizationClient)
 
   implicit val createAuthBody = jsonFormat3(CreateAuthorizationBody)
+
+  implicit val state = jsonFormat1(AppTransfer.State)
+
+  implicit val transferApp = jsonFormat2(AppTransfer.App)
+
+  implicit val appTransferBody = jsonFormat2(CreateTransferBody.apply)
 
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = to[CreateAppBody]
 
@@ -86,9 +104,17 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
   implicit val createKeyBodyToJson: ToJson[CreateKeyBody] = to[CreateKeyBody]
 
-  implicit def oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient] = to[CreateAuthorizationClient]
+  implicit val oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient] = to[CreateAuthorizationClient]
 
-  implicit def oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody] = to[CreateAuthorizationBody]
+  implicit val oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody] = to[CreateAuthorizationBody]
+
+  implicit val userBodyToJson: ToJson[UserBody] = to[UserBody]
+
+  implicit val stateToJson: ToJson[AppTransfer.State] = to[AppTransfer.State]
+
+  implicit val appTransferAppToJson: ToJson[AppTransfer.App] = to[AppTransfer.App]
+
+  implicit val createTransferBodyToJson: ToJson[CreateTransferBody] = to[CreateTransferBody]
 
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T): String = t.toJson.compactPrint
@@ -152,6 +178,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val oauthToken = jsonFormat7(OAuthToken.apply)
 
+  implicit val transferApp = jsonFormat2(AppTransfer.App)
+
+  implicit val transfer = jsonFormat7(AppTransfer.apply)
+
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = SprayIgnoreNullJson.createAppBodyToJson
 
   implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = SprayIgnoreNullJson.updateAppBodyToJson
@@ -177,6 +207,14 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val oauthCreateAuthoriztionClient: ToJson[CreateAuthorizationClient] = SprayIgnoreNullJson.oauthCreateAuthoriztionClient
 
   implicit val oauthcreateAuthorizationBody: ToJson[CreateAuthorizationBody] = SprayIgnoreNullJson.oauthcreateAuthorizationBody
+
+  implicit val stateToJson: ToJson[State] = SprayIgnoreNullJson.stateToJson
+
+  implicit val appTransferAppToJson: ToJson[AppTransfer.App] = SprayIgnoreNullJson.appTransferAppToJson
+
+  implicit val createTransferBodyToJson: ToJson[CreateTransferBody] = SprayIgnoreNullJson.createTransferBodyToJson
+
+  implicit val userBodyToJson: ToJson[UserBody] = SprayIgnoreNullJson.userBodyToJson
 
   implicit val collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
 
@@ -231,6 +269,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val oauthClientListFromJson: FromJson[List[OAuthClient]] = from[List[OAuthClient]]
 
   implicit val oauthTokenListFromJson: FromJson[List[OAuthToken]] = from[List[OAuthToken]]
+
+  implicit val appTransferFromJson: FromJson[AppTransfer] = from[AppTransfer]
+
+  implicit val appTransferListFromJson: FromJson[List[AppTransfer]] = from[List[AppTransfer]]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = try {

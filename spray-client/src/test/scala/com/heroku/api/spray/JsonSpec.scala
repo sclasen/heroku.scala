@@ -57,6 +57,7 @@ class JsonSpec extends WordSpec with MustMatchers {
   val modelMap = List(
     "Account" -> implicitly[FromJson[Account]],
     "App" -> implicitly[FromJson[HerokuApp]],
+    "App Transfer" -> implicitly[FromJson[AppTransfer]],
     "Collaborator" -> implicitly[FromJson[Collaborator]],
     "Domain" -> implicitly[FromJson[Domain]],
     "Dyno" -> implicitly[FromJson[Dyno]],

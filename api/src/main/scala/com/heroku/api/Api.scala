@@ -26,15 +26,19 @@ trait Api {
 trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
     with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
     with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson
-    with OAuthResponseJson {
+    with OAuthResponseJson with AppTransferResponseJson {
   implicit def errorResponseFromJson: FromJson[ErrorResponse]
   implicit def userFromJson: FromJson[User]
 }
 
 trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with CollaboratorRequestJson with ConfigVarRequestJson
-  with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson
+    with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson with AppTransferRequestJson {
+  implicit def userBodyToJson: ToJson[UserBody]
+}
 
 case class User(id: String, email: String)
+
+case class UserBody(id: Option[String] = None, email: Option[String] = None)
 
 object NoCache extends ApiCache {
   def put[T](request: Request[T], lastModified: String, response: T) {}
