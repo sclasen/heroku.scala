@@ -26,13 +26,14 @@ trait Api {
 trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
     with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
     with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson
-    with OAuthResponseJson with AppTransferResponseJson {
+    with OAuthResponseJson with AppTransferResponseJson with AddonResponseJson {
   implicit def errorResponseFromJson: FromJson[ErrorResponse]
   implicit def userFromJson: FromJson[User]
 }
 
 trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with CollaboratorRequestJson with ConfigVarRequestJson
-    with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson with AppTransferRequestJson {
+    with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson with AppTransferRequestJson
+    with AddonRequestJson {
   implicit def userBodyToJson: ToJson[UserBody]
 }
 

@@ -37,6 +37,7 @@ import com.heroku.platform.api.OAuthAuthorization.CreateAuthorizationClient
 import com.heroku.platform.api.UserBody
 import com.heroku.platform.api.Collaborator.CollaboratedUser
 import com.heroku.platform.api.Domain.CreateDomainBody
+import com.heroku.platform.api.Addon.{ AddonPlan, AddonChange }
 
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
@@ -71,6 +72,10 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val state = jsonFormat1(AppTransfer.State)
 
   implicit val transferApp = jsonFormat2(AppTransfer.App)
+
+  implicit val addonPlan = jsonFormat1(Addon.AddonPlan)
+
+  implicit val addonChange = jsonFormat2(Addon.AddonChange)
 
   implicit val appTransferBody = jsonFormat2(CreateTransferBody.apply)
 
@@ -115,6 +120,10 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit val appTransferAppToJson: ToJson[AppTransfer.App] = to[AppTransfer.App]
 
   implicit val createTransferBodyToJson: ToJson[CreateTransferBody] = to[CreateTransferBody]
+
+  implicit val addonChangeToJson: ToJson[AddonChange] = to[AddonChange]
+
+  implicit val addonPlanToJson: ToJson[AddonPlan] = to[AddonPlan]
 
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T): String = t.toJson.compactPrint
@@ -182,6 +191,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
 
   implicit val transfer = jsonFormat7(AppTransfer.apply)
 
+  implicit val addonPlan = jsonFormat1(Addon.AddonPlan)
+
+  implicit val addonForlat = jsonFormat5(Addon.apply)
+
   implicit val createAppBodyToJson: ToJson[CreateAppBody] = SprayIgnoreNullJson.createAppBodyToJson
 
   implicit val updateAppBodyToJson: ToJson[UpdateAppBody] = SprayIgnoreNullJson.updateAppBodyToJson
@@ -215,6 +228,10 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val createTransferBodyToJson: ToJson[CreateTransferBody] = SprayIgnoreNullJson.createTransferBodyToJson
 
   implicit val userBodyToJson: ToJson[UserBody] = SprayIgnoreNullJson.userBodyToJson
+
+  implicit val addonChangeToJson: ToJson[AddonChange] = SprayIgnoreNullJson.addonChangeToJson
+
+  implicit val addonPlanToJson: ToJson[AddonPlan] = SprayIgnoreNullJson.addonPlanToJson
 
   implicit val collaboratedUserFromJson: FromJson[CollaboratedUser] = from[CollaboratedUser]
 
@@ -273,6 +290,12 @@ object SprayApi extends DefaultJsonProtocol with NullOptions with ApiRequestJson
   implicit val appTransferFromJson: FromJson[AppTransfer] = from[AppTransfer]
 
   implicit val appTransferListFromJson: FromJson[List[AppTransfer]] = from[List[AppTransfer]]
+
+  implicit val addonPlanFromJson: FromJson[AddonPlan] = from[AddonPlan]
+
+  implicit val addonFromJson: FromJson[Addon] = from[Addon]
+
+  implicit val addonListFromJson: FromJson[List[Addon]] = from[List[Addon]]
 
   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String): T = try {
