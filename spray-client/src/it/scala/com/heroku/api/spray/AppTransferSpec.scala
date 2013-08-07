@@ -12,6 +12,7 @@ class AppTransferSpec extends WordSpec with SprayApiSpec with MustMatchers {
     "operate on AppTransfers" in {
       val app = getApp
       import AppTransfer._
+      create(Collaborator.Create(app.id, testCollaborator))
       val transfer = create(Create(App(id = Some(app.id)),UserBody(email = Some(testCollaborator))))
       val transferList = listAll(List())
       transferList.contains(transfer) must be(true)
