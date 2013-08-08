@@ -1,7 +1,6 @@
 import com.heroku.platform.api.{ FromJson, ToJson, ApiRequestJson, ApiResponseJson }
 import java.lang.reflect._
 import java.lang.reflect.{ Type => JType }
-import scala.reflect.runtime.{ universe => ru }
 
 import treehugger.forest._
 import definitions._
@@ -21,8 +20,6 @@ object JsonBoilerplate extends App {
   val respJson = classOf[ApiResponseJson]
 
   val reqJson = classOf[ApiRequestJson]
-
-  val mirror = ru.runtimeMirror(reqJson.getClassLoader)
 
   val jsonBoilerplate = BLOCK(
     IMPORT(sym.ApiPackage),
@@ -140,7 +137,6 @@ object JsonBoilerplate extends App {
       val raw = pt.getRawType.asInstanceOf[Class[_]].getSimpleName
       val params = pt.getActualTypeArguments.map(t => t.asInstanceOf[Class[_]].getSimpleName).reduceLeft(_ + "," + _)
       s"$raw[$params]"
-      //name.substring(name.lastIndexOf('.') + 1).replace('<', '[').replace('>', ']').replace('$', '.')
     }
   }
 
@@ -154,36 +150,33 @@ object JsonBoilerplate extends App {
     /*
      implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
     */
-
     (LAZYVAL("nullSafeConfigToJson", sym.ToJson TYPE_OF TYPE_MAP("String", TYPE_OPTION("String")))
       withFlags (Flags.IMPLICIT) :=
       REF("to") APPLYTYPE (TYPE_MAP("String", TYPE_OPTION("String"))): Tree)
   }
 
   def configToJson = {
+    /*
+     implicit val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
+       def toJson(t: Map[String, String]): String = {
+         nullSafeConfigToJson.toJson(t.map {
+           case (k, v) => k -> Option(v)
+         })
+       }
+     }
+    */
     (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
       withFlags (Flags.IMPLICIT) := NEW(ANONDEF(sym.ToJson TYPE_OF TYPE_MAP("String", "String")) := BLOCK(
         (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF("nullSafeConfigToJson") DOT "toJson" APPLY (
           REF("t") MAP LAMBDA(PARAM("kv")) ==> BLOCK(REF("kv._1") ANY_-> REF("Option") APPLY REF("kv._2"))
         )
       )): Tree)
-
   }
 
   def apiConfigToJson = {
     (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
       withFlags (Flags.IMPLICIT) := REF("SprayIgnoreNullJson") DOT "configToJson": Tree)
   }
-
-  /*
-  implicit val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
-    def toJson(t: Map[String, String]): String = {
-      nullSafeConfigToJson.toJson(t.map {
-        case (k, v) => k -> Option(v)
-      })
-    }
-  }
-  */
 
   println(treeToString(jsonBoilerplate))
 
