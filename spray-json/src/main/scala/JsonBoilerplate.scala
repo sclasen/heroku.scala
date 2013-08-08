@@ -53,36 +53,39 @@ object JsonBoilerplate extends App {
         }.toSeq.flatten ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != "configToJson")
         .map {
-          m => toJsonFrom(m)
+          m => callToJson(m)
         } ++
         respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
         .map {
           m => fromJson(m)
         } ++ Seq(from)
     )
-  /*
-  def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
-    def toJson(t: T): String = t.toJson.compactPrint
-  }
-  */
-  def to = (
-    DEF("to") withTypeParams (TYPEVAR("T")) withParams (PARAM("f", sym.JsonFormat TYPE_OF "T") withFlags (Flags.IMPLICIT))
+
+  def to = {
+    /*
+      def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
+        def toJson(t: T): String = t.toJson.compactPrint
+      }
+    */
+    (DEF("to") withTypeParams (TYPEVAR("T")) withParams (PARAM("f", sym.JsonFormat TYPE_OF "T") withFlags (Flags.IMPLICIT))
       := NEW(ANONDEF(sym.ToJson TYPE_OF "T") := BLOCK(
         (DEF("toJson") withParams (PARAM("t", "T"))) := REF("t") DOT "toJson" DOT "compactPrint"
       )): Tree)
-  /*
-   def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
-    def fromJson(json: String): T = try {
-      JsonParser(json).convertTo[T]
-    } catch {
-      case d: DeserializationException =>
-        println(json)
-        throw d
-    }
   }
-  */
-  def from = (
-    DEF("from") withTypeParams (TYPEVAR("T")) withParams (PARAM("t", sym.JsonFormat TYPE_OF "T") withFlags (Flags.IMPLICIT))
+
+  def from = {
+    /*
+      def from[T](implicit f: JsonFormat[T]) = new FromJson[T] {
+       def fromJson(json: String): T = try {
+         JsonParser(json).convertTo[T]
+       } catch {
+         case d: DeserializationException =>
+           println(json)
+           throw d
+       }
+      }
+    */
+    (DEF("from") withTypeParams (TYPEVAR("T")) withParams (PARAM("t", sym.JsonFormat TYPE_OF "T") withFlags (Flags.IMPLICIT))
       := NEW(ANONDEF(sym.FromJson TYPE_OF "T") := BLOCK(
         (DEF("fromJson") withParams (PARAM("json", "String"))) := (TRY(REF("JsonParser") APPLY REF("json") DOT "convertTo" APPLYTYPE "T")
           CATCH (
@@ -90,6 +93,7 @@ object JsonBoilerplate extends App {
               Predef_println APPLY REF("json")), THROW("DeserializationException", REF("e")))
           ) ENDTRY)
       )): Tree)
+  }
 
   def toJson(m: Method) = {
     val t = getTypeParamOfReturnType(m)
@@ -98,7 +102,7 @@ object JsonBoilerplate extends App {
     (LAZYVAL(m.getName, sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF("to") APPLYTYPE (typ): Tree)
   }
 
-  def toJsonFrom(m: Method) = {
+  def callToJson(m: Method) = {
     val t = getTypeParamOfReturnType(m)
     val typ = getTypeParamForSource(t)
     // implicit lazy val  methodFromApiRequestJson = SprayIgnoreNullJson.methodFromApiRequestJson
