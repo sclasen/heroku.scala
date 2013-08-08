@@ -6,10 +6,11 @@ import treehugger.forest._
 import definitions._
 import treehuggerDSL._
 
-object Generator extends App {
+object JsonBoilerplate extends App {
 
   object sym {
     val ApiPackage = "com.heroku.platform.api._"
+    val ClientPackage = "com.heroku.platform.api.client.spray"
     val SprayPackage = "spray.json._"
     val ToJson = RootClass.newClass("ToJson")
     val FromJson = RootClass.newClass("FromJson")
@@ -21,29 +22,38 @@ object Generator extends App {
 
   val mirror = ru.runtimeMirror(reqJson.getClassLoader)
 
-  val ignoreNulls = OBJECTDEF("SprayIgnoreNullJson") withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
-    Seq(IMPORT(sym.ApiPackage), IMPORT(sym.SprayPackage), to) ++
-      //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
-      reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
-        m => jsonFormat(m)
-      } ++
-      reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
-        m => toJson(m)
-      }
-  )
+  val jsonBoilerplate = BLOCK(
+    IMPORT(sym.ApiPackage),
+    IMPORT(sym.SprayPackage),
+    ignoreNulls,
+    sprayJson
+  ).inPackage(sym.ClientPackage)
 
-  val sprayJson = OBJECTDEF("SprayApi") withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson") := BLOCK(
-    Seq(IMPORT(sym.ApiPackage), IMPORT(sym.SprayPackage), from) ++
-      //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
-      reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
-        m => toJsonFrom(m)
-      } ++
-      respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
-        m => jsonFormat(m)
-      } ++
-      respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
-        m => fromJson(m)
-      })
+  def ignoreNulls =
+    OBJECTDEF("SprayIgnoreNullJson") withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
+      Seq(to) ++
+        //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
+        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
+          m => jsonFormat(m)
+        } ++
+        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
+          m => toJson(m)
+        }
+    )
+
+  def sprayJson =
+    OBJECTDEF("SprayApi") withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
+      Seq(from) ++
+        //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
+        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
+          m => toJsonFrom(m)
+        } ++
+        respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
+          m => jsonFormat(m)
+        } ++
+        respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
+          m => fromJson(m)
+        })
   /*
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T): String = t.toJson.compactPrint
@@ -131,7 +141,6 @@ object Generator extends App {
 
   }
 
-  println(treeToString(ignoreNulls))
-  println(treeToString(sprayJson))
+  println(treeToString(jsonBoilerplate))
 
 }

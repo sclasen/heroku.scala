@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtScalariform._
@@ -26,15 +27,42 @@ object Build extends Build {
   val spray_json = Project(
     id = "spray-json",
     base = file("spray-json"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(reflect,treehugger))
+    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(reflect, treehugger))
   ).dependsOn(api)
+
+  val jsonBoilerplate = TaskKey[Seq[File]]("json-boilerplate", "Generate Spray Json Boilerplate")
 
   val spray_client = Project(
     id = "spray-client",
     base = file("spray-client"),
+    dependencies = Seq(api % "it->test;test->test;compile->compile"), 
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
-  ).settings( Defaults.itSettings : _*).configs( IntegrationTest )
-    .dependsOn(api % "it->test;test->test;compile->compile")
+  ).settings(Defaults.itSettings: _*).configs(IntegrationTest)
+  
+  
+  def generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
+    sourceGenerators in Compile <+= (jsonBoilerplate in Compile).task,
+    sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
+    jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in spray_json) map {
+      (sm, cp) =>
+        generate(sm / "com/heroku/platform/api/client/spray/JsonBoilerplate.scala", cp.files)
+    }
+  )
+
+  def generate(source: File, cp: Seq[File]): Seq[File] = {
+    println(source)
+    val mainClass = "JsonBoilerplate"
+    val baos = new ByteArrayOutputStream()
+    val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
+    if (i != 0) {
+      error("Trouble with code generator")
+    }
+    val code = new String(baos.toByteArray)
+    println(code)
+    //IO write(source, code)
+    // Seq(source)
+    Seq()
+  }
 
 
   val root = Project(id = "heroku-scala-project", base = file("."), settings = buildSettings).aggregate(api, spray_client)
@@ -49,7 +77,7 @@ object Build extends Build {
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
-  val treehugger =  "com.eed3si9n" %% "treehugger" % "0.2.3"
-  val reflect =  "org.scala-lang" % "scala-reflect" % "2.10.0"
+  val treehugger = "com.eed3si9n" %% "treehugger" % "0.2.3"
+  val reflect = "org.scala-lang" % "scala-reflect" % "2.10.0"
 
 }
