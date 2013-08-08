@@ -1,6 +1,7 @@
 package com.heroku.platform.api
 
 import concurrent.{ ExecutionContext, Future }
+import scala.reflect.ClassTag
 
 trait Api {
 
@@ -35,6 +36,11 @@ trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with C
     with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson with AppTransferRequestJson
     with AddonRequestJson {
   implicit def userBodyToJson: ToJson[UserBody]
+}
+
+object ApiJson {
+  val requestTag = ClassTag(classOf[ApiRequestJson])
+  val responseTag = ClassTag(classOf[ApiResponseJson])
 }
 
 case class User(id: String, email: String)
