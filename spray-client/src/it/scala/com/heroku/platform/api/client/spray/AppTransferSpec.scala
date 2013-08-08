@@ -4,7 +4,8 @@ package com.heroku.platform.api.client.spray
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
-import com.heroku.platform.api.client.spray.SprayApi._
+import SprayApiJson._
+
 
 class AppTransferSpec extends WordSpec with SprayApiSpec with MustMatchers {
 

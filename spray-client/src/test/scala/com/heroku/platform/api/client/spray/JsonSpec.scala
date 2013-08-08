@@ -5,7 +5,7 @@ import org.scalatest.matchers.MustMatchers
 import scala.io.Source
 import com.heroku.platform.api._
 import _root_.spray.json._
-import com.heroku.platform.api.client.spray.SprayApi._
+import com.heroku.platform.api.client.spray.SprayApiJson._
 import com.heroku.platform.api.Account
 import com.heroku.platform.api.HerokuApp
 import com.heroku.platform.api.Collaborator
@@ -56,6 +56,7 @@ class JsonSpec extends WordSpec with MustMatchers {
 
   val modelMap = List(
     "Account" -> implicitly[FromJson[Account]],
+    "Add-on" -> implicitly[FromJson[Addon]],
     "App" -> implicitly[FromJson[HerokuApp]],
     "App Transfer" -> implicitly[FromJson[AppTransfer]],
     "Collaborator" -> implicitly[FromJson[Collaborator]],

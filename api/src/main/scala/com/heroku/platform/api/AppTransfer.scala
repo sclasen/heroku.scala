@@ -59,6 +59,9 @@ case class AppTransfer(created_at: String,
   updated_at: String)
 
 trait AppTransferResponseJson {
+
+  implicit def appTransferAppFromJson: FromJson[AppTransfer.App]
+
   implicit def appTransferFromJson: FromJson[AppTransfer]
 
   implicit def appTransferListFromJson: FromJson[List[AppTransfer]]
