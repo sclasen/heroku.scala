@@ -36,11 +36,11 @@ object JsonBoilerplate extends App {
     OBJECTDEF("SprayIgnoreNullJson") withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
       Seq(nullSafeConfigToJson, configToJson) ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]])
-        .sortBy(m => getTypeParamOfReturnType(m).toString.length * -1).map { //Sorting by length is a heruisitc to get implicit ordering right
+        .map {
           m => jsonFormat(m)
         }.toSeq.flatten ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != "configToJson")
-        .sortBy(m => getTypeParamOfReturnType(m).toString.length * -1).map {
+        .map {
           m => toJson(m)
         } ++ Seq(to)
     )
@@ -50,16 +50,16 @@ object JsonBoilerplate extends App {
     OBJECTDEF("SprayApiJson") withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
       Seq(apiConfigToJson) ++
         respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
-        .sortBy(m => getTypeParamOfReturnType(m).toString.length * -1).map {
+        .map {
           m =>
             jsonFormat(m)
         }.toSeq.flatten ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != "configToJson")
-        .sortBy(m => getTypeParamOfReturnType(m).toString.length * -1).map {
+        .map {
           m => toJsonFrom(m)
         } ++
         respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
-        .sortBy(m => getTypeParamOfReturnType(m).toString.length * -1).map {
+        .map {
           m => fromJson(m)
         } ++ Seq(from)
     )
