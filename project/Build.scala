@@ -30,27 +30,26 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= Seq(reflect, treehugger))
   ).dependsOn(api)
 
-  val jsonBoilerplate = TaskKey[Seq[File]]("json-boilerplate", "Generate Spray Json Boilerplate")
-
   val spray_client = Project(
     id = "spray-client",
     base = file("spray-client"),
     dependencies = Seq(api % "it->test;test->test;compile->compile"), 
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
-  ).settings(Defaults.itSettings: _*).configs(IntegrationTest)
-  
-  
-  def generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
+  ).settings(Defaults.itSettings: _*).configs(IntegrationTest).settings(generateJsonBoilerplate:_*)
+
+  lazy val jsonBoilerplate = TaskKey[Seq[File]]("json-boilerplate", "Generate Spray Json Boilerplate")
+
+  lazy val generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
     sourceGenerators in Compile <+= (jsonBoilerplate in Compile).task,
     sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
     jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in spray_json) map {
       (sm, cp) =>
-        generate(sm / "com/heroku/platform/api/client/spray/JsonBoilerplate.scala", cp.files)
+        generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files)
     }
   )
 
   def generate(source: File, cp: Seq[File]): Seq[File] = {
-    println(source)
+    println("Generating:"+source)
     val mainClass = "JsonBoilerplate"
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
@@ -58,10 +57,10 @@ object Build extends Build {
       error("Trouble with code generator")
     }
     val code = new String(baos.toByteArray)
-    println(code)
-    //IO write(source, code)
-    // Seq(source)
-    Seq()
+    IO delete source
+    IO write(source, code)
+    Seq(source)
+
   }
 
 

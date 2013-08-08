@@ -5,7 +5,7 @@ import org.scalatest.matchers.MustMatchers
 import scala.io.Source
 import com.heroku.platform.api._
 import _root_.spray.json._
-import com.heroku.platform.api.client.spray.SprayApi._
+import com.heroku.platform.api.client.spray.SprayApiJson._
 import com.heroku.platform.api.Account
 import com.heroku.platform.api.HerokuApp
 import com.heroku.platform.api.Collaborator

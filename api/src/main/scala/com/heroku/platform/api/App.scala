@@ -72,6 +72,10 @@ case class HerokuApp(buildpack_provided_description: Option[String],
 
 trait HerokuAppResponseJson {
 
+  implicit def appRegionFromJson: FromJson[HerokuApp.AppRegion]
+
+  implicit def appOwnerFromJson: FromJson[HerokuApp.AppOwner]
+
   implicit def appFromJson: FromJson[HerokuApp]
 
   implicit def appListFromJson: FromJson[List[HerokuApp]]
@@ -79,6 +83,9 @@ trait HerokuAppResponseJson {
 }
 
 trait HerokuAppRequestJson {
+
+  implicit def appRegionToJson: ToJson[HerokuApp.AppRegion]
+
   implicit def createAppBodyToJson: ToJson[CreateAppBody]
 
   implicit def updateAppBodyToJson: ToJson[UpdateAppBody]
