@@ -25,6 +25,9 @@ object Generator extends App {
     Seq(IMPORT(sym.ApiPackage), IMPORT(sym.SprayPackage), to) ++
       //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
       reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
+        m => jsonFormat(m)
+      } ++
+      reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
         m => toJson(m)
       }
   )
@@ -34,6 +37,9 @@ object Generator extends App {
       //(DEF("to", sym.ToJson TYPE_OF sym.ToParam): Tree)
       reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]]).map {
         m => toJsonFrom(m)
+      } ++
+      respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
+        m => jsonFormat(m)
       } ++
       respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]]).map {
         m => fromJson(m)
@@ -67,12 +73,6 @@ object Generator extends App {
             CASE(ID("e") withType ("DeserializationException")) ==> (Predef_println APPLY REF("json"))
           ) ENDTRY)
       )): Tree)
-
-  (DEF("maxList", "T")
-    withTypeParams (TYPEVAR("T") VIEWBOUNDS TYPE_ORDERED("T"))
-    withParams (PARAM("elements", TYPE_LIST("T"))): Tree)
-
-  //def maxList[T <% Ordered[T]](elements: List[T]): T
 
   def toJson(m: Method) = {
     val t = m.getGenericReturnType.asInstanceOf[ParameterizedType].getActualTypeArguments.apply(0)
@@ -116,8 +116,15 @@ object Generator extends App {
     (LAZYVAL(m.getName, sym.FromJson TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF("from") APPLYTYPE (typ): Tree)
   }
 
-  def toJsonFormat(m: Method) = {
-
+  def jsonFormat(m: Method) = {
+    val t = m.getGenericReturnType.asInstanceOf[ParameterizedType].getActualTypeArguments.apply(0)
+    if (t.isInstanceOf[Class[_]]) {
+      val airity = t.asInstanceOf[Class[_]].getConstructors.apply(0).getParameterTypes.size
+      val name = t.asInstanceOf[Class[_]].getName.substring(t.asInstanceOf[Class[_]].getName.lastIndexOf('.') + 1).replace('$', '.')
+      (LAZYVAL(s"${name}format") withFlags (Flags.IMPLICIT) := REF(s"jsonFormat$airity") DOT "apply" APPLY (REF(name) DOT "apply"): Tree)
+    } else {
+      LIT(t.toString)
+    }
   }
 
   def fromFormats(m: Method) = {
