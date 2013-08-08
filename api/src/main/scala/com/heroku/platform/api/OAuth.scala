@@ -74,6 +74,16 @@ trait OAuthRequestJson {
 trait OAuthResponseJson {
   implicit def oauthAuthorizationFromJson: FromJson[OAuthAuthorization]
 
+  implicit def oauthAuthorizationAccessTokenFromJson: FromJson[OAuthAuthorization.AccessToken]
+
+  implicit def oauthAuthorizationClientFromJson: FromJson[OAuthAuthorization.Client]
+
+  implicit def oauthAuthorizationGrantFromJson: FromJson[OAuthAuthorization.Grant]
+
+  implicit def oauthAuthorizationRefreshTokenFromJson: FromJson[OAuthAuthorization.RefreshToken]
+
+  implicit def oauthAuthorizationSessionFromJson: FromJson[OAuthAuthorization.Session]
+
   implicit def oauthAuthorizationListFromJson: FromJson[List[OAuthAuthorization]]
 
   implicit def oauthClientFromJson: FromJson[OAuthClient]
@@ -81,6 +91,12 @@ trait OAuthResponseJson {
   implicit def oauthClientListFromJson: FromJson[List[OAuthClient]]
 
   implicit def oauthTokenFromJson: FromJson[OAuthToken]
+
+  implicit def oauthTokenAccessTokenFromJson: FromJson[OAuthToken.AccessToken]
+
+  implicit def oauthTokenAuthorizationFromJson: FromJson[OAuthToken.Authorization]
+
+  implicit def oauthTokenRefreshTokenFromJson: FromJson[OAuthToken.RefreshToken]
 
   implicit def oauthTokenListFromJson: FromJson[List[OAuthToken]]
 }
@@ -97,6 +113,7 @@ case class OAuthClient(created_at: String,
   updated_at: String)
 
 object OAuthToken {
+
   case class Authorization(id: String)
 
   case class AccessToken(expires_in: Long, id: String, token: String)
