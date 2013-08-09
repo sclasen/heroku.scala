@@ -27,7 +27,7 @@ object Build extends Build {
   val spray_json = Project(
     id = "spray-json",
     base = file("spray-json"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger))
+    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger, sprayJson))
   ).dependsOn(api)
 
   val spray_client = Project(
