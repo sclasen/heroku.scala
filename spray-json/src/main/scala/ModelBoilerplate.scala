@@ -41,12 +41,12 @@ object ModelBoilerplate extends App {
       keys.map {
         k =>
           val prop = props(k)
-          prop.`type`.map(
+          prop.right.map(
             typ =>
               {
-                (VAL(k, sym.TypeMap(typ)).tree)
+                (VAL(k, sym.TypeMap(typ.`type`)).tree)
               }
-          )
+          ).fold(r => None, x => Some(x))
       }.flatten
     }.toIterable.asInstanceOf[Iterable[ValDef]]
     (CASECLASSDEF(modelJson.name) withParams params: Tree)
@@ -64,12 +64,12 @@ object ModelBoilerplate extends App {
             keys.map {
               k =>
                 val prop = props(k)
-                prop.`type`.map(
+                prop.right.map(
                   typ =>
                     {
-                      (VAL(k, sym.TypeMap(typ)).tree)
+                      (VAL(k, sym.TypeMap(typ.`type`)).tree)
                     }
-                )
+                ).fold(r => None, x => Some(x))
             }.flatten ++ Set(VAL("extraHeaders", TYPE_MAP("String", "String")).tree)
           }.toIterable.asInstanceOf[Iterable[ValDef]]
           (CASECLASSDEF(actionObj.title) withParams params withParents (sym.Request TYPE_OF name): Tree)
@@ -79,15 +79,17 @@ object ModelBoilerplate extends App {
 
   val schemaObj = SchemaModel.schemaObj
 
-  case class TypeInfo(`type`: Option[String])
-  case class Schema(`type`: String, properties: Map[String, TypeInfo])
+  case class RefInfo($ref: String)
+  case class TypeInfo(`type`: String)
+  case class Schema(`type`: String, properties: Map[String, Either[RefInfo, TypeInfo]])
   case class Action(title: String, rel: String, href: String, method: String, schema: Schema)
-  case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, TypeInfo])
+  case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, Either[RefInfo, TypeInfo]])
   case class SchemaDoc(docVersion: String, properties: Map[String, ModelInfo], links: Map[String, List[Action]])
 
   object SchemaModel extends DefaultJsonProtocol {
 
     implicit lazy val fti = jsonFormat1(TypeInfo)
+    implicit lazy val fri = jsonFormat(RefInfo, "$ref")
     implicit lazy val fs = jsonFormat2(Schema)
     implicit lazy val fa = jsonFormat5(Action)
     implicit lazy val fmi = jsonFormat5(ModelInfo)
