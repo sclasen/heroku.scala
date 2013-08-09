@@ -23,72 +23,80 @@ object ModelBoilerplate extends App {
   //VAL("name", StringClass)
 
   def codez = {
-    val properties = schemaObj.fields("properties").asJsObject(errorMsg = "Couldnt get properties obj")
-    val links = schemaObj.fields("links").asJsObject(errorMsg = "Couldnt get properties obj")
-    val typez = properties.fields.keys
+    val properties = schemaObj.properties
+    val links = schemaObj.links
+    val typez = properties.keys
     typez.map {
       t =>
-        val objDef = properties.fields(t).asJsObject(errorMsg = s"couldnt get object def for $t")
-        val actionsDef = links.fields(t).asInstanceOf[JsArray]
+        val objDef = properties(t)
+        val actionsDef = links(t)
         (BLOCK(model(objDef), companion(objDef, actionsDef)).inPackage("com.heroku.api"): Tree)
     }
   }
 
-  def model(modelJson: JsObject) = {
-    val fields = modelJson.fields
+  def model(modelJson: ModelInfo) = {
     def params = {
-      val props: JsObject = fields("properties").asJsObject()
-      val keys = props.fields.keySet
+      val props = modelJson.properties
+      val keys = props.keySet
       keys.map {
         k =>
-          println(k + "!!!!!")
-          val prop = props.fields(k).asJsObject
-          println(prop.fields.keys)
-          prop.fields.get("type").map(
+          val prop = props(k)
+          prop.`type`.map(
             typ =>
               {
-                val value: String = typ.asInstanceOf[JsString].value
-                (VAL(k, sym.TypeMap(value)).tree)
+                (VAL(k, sym.TypeMap(typ)).tree)
               }
           )
       }.flatten
     }.toIterable.asInstanceOf[Iterable[ValDef]]
-    (CASECLASSDEF(fields("name").asInstanceOf[JsString].value) withParams params: Tree)
+    (CASECLASSDEF(modelJson.name) withParams params: Tree)
 
   }
 
-  def companion(modelJson: JsObject, actionsDefs: JsArray) = {
-    val fields = modelJson.fields
-    val name: String = fields("name").asInstanceOf[JsString].value
+  def companion(modelJson: ModelInfo, actionsDefs: List[Action]) = {
+    val name: String = modelJson.name
     OBJECTDEF(name) := BLOCK(
-      actionsDefs.elements.map(_.asJsObject).map {
+      actionsDefs.map {
         actionObj =>
           def params = {
-            val props: JsObject = actionObj.fields("schema").asJsObject.fields("properties").asJsObject
-            val keys = props.fields.keySet
+            val props = actionObj.schema.properties
+            val keys = props.keySet
             keys.map {
               k =>
-                println(k + "!!!!!")
-                val prop = props.fields(k).asJsObject
-                println(prop.fields.keys)
-                prop.fields.get("type").map(
+                val prop = props(k)
+                prop.`type`.map(
                   typ =>
                     {
-                      val value: String = typ.asInstanceOf[JsString].value
-                      (VAL(k, sym.TypeMap(value)).tree)
+                      (VAL(k, sym.TypeMap(typ)).tree)
                     }
                 )
             }.flatten ++ Set(VAL("extraHeaders", TYPE_MAP("String", "String")).tree)
           }.toIterable.asInstanceOf[Iterable[ValDef]]
-          (CASECLASSDEF(actionObj.fields("title").asInstanceOf[JsString].value) withParams params withParents (sym.Request TYPE_OF name): Tree)
+          (CASECLASSDEF(actionObj.title) withParams params withParents (sym.Request TYPE_OF name): Tree)
       }
     )
   }
 
-  val schemaObj = JsonParser.apply(schema).asJsObject(errorMsg = "couldnt parse schema")
+  val schemaObj = SchemaModel.schemaObj
 
-  def schema =
-    """
+  case class TypeInfo(`type`: Option[String])
+  case class Schema(`type`: String, properties: Map[String, TypeInfo])
+  case class Action(title: String, rel: String, href: String, method: String, schema: Schema)
+  case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, TypeInfo])
+  case class SchemaDoc(docVersion: String, properties: Map[String, ModelInfo], links: Map[String, List[Action]])
+
+  object SchemaModel extends DefaultJsonProtocol {
+
+    implicit lazy val fti = jsonFormat1(TypeInfo)
+    implicit lazy val fs = jsonFormat2(Schema)
+    implicit lazy val fa = jsonFormat5(Action)
+    implicit lazy val fmi = jsonFormat5(ModelInfo)
+    implicit lazy val ti = jsonFormat3(SchemaDoc)
+
+    def schemaObj = JsonParser(schema).convertTo[SchemaDoc]
+
+    def schema =
+      """
       {
         "docVersion": "1",
         "properties": {
@@ -135,6 +143,7 @@ object ModelBoilerplate extends App {
         }
       }
     """
+  }
 
   codez.foreach(c => println(treeToString(c)))
 
