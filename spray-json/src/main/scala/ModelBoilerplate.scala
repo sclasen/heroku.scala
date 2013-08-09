@@ -78,7 +78,7 @@ object ModelBoilerplate extends App {
                       (VAL(k, sym.TypeMap(value)).tree)
                     }
                 )
-            }.flatten
+            }.flatten ++ Set(VAL("extraHeaders", TYPE_MAP("String", "String")).tree)
           }.toIterable.asInstanceOf[Iterable[ValDef]]
           (CASECLASSDEF(actionObj.fields("title").asInstanceOf[JsString].value) withParams params withParents (sym.Request TYPE_OF name): Tree)
       }
