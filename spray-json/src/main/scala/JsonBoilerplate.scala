@@ -172,7 +172,9 @@ object JsonBoilerplate extends App {
     (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
       withFlags (Flags.IMPLICIT) := NEW(ANONDEF(sym.ToJson TYPE_OF TYPE_MAP("String", "String")) := BLOCK(
         (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF("nullSafeConfigToJson") DOT "toJson" APPLY (
-          REF("t") MAP LAMBDA(PARAM("kv")) ==> BLOCK(REF("kv._1") ANY_-> REF("Option") APPLY REF("kv._2"))
+          REF("t") MAP BLOCK(
+            CASE(TUPLE(ID("k"), ID("v"))) ==> (REF("k") ANY_-> (OptionClass APPLY REF("v")))
+          )
         )
       )): Tree)
   }

@@ -7,8 +7,8 @@ import spray.json._
 object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   implicit lazy val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
   implicit lazy val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
-    def toJson(t: Map[String, String]) = nullSafeConfigToJson.toJson(t map { kv =>
-      kv._1 -> Option(kv._2)
+    def toJson(t: Map[String, String]) = nullSafeConfigToJson.toJson(t map {
+      case (k, v) => k -> Option(v)
     })
   }
   implicit lazy val FormatUserBody: JsonFormat[UserBody] = jsonFormat2(UserBody.apply)
@@ -56,8 +56,8 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
 
 object SprayApiJson extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
   implicit lazy val configToJson: ToJson[Map[String, String]] = SprayIgnoreNullJson.configToJson
-  implicit lazy val FormatUser: JsonFormat[User] = jsonFormat2(User.apply)
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
+  implicit lazy val FormatUser: JsonFormat[User] = jsonFormat2(User.apply)
   implicit lazy val FormatHerokuAppAppRegion: JsonFormat[HerokuApp.AppRegion] = jsonFormat2(HerokuApp.AppRegion.apply)
   implicit lazy val FormatHerokuAppAppOwner: JsonFormat[HerokuApp.AppOwner] = jsonFormat2(HerokuApp.AppOwner.apply)
   implicit lazy val FormatHerokuApp: JsonFormat[HerokuApp] = jsonFormat15(HerokuApp.apply)
@@ -106,8 +106,8 @@ object SprayApiJson extends DefaultJsonProtocol with NullOptions with ApiRequest
   implicit lazy val createTransferBodyToJson: ToJson[AppTransfer.CreateTransferBody] = SprayIgnoreNullJson.createTransferBodyToJson
   implicit lazy val addonChangeToJson: ToJson[Addon.AddonChange] = SprayIgnoreNullJson.addonChangeToJson
   implicit lazy val addonPlanToJson: ToJson[Addon.AddonPlan] = SprayIgnoreNullJson.addonPlanToJson
-  implicit lazy val userFromJson: FromJson[User] = from[User]
   implicit lazy val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
+  implicit lazy val userFromJson: FromJson[User] = from[User]
   implicit lazy val appRegionFromJson: FromJson[HerokuApp.AppRegion] = from[HerokuApp.AppRegion]
   implicit lazy val appOwnerFromJson: FromJson[HerokuApp.AppOwner] = from[HerokuApp.AppOwner]
   implicit lazy val appFromJson: FromJson[HerokuApp] = from[HerokuApp]
