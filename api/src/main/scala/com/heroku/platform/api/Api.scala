@@ -38,11 +38,6 @@ trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with C
   implicit def userBodyToJson: ToJson[UserBody]
 }
 
-object ApiJson {
-  val requestTag = ClassTag(classOf[ApiRequestJson])
-  val responseTag = ClassTag(classOf[ApiResponseJson])
-}
-
 case class User(id: String, email: String)
 
 case class UserBody(id: Option[String] = None, email: Option[String] = None)

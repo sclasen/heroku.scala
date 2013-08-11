@@ -20,7 +20,7 @@ import com.heroku.platform.api.ErrorResponse
 
 class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
-  import SprayApiJson._
+  import SprayJsonBoilerplate._
 
   implicit val connTimeout = Timeout(10 seconds)
   implicit val executionContext = system.dispatcher

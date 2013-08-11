@@ -24,9 +24,9 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= apiDeps)
   )
 
-  val spray_json = Project(
-    id = "spray-json",
-    base = file("spray-json"),
+  val boilerplateGen = Project(
+    id = "boilerplate-generator",
+    base = file("boilerplate-generator"),
     settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger, sprayJson))
   ).dependsOn(api)
 
@@ -42,7 +42,7 @@ object Build extends Build {
   lazy val generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
     sourceGenerators in Compile <+= (jsonBoilerplate in Compile).task,
     sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
-    jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in spray_json, streams) map {
+    jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, streams) map {
       (sm, cp, st) =>
         generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, st)
     }
@@ -50,7 +50,7 @@ object Build extends Build {
 
   def generate(source: File, cp: Seq[File], streams:Types.Id[Keys.TaskStreams]): Seq[File] = {
     streams.log.info("Generating:%s".format(source))
-    val mainClass = "JsonBoilerplate"
+    val mainClass = "SprayJsonBoilerplateGen"
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
     if (i != 0) {

@@ -6,7 +6,7 @@ import treehugger.forest._
 import definitions._
 import treehuggerDSL._
 
-object JsonBoilerplate extends App {
+object SprayJsonBoilerplateGen extends App {
 
   object sym {
     val ApiPackage = "com.heroku.platform.api._"
@@ -15,6 +15,8 @@ object JsonBoilerplate extends App {
     val ToJson = RootClass.newClass("ToJson")
     val FromJson = RootClass.newClass("FromJson")
     val JsonFormat = RootClass.newClass("JsonFormat")
+    val BoilerplateObj = "SprayJsonBoilerplate"
+    val BoilerplateNullsObj = "SprayJsonIgnoreNullBoilerplate"
   }
 
   val respJson = classOf[ApiResponseJson]
@@ -30,7 +32,7 @@ object JsonBoilerplate extends App {
 
   def ignoreNulls =
     //object SprayIgnoreNullJson omits Options that are None instead of sending null
-    OBJECTDEF("SprayIgnoreNullJson") withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
+    OBJECTDEF(sym.BoilerplateNullsObj) withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
       Seq(nullSafeConfigToJson, configToJson) ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]])
         .map {
@@ -44,7 +46,7 @@ object JsonBoilerplate extends App {
 
   def sprayJson =
     //object SprayApiJson handles null attributes in Json by giving back None
-    OBJECTDEF("SprayApiJson") withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
+    OBJECTDEF(sym.BoilerplateObj) withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
       Seq(apiConfigToJson) ++
         respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
         .map {
@@ -106,7 +108,7 @@ object JsonBoilerplate extends App {
     val t = getTypeParamOfReturnType(m)
     val typ = getTypeParamForSource(t)
     // implicit lazy val  methodFromApiRequestJson = SprayIgnoreNullJson.methodFromApiRequestJson
-    (LAZYVAL(m.getName, sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF("SprayIgnoreNullJson") DOT m.getName: Tree)
+    (LAZYVAL(m.getName, sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF(sym.BoilerplateNullsObj) DOT m.getName: Tree)
   }
 
   def fromJson(m: Method) = {
@@ -181,7 +183,7 @@ object JsonBoilerplate extends App {
 
   def apiConfigToJson = {
     (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
-      withFlags (Flags.IMPLICIT) := REF("SprayIgnoreNullJson") DOT "configToJson": Tree)
+      withFlags (Flags.IMPLICIT) := REF(sym.BoilerplateNullsObj) DOT "configToJson": Tree)
   }
 
   println(treeToString(jsonBoilerplate))

@@ -6,7 +6,7 @@ import scala.concurrent.duration._
 import com.heroku.platform.api._
 import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.MustMatchers
-import SprayApiJson._
+import SprayJsonBoilerplate._
 import scala.collection.mutable.ListBuffer
 import com.heroku.platform.api.ErrorResponse
 import org.scalatest.exceptions.TestFailedException

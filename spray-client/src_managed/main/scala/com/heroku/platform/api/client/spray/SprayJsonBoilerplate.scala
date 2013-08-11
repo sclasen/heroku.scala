@@ -4,7 +4,7 @@ import com.heroku.platform.api._
 
 import spray.json._
 
-object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
+object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequestJson {
   implicit lazy val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
   implicit lazy val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
     def toJson(t: Map[String, String]) = nullSafeConfigToJson.toJson(t map {
@@ -54,8 +54,8 @@ object SprayIgnoreNullJson extends DefaultJsonProtocol with ApiRequestJson {
   }
 }
 
-object SprayApiJson extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
-  implicit lazy val configToJson: ToJson[Map[String, String]] = SprayIgnoreNullJson.configToJson
+object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
+  implicit lazy val configToJson: ToJson[Map[String, String]] = SprayJsonIgnoreNullBoilerplate.configToJson
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
   implicit lazy val FormatUser: JsonFormat[User] = jsonFormat2(User.apply)
   implicit lazy val FormatHerokuAppAppRegion: JsonFormat[HerokuApp.AppRegion] = jsonFormat2(HerokuApp.AppRegion.apply)
@@ -87,25 +87,25 @@ object SprayApiJson extends DefaultJsonProtocol with NullOptions with ApiRequest
   implicit lazy val FormatAppTransfer: JsonFormat[AppTransfer] = jsonFormat7(AppTransfer.apply)
   implicit lazy val FormatAddonAddonPlan: JsonFormat[Addon.AddonPlan] = jsonFormat1(Addon.AddonPlan.apply)
   implicit lazy val FormatAddon: JsonFormat[Addon] = jsonFormat5(Addon.apply)
-  implicit lazy val userBodyToJson: ToJson[UserBody] = SprayIgnoreNullJson.userBodyToJson
-  implicit lazy val updateAccountToJson: ToJson[Account.UpdateBody] = SprayIgnoreNullJson.updateAccountToJson
-  implicit lazy val passwordChangeToJson: ToJson[Account.PasswordChangeBody] = SprayIgnoreNullJson.passwordChangeToJson
-  implicit lazy val appRegionToJson: ToJson[HerokuApp.AppRegion] = SprayIgnoreNullJson.appRegionToJson
-  implicit lazy val createAppBodyToJson: ToJson[HerokuApp.CreateAppBody] = SprayIgnoreNullJson.createAppBodyToJson
-  implicit lazy val updateAppBodyToJson: ToJson[HerokuApp.UpdateAppBody] = SprayIgnoreNullJson.updateAppBodyToJson
-  implicit lazy val appOwnerToJson: ToJson[HerokuApp.AppOwner] = SprayIgnoreNullJson.appOwnerToJson
-  implicit lazy val collaboratorBodyToJson: ToJson[Collaborator.CollaboratorBody] = SprayIgnoreNullJson.collaboratorBodyToJson
-  implicit lazy val createDomainBodyToJson: ToJson[Domain.CreateDomainBody] = SprayIgnoreNullJson.createDomainBodyToJson
-  implicit lazy val createDynoBodyToJson: ToJson[Dyno.CreateDynoBody] = SprayIgnoreNullJson.createDynoBodyToJson
-  implicit lazy val updateFormationBodyToJson: ToJson[Formation.UpdateFormationBody] = SprayIgnoreNullJson.updateFormationBodyToJson
-  implicit lazy val createKeyBodyToJson: ToJson[Key.CreateKeyBody] = SprayIgnoreNullJson.createKeyBodyToJson
-  implicit lazy val oauthCreateAuthoriztionClient: ToJson[OAuthAuthorization.CreateAuthorizationClient] = SprayIgnoreNullJson.oauthCreateAuthoriztionClient
-  implicit lazy val oauthcreateAuthorizationBody: ToJson[OAuthAuthorization.CreateAuthorizationBody] = SprayIgnoreNullJson.oauthcreateAuthorizationBody
-  implicit lazy val stateToJson: ToJson[AppTransfer.State] = SprayIgnoreNullJson.stateToJson
-  implicit lazy val appTransferAppToJson: ToJson[AppTransfer.App] = SprayIgnoreNullJson.appTransferAppToJson
-  implicit lazy val createTransferBodyToJson: ToJson[AppTransfer.CreateTransferBody] = SprayIgnoreNullJson.createTransferBodyToJson
-  implicit lazy val addonChangeToJson: ToJson[Addon.AddonChange] = SprayIgnoreNullJson.addonChangeToJson
-  implicit lazy val addonPlanToJson: ToJson[Addon.AddonPlan] = SprayIgnoreNullJson.addonPlanToJson
+  implicit lazy val userBodyToJson: ToJson[UserBody] = SprayJsonIgnoreNullBoilerplate.userBodyToJson
+  implicit lazy val updateAccountToJson: ToJson[Account.UpdateBody] = SprayJsonIgnoreNullBoilerplate.updateAccountToJson
+  implicit lazy val passwordChangeToJson: ToJson[Account.PasswordChangeBody] = SprayJsonIgnoreNullBoilerplate.passwordChangeToJson
+  implicit lazy val appRegionToJson: ToJson[HerokuApp.AppRegion] = SprayJsonIgnoreNullBoilerplate.appRegionToJson
+  implicit lazy val createAppBodyToJson: ToJson[HerokuApp.CreateAppBody] = SprayJsonIgnoreNullBoilerplate.createAppBodyToJson
+  implicit lazy val updateAppBodyToJson: ToJson[HerokuApp.UpdateAppBody] = SprayJsonIgnoreNullBoilerplate.updateAppBodyToJson
+  implicit lazy val appOwnerToJson: ToJson[HerokuApp.AppOwner] = SprayJsonIgnoreNullBoilerplate.appOwnerToJson
+  implicit lazy val collaboratorBodyToJson: ToJson[Collaborator.CollaboratorBody] = SprayJsonIgnoreNullBoilerplate.collaboratorBodyToJson
+  implicit lazy val createDomainBodyToJson: ToJson[Domain.CreateDomainBody] = SprayJsonIgnoreNullBoilerplate.createDomainBodyToJson
+  implicit lazy val createDynoBodyToJson: ToJson[Dyno.CreateDynoBody] = SprayJsonIgnoreNullBoilerplate.createDynoBodyToJson
+  implicit lazy val updateFormationBodyToJson: ToJson[Formation.UpdateFormationBody] = SprayJsonIgnoreNullBoilerplate.updateFormationBodyToJson
+  implicit lazy val createKeyBodyToJson: ToJson[Key.CreateKeyBody] = SprayJsonIgnoreNullBoilerplate.createKeyBodyToJson
+  implicit lazy val oauthCreateAuthoriztionClient: ToJson[OAuthAuthorization.CreateAuthorizationClient] = SprayJsonIgnoreNullBoilerplate.oauthCreateAuthoriztionClient
+  implicit lazy val oauthcreateAuthorizationBody: ToJson[OAuthAuthorization.CreateAuthorizationBody] = SprayJsonIgnoreNullBoilerplate.oauthcreateAuthorizationBody
+  implicit lazy val stateToJson: ToJson[AppTransfer.State] = SprayJsonIgnoreNullBoilerplate.stateToJson
+  implicit lazy val appTransferAppToJson: ToJson[AppTransfer.App] = SprayJsonIgnoreNullBoilerplate.appTransferAppToJson
+  implicit lazy val createTransferBodyToJson: ToJson[AppTransfer.CreateTransferBody] = SprayJsonIgnoreNullBoilerplate.createTransferBodyToJson
+  implicit lazy val addonChangeToJson: ToJson[Addon.AddonChange] = SprayJsonIgnoreNullBoilerplate.addonChangeToJson
+  implicit lazy val addonPlanToJson: ToJson[Addon.AddonPlan] = SprayJsonIgnoreNullBoilerplate.addonPlanToJson
   implicit lazy val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
   implicit lazy val userFromJson: FromJson[User] = from[User]
   implicit lazy val appRegionFromJson: FromJson[HerokuApp.AppRegion] = from[HerokuApp.AppRegion]
@@ -114,8 +114,8 @@ object SprayApiJson extends DefaultJsonProtocol with NullOptions with ApiRequest
   implicit lazy val appListFromJson: FromJson[List[HerokuApp]] = from[List[HerokuApp]]
   implicit lazy val accountFromJson: FromJson[Account] = from[Account]
   implicit lazy val collaboratorFromJson: FromJson[Collaborator] = from[Collaborator]
-  implicit lazy val collaboratorListFromJson: FromJson[List[Collaborator]] = from[List[Collaborator]]
   implicit lazy val collaboratedUserFromJson: FromJson[Collaborator.CollaboratedUser] = from[Collaborator.CollaboratedUser]
+  implicit lazy val collaboratorListFromJson: FromJson[List[Collaborator]] = from[List[Collaborator]]
   implicit lazy val configFromJson: FromJson[Map[String,String]] = from[Map[String,String]]
   implicit lazy val domainFromJson: FromJson[Domain] = from[Domain]
   implicit lazy val domainListFromJson: FromJson[List[Domain]] = from[List[Domain]]
