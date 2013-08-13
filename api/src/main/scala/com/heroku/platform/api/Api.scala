@@ -45,14 +45,3 @@ case class User(id: String, email: String)
 
 case class UserBody(id: Option[String] = None, email: Option[String] = None)
 
-object NoCache extends ApiCache {
-  def put[T](request: Request[T], lastModified: String, response: T) {}
-
-  def put[T](request: ListRequest[T], lastModified: String, response: PartialResponse[T]) {}
-
-  def getLastModified(request: BaseRequest): Option[String] = None
-
-  def getCachedResponse[T](request: Request[T]): Option[T] = None
-
-  def getCachedResponse[T](request: ListRequest[T]): Option[PartialResponse[T]] = None
-}
