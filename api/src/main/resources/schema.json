@@ -22,24 +22,37 @@
                     "$ref": "AppOwner"
                 }
             }
-        },
-        "links": {
-            "app": [
-                {
-                    "title":  "Create",
-                    "rel":    "create",
-                    "href":   "/apps",
-                    "method": "POST",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            }
+        }
+    },
+    "links": {
+        "app": [
+            {
+                "title":  "Create",
+                "rel":    "create",
+                "href":   "/apps",
+                "method": "POST",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
                         }
                     }
                 }
-            ]
-        }
+            },
+            {
+                "title":  "List",
+                "rel":    "list",
+                "href":   "/apps",
+                "method": "GET"
+
+            },
+            {
+                "title":  "Info",
+                "rel":    "info",
+                "href":   "/apps/{app_name_or_id}",
+                "method": "GET"
+            }
+        ]
     }
 }

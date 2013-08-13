@@ -1,7 +1,11 @@
-import com.heroku.platform.api.{ FromJson, ToJson, ApiRequestJson, ApiResponseJson }
+import com.heroku.platform.api._
 import java.lang.reflect._
 import java.lang.reflect.{ Type => JType }
 
+import scala.Some
+import scala.Some
+import scala.Some
+import scala.Some
 import treehugger.forest._
 import definitions._
 import treehuggerDSL._

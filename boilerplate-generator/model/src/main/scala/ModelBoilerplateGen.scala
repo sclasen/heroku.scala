@@ -1,18 +1,15 @@
-import com.heroku.platform.api.{ FromJson, ToJson, ApiRequestJson, ApiResponseJson }
-import java.lang.reflect._
-import java.lang.reflect.{ Type => JType }
 
+import java.io.File
+import scala.io.Source
 import spray.json._
 import treehugger.forest._
 import definitions._
 import treehuggerDSL._
 
-object ModelBoilerplate extends App {
+object ModelBoilerplateGen extends App {
 
   object sym {
-    val ApiPackage = "com.heroku.platform.api._"
-    val ClientPackage = "com.heroku.platform.api.client.spray"
-    val SprayPackage = "spray.json._"
+    val ApiPackage = "com.heroku.platform.api"
     val ToJson = RootClass.newClass("ToJson")
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
@@ -32,7 +29,7 @@ object ModelBoilerplate extends App {
       t =>
         val objDef = properties(t)
         val actionsDef = links(t)
-        (BLOCK(model(objDef), companion(objDef, actionsDef)).inPackage("com.heroku.api"): Tree)
+        (BLOCK(model(objDef), companion(objDef, actionsDef)).inPackage(sym.ApiPackage): Tree)
     }
   }
 
@@ -105,67 +102,16 @@ object ModelBoilerplate extends App {
 
     def schemaObj = JsonParser(schema).convertTo[SchemaDoc]
 
-    def schema =
-      """
-      {
-        "docVersion": "1",
-        "properties": {
-          "app":{
-            "type":        "object",
-            "id":          "app",
-            "name":        "App",
-            "description": "A Heroku app",
-            "properties": {
-              "id": {
-                "type":        "string",
-                "format":      "uuid",
-                "description": "Unique app identifier",
-                "example":     "01234567-89ab-cdef-0123-456789abcdef"
-              },
-              "name": {
-                "type":        "string",
-                "description": "unique name of app",
-                "example":     "example"
-              },
-              "owner": {
-                "$ref": "AppOwner"
-              }
-            }
-          }
-        },
-        "links": {
-          "app": [
-            {
-              "title":  "Create",
-              "rel":    "create",
-              "href":   "/apps",
-              "method": "POST",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-         {
-                      "title":  "List",
-                      "rel":    "list",
-                      "href":   "/apps",
-                      "method": "GET"
+    def schemaFile = new File("api/src/main/resources/schema.json")
 
-                    },
-           {
-                      "title":  "Info",
-                      "rel":    "info",
-                      "href":   "/apps/{app_name_or_id}",
-                      "method": "GET"
-                    }
-          ]
-        }
-      }
-      """
+    System.err.println(schemaFile.getAbsolutePath)
+
+    def schema = Source.fromFile(schemaFile).foldLeft(new StringBuilder) {
+      case (b, c) => b.append(c)
+    }.toString
+
+    System.err.println(schema)
+
   }
 
   codez.foreach(c => println(treeToString(c)))
