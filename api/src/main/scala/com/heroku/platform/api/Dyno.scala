@@ -1,14 +1,19 @@
 package com.heroku.platform.api
 
 import com.heroku.platform.api.Request._
-import com.heroku.platform.api.Dyno.{ DynoRelease, CreateDynoBody }
+import com.heroku.platform.api.Dyno.models.{ CreateDynoBody, DynoRelease }
 
 case class Dyno(attach_url: Option[String], command: String, created_at: String, id: String, name: String, release: DynoRelease, state: String, `type`: String, updated_at: String)
 
 object Dyno {
-  case class CreateDynoBody(command: String, attach: Boolean = false)
 
-  case class DynoRelease(id: String)
+  object models {
+    //STUFF HERE INSTEAD OF COMPANION SINCE THAT BREAKS PLAY JSON
+
+    case class CreateDynoBody(command: String, attach: Boolean = false)
+
+    case class DynoRelease(id: String)
+  }
 
   case class Create(appId: String, command: String, attach: Boolean = false, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateDynoBody, Dyno] {
     val expect: Set[Int] = expect201

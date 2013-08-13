@@ -1,7 +1,7 @@
 package com.heroku.platform.api
 
 import Request._
-import com.heroku.platform.api.Addon.{ AddonChange, AddonPlan }
+import com.heroku.platform.api.Addon.models.{ AddonChange, AddonPlan }
 
 case class Addon(
   config: Option[Map[String, String]],
@@ -12,9 +12,13 @@ case class Addon(
 
 object Addon {
 
-  case class AddonPlan(name: String)
+  object models {
 
-  case class AddonChange(config: Option[Map[String, String]], plan: AddonPlan)
+    case class AddonPlan(name: String)
+
+    case class AddonChange(config: Option[Map[String, String]], plan: AddonPlan)
+
+  }
 
   case class Create(appIdOrName: String, plan: String, config: Map[String, String] = Map.empty, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[AddonChange, Addon] {
     val expect: Set[Int] = expect201
@@ -64,9 +68,4 @@ trait AddonResponseJson {
 
   implicit def addonListFromJson: FromJson[List[Addon]]
 }
-
-/*case class AddonCreate(appIdOrName:String,) extends RequestWithBody[AddonChange,Addon]{
-  val endpoint: String = s"/apps/$appIdOrName/addons"
-
-}*/
 

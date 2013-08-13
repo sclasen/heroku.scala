@@ -1,7 +1,79 @@
 package com.heroku.platform.api
 
 import concurrent.{ ExecutionContext, Future }
-import scala.reflect.ClassTag
+
+trait ToJson[T] {
+  def toJson(t: T): String
+}
+
+trait FromJson[T] {
+  def fromJson(json: String): T
+}
+
+case class ErrorResponse(id: String, message: String)
+
+case class PartialResponse[T](list: List[T], nextRange: Option[String]) {
+  def isComplete = nextRange.isEmpty
+}
+
+object Request {
+  val v3json = "application/vnd.heroku+json; version=3"
+  val expect200 = Set(200)
+  val expect201 = Set(201)
+  val GET = "GET"
+  val PUT = "PUT"
+  val PATCH = "PATCH"
+  val POST = "POST"
+  val DELETE = "DELETE"
+}
+
+trait BaseRequest {
+
+  def expect: Set[Int]
+
+  def endpoint: String
+
+  def method: String
+
+  def extraHeaders: Map[String, String]
+
+}
+
+trait Request[O] extends BaseRequest {
+
+  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[ErrorResponse, O] = {
+    if (expect.contains(status)) {
+      Right(f.fromJson(body))
+    } else {
+      Left(e.fromJson(body))
+    }
+  }
+}
+
+trait RequestWithBody[I, O] extends Request[O] {
+
+  def body: I
+
+}
+
+trait ListRequest[T] extends BaseRequest {
+
+  val expect = Set(200, 206)
+
+  def range: Option[String]
+
+  def getResponse(status: Int, headers: Map[String, String], nextRange: Option[String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[ErrorResponse, PartialResponse[T]] = {
+    if (status == 200) {
+      Right(PartialResponse(f.fromJson(body), None))
+    } else if (status == 206) {
+      Right(PartialResponse(f.fromJson(body), nextRange))
+    } else {
+      Left(e.fromJson(body))
+    }
+  }
+
+  def nextRequest(nextRange: String): ListRequest[T]
+}
 
 trait Api {
 
@@ -24,37 +96,3 @@ trait Api {
   }
 }
 
-trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
-    with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
-    with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson
-    with OAuthResponseJson with AppTransferResponseJson with AddonResponseJson {
-  implicit def errorResponseFromJson: FromJson[ErrorResponse]
-  implicit def userFromJson: FromJson[User]
-}
-
-trait ApiRequestJson extends AccountRequestJson with HerokuAppRequestJson with CollaboratorRequestJson with ConfigVarRequestJson
-    with DomainRequestJson with DynoRequestJson with FormationRequestJson with KeyRequestJson with OAuthRequestJson with AppTransferRequestJson
-    with AddonRequestJson {
-  implicit def userBodyToJson: ToJson[UserBody]
-}
-
-object ApiJson {
-  val requestTag = ClassTag(classOf[ApiRequestJson])
-  val responseTag = ClassTag(classOf[ApiResponseJson])
-}
-
-case class User(id: String, email: String)
-
-case class UserBody(id: Option[String] = None, email: Option[String] = None)
-
-object NoCache extends ApiCache {
-  def put[T](request: Request[T], lastModified: String, response: T) {}
-
-  def put[T](request: ListRequest[T], lastModified: String, response: PartialResponse[T]) {}
-
-  def getLastModified(request: BaseRequest): Option[String] = None
-
-  def getCachedResponse[T](request: Request[T]): Option[T] = None
-
-  def getCachedResponse[T](request: ListRequest[T]): Option[PartialResponse[T]] = None
-}

@@ -24,16 +24,16 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= apiDeps)
   )
 
-  val spray_json = Project(
-    id = "spray-json",
-    base = file("spray-json"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger))
+  val boilerplateGen = Project(
+    id = "boilerplate-generator",
+    base = file("boilerplate-generator"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger, sprayJson))
   ).dependsOn(api)
 
   val spray_client = Project(
     id = "spray-client",
     base = file("spray-client"),
-    dependencies = Seq(api % "it->test;test->test;compile->compile"), 
+    dependencies = Seq(api % "it->test;test->test;compile->compile"),
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
   ).settings(Defaults.itSettings: _*).configs(IntegrationTest).settings(generateJsonBoilerplate:_*)
 
@@ -42,15 +42,22 @@ object Build extends Build {
   lazy val generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
     sourceGenerators in Compile <+= (jsonBoilerplate in Compile).task,
     sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
-    jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in spray_json, streams) map {
-      (sm, cp, st) =>
-        generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, st)
+    jsonBoilerplate in Compile <<= (cacheDirectory, sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, compile in api in Compile, streams) map {
+      (cacheDir, sm, cp, apiComp, st) =>
+        val apiClasses = apiComp.relations.allProducts
+        val cache =
+          FileFunction.cached(cacheDir / "autogen", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
+            in: Set[File] =>
+              generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
+                generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+          }
+
+       cache(apiClasses.toSet).toSeq
     }
   )
 
-  def generate(source: File, cp: Seq[File], streams:Types.Id[Keys.TaskStreams]): Seq[File] = {
+  def generate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Set[File] = {
     streams.log.info("Generating:%s".format(source))
-    val mainClass = "JsonBoilerplate"
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
     if (i != 0) {
@@ -59,7 +66,8 @@ object Build extends Build {
     val code = new String(baos.toByteArray)
     IO delete source
     IO write(source, code)
-    Seq(source)
+    if(mainClass == "PlayJsonBoilerplate") Set()
+    else Set(source)
   }
 
 
@@ -67,12 +75,13 @@ object Build extends Build {
 
   def apiDeps = Seq(scalaTest)
 
-  def sprayDeps = Seq(spray, sprayJson, akka, scalaTest)
+  def sprayDeps = Seq(spray, sprayJson % "provided", akka, scalaTest, playJson % "provided")
 
   val spray = "io.spray" % "spray-client" % "1.2-20130801" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.2.3"
+  val playJson = "com.typesafe.play" %% "play-json" % "2.2.0-M2"
 
 }

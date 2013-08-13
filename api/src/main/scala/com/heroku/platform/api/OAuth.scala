@@ -1,31 +1,33 @@
 package com.heroku.platform.api
 
 import com.heroku.platform.api.Request._
-import com.heroku.platform.api.OAuthAuthorization.Grant
-import com.heroku.platform.api.OAuthAuthorization.Session
-import com.heroku.platform.api.OAuthAuthorization.AccessToken
-import com.heroku.platform.api.OAuthAuthorization.Client
-import com.heroku.platform.api.OAuthAuthorization.CreateAuthorizationClient
-import com.heroku.platform.api.OAuthAuthorization.CreateAuthorizationBody
-import com.heroku.platform.api.OAuthAuthorization.RefreshToken
-import com.heroku.platform.api.OAuthToken.Authorization
+
+import com.heroku.platform.api.OAuthAuthorization.models._
+import com.heroku.platform.api.OAuthAuthorization.models.AccessToken
+import com.heroku.platform.api.OAuthAuthorization.models.CreateAuthorizationBody
+import com.heroku.platform.api.OAuthAuthorization.models.Client
+import com.heroku.platform.api.OAuthAuthorization.models.CreateAuthorizationClient
+import com.heroku.platform.api.OAuthToken.models.Authorization
 
 object OAuthAuthorization {
 
-  case class AccessToken(expires_in: Option[String], id: String, token: String)
+  object models {
 
-  case class Client(id: String, name: String, redirect_uri: String)
+    case class AccessToken(expires_in: Option[String], id: String, token: String)
 
-  case class Grant(code: String, expires_in: String, id: String)
+    case class Client(id: String, name: String, redirect_uri: String)
 
-  case class RefreshToken(expires_in: String, id: String, token: String)
+    case class Grant(code: String, expires_in: String, id: String)
 
-  case class Session(id: String)
+    case class RefreshToken(expires_in: String, id: String, token: String)
 
-  case class CreateAuthorizationClient(id: String)
+    case class Session(id: String)
 
-  case class CreateAuthorizationBody(scope: collection.immutable.List[String], client: Option[CreateAuthorizationClient], description: Option[String])
+    case class CreateAuthorizationClient(id: String)
 
+    case class CreateAuthorizationBody(scope: collection.immutable.List[String], client: Option[CreateAuthorizationClient], description: Option[String])
+
+  }
   case class Create(scope: collection.immutable.List[String], description: Option[String] = None, client_id: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
     val endpoint = "/oauth/authorizations"
     val expect = expect201
@@ -74,15 +76,15 @@ trait OAuthRequestJson {
 trait OAuthResponseJson {
   implicit def oauthAuthorizationFromJson: FromJson[OAuthAuthorization]
 
-  implicit def oauthAuthorizationAccessTokenFromJson: FromJson[OAuthAuthorization.AccessToken]
+  implicit def oauthAuthorizationAccessTokenFromJson: FromJson[OAuthAuthorization.models.AccessToken]
 
-  implicit def oauthAuthorizationClientFromJson: FromJson[OAuthAuthorization.Client]
+  implicit def oauthAuthorizationClientFromJson: FromJson[OAuthAuthorization.models.Client]
 
-  implicit def oauthAuthorizationGrantFromJson: FromJson[OAuthAuthorization.Grant]
+  implicit def oauthAuthorizationGrantFromJson: FromJson[OAuthAuthorization.models.Grant]
 
-  implicit def oauthAuthorizationRefreshTokenFromJson: FromJson[OAuthAuthorization.RefreshToken]
+  implicit def oauthAuthorizationRefreshTokenFromJson: FromJson[OAuthAuthorization.models.RefreshToken]
 
-  implicit def oauthAuthorizationSessionFromJson: FromJson[OAuthAuthorization.Session]
+  implicit def oauthAuthorizationSessionFromJson: FromJson[OAuthAuthorization.models.Session]
 
   implicit def oauthAuthorizationListFromJson: FromJson[List[OAuthAuthorization]]
 
@@ -92,11 +94,11 @@ trait OAuthResponseJson {
 
   implicit def oauthTokenFromJson: FromJson[OAuthToken]
 
-  implicit def oauthTokenAccessTokenFromJson: FromJson[OAuthToken.AccessToken]
+  implicit def oauthTokenAccessTokenFromJson: FromJson[OAuthToken.models.AccessToken]
 
-  implicit def oauthTokenAuthorizationFromJson: FromJson[OAuthToken.Authorization]
+  implicit def oauthTokenAuthorizationFromJson: FromJson[OAuthToken.models.Authorization]
 
-  implicit def oauthTokenRefreshTokenFromJson: FromJson[OAuthToken.RefreshToken]
+  implicit def oauthTokenRefreshTokenFromJson: FromJson[OAuthToken.models.RefreshToken]
 
   implicit def oauthTokenListFromJson: FromJson[List[OAuthToken]]
 }
@@ -114,21 +116,23 @@ case class OAuthClient(created_at: String,
 
 object OAuthToken {
 
-  case class Authorization(id: String)
+  object models {
+    case class Authorization(id: String)
 
-  case class AccessToken(expires_in: Long, id: String, token: String)
+    case class AccessToken(expires_in: Long, id: String, token: String)
 
-  case class RefreshToken(expires_in: Long, id: String, token: String)
+    case class RefreshToken(expires_in: Long, id: String, token: String)
+  }
 
 }
 
 case class OAuthToken(authorization: Authorization,
-  access_token: OAuthToken.AccessToken,
+  access_token: OAuthToken.models.AccessToken,
   //client:TokenClient,
   created_at: String,
   //grant:TokenGrant,
   id: String,
-  refresh_token: OAuthToken.RefreshToken,
+  refresh_token: OAuthToken.models.RefreshToken,
   session: Session,
   updated_at: String)
 

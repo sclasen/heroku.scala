@@ -18,13 +18,11 @@ import akka.util.Timeout
 import com.heroku.platform.api.PartialResponse
 import com.heroku.platform.api.ErrorResponse
 
-class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
+class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api {
 
-  import SprayApiJson._
-
+  import erj._
   implicit val connTimeout = Timeout(10 seconds)
   implicit val executionContext = system.dispatcher
-  implicit val cache = apiCache
 
   val connection = {
     implicit val s = system
@@ -51,17 +49,12 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
 
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
-    val headers = getHeaders(request, key) ++ ifModified(request, cache)
+    val headers = getHeaders(request, key)
     pipeline(HttpRequest(method, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        if (resp.status.value == 304) {
-          cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
-        } else {
-          val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-          val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
-          response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
-          response
-        }
+        val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
+        val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
+        response
     }
   }
 
@@ -79,17 +72,12 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
     val range = request.range.map {
       r => List(rangeHeader(r))
     }.getOrElse(Nil)
-    val headers = getHeaders(request, key) ++ range ++ ifModified(request, cache)
+    val headers = getHeaders(request, key) ++ range
     pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
-        if (resp.status.value == 304) {
-          cache.getCachedResponse(request).map(Right(_)).getOrElse(Left(ApiCacheError))
-        } else {
-          val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-          val response = request.getResponse(resp.status.intValue, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
-          response.right.foreach(right => resp.header[`Last-Modified`].foreach(last => cache.put(request, last.value, right)))
-          response
-        }
+        val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
+        val response = request.getResponse(resp.status.intValue, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
+        response
     }
   }
 
@@ -107,14 +95,6 @@ class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache) extends Api {
     req.extraHeaders.map {
       case (k, v) => RawHeader(k, v)
     }.toList ++ List(accept, auth(key))
-  }
-
-  def ifModified(req: Request[_], cache: ApiCache): List[HttpHeader] = {
-    cache.getLastModified(req).map(last => List(IfModifiedSince(last))).getOrElse(Nil)
-  }
-
-  def ifModified(req: ListRequest[_], cache: ApiCache): List[HttpHeader] = {
-    cache.getLastModified(req).map(last => List(IfModifiedSince(last))).getOrElse(Nil)
   }
 
   case class NextRange(next: String) extends HttpHeader {

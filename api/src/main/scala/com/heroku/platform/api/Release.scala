@@ -22,8 +22,8 @@ object Release {
 }
 
 trait ReleaseResponseJson {
-  def releaseFromJson: FromJson[Release]
+  implicit def releaseFromJson: FromJson[Release]
 
-  def releaseListFromJson: FromJson[List[Release]]
+  implicit def releaseListFromJson: FromJson[List[Release]]
 }
 
