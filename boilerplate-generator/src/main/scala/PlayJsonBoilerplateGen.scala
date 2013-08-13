@@ -153,35 +153,6 @@ object PlayJsonBoilerplateGen extends App {
     "Writes" + typ.replaceAll("\\$", "").replaceAll("\\.", "")
   }
 
-  def nullSafeConfigToJson = {
-    /*
-     implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
-    */
-    (LAZYVAL("nullSafeConfigToJson", sym.ToJson TYPE_OF TYPE_MAP("String", TYPE_OPTION("String")))
-      withFlags (Flags.IMPLICIT) :=
-      REF("to") APPLYTYPE (TYPE_MAP("String", TYPE_OPTION("String"))): Tree)
-  }
-
-  def configToJson = {
-    /*
-     implicit val configToJson: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
-       def toJson(t: Map[String, String]): String = {
-         nullSafeConfigToJson.toJson(t.map {
-           case (k, v) => k -> Option(v)
-         })
-       }
-     }
-    */
-    (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
-      withFlags (Flags.IMPLICIT) := NEW(ANONDEF(sym.ToJson TYPE_OF TYPE_MAP("String", "String")) := BLOCK(
-        (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF("nullSafeConfigToJson") DOT "toJson" APPLY (
-          REF("t") MAP BLOCK(
-            CASE(TUPLE(ID("k"), ID("v"))) ==> (REF("k") ANY_-> (OptionClass APPLY REF("v")))
-          )
-        )
-      )): Tree)
-  }
-
   println(treeToString(jsonBoilerplate))
 
 }
