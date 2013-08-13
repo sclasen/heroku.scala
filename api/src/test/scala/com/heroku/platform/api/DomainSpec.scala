@@ -1,15 +1,10 @@
-package com.heroku.platform.api.client.spray
-
-
-import com.heroku.platform.api._
-
+package com.heroku.platform.api
 
 abstract class DomainSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
   val implicits: DomainRequestJson with DomainResponseJson = aj
 
   import implicits._
-
 
   "Api for Domains" must {
     "operate on Domains" in {
@@ -22,7 +17,6 @@ abstract class DomainSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSp
       delete(Domain.Delete(app.id, domain.id))
     }
   }
-
 
 }
 

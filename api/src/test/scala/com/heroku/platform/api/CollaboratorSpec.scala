@@ -1,8 +1,4 @@
-package com.heroku.platform.api.client.spray
-
-
-import com.heroku.platform.api._
-
+package com.heroku.platform.api
 
 abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 

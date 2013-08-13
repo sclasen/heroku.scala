@@ -1,15 +1,10 @@
-package com.heroku.platform.api.client.spray
-
-
-import com.heroku.platform.api._
-
+package com.heroku.platform.api
 
 abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
   val implicits: AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson = aj
 
   import implicits._
-
 
   "Spray Api for App Transfers" must {
     "operate on AppTransfers" in {

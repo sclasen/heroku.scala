@@ -1,14 +1,10 @@
-package com.heroku.platform.api.client.spray
-
-
-import com.heroku.platform.api._
+package com.heroku.platform.api
 
 abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
   val implicits: ConfigVarRequestJson with ConfigVarResponseJson = aj
 
   import implicits._
-
 
   "Api for ConfigVars" must {
     "operate on ConfigVars" in {

@@ -1,16 +1,10 @@
-package com.heroku.platform.api.client.spray
-
-
-import com.heroku.platform.api._
-
+package com.heroku.platform.api
 
 abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
-
 
   val implicits: OAuthRequestJson with OAuthResponseJson = aj
 
   import implicits._
-
 
   "Api for OAuth" must {
     "operate on OAuthAuthorizations" in {
@@ -24,7 +18,4 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
   }
 
 }
-
-
-
 

@@ -1,5 +1,7 @@
 package com.heroku.platform.api.client.spray
 
+import com.heroku.platform.api._
+
 class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate) with SprayApiSpec

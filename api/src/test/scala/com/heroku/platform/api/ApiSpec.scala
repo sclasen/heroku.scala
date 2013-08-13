@@ -1,18 +1,15 @@
-package com.heroku.platform.api.client.spray
+package com.heroku.platform.api
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
-import com.heroku.platform.api._
-import org.scalatest.{BeforeAndAfterAll, WordSpec}
+import org.scalatest.{ BeforeAndAfterAll, WordSpec }
 import org.scalatest.matchers.MustMatchers
 import scala.collection.mutable.ListBuffer
-import com.heroku.platform.api.ErrorResponse
 import org.scalatest.exceptions.TestFailedException
 
-abstract class ApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordSpec with BeforeAndAfterAll with  MustMatchers {
+abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends WordSpec with BeforeAndAfterAll with MustMatchers {
 
-
-  def api:Api
+  def api: Api
 
   def apiKey = sys.env("TEST_API_KEY")
 
@@ -42,33 +39,31 @@ abstract class ApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordS
     await(api.execute(rwb, apiKey))
   }
 
-  def info[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req){
+  def info[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
     await(api.execute(req, apiKey))
   }
 
-  def update[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb){
+  def update[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
     await(api.execute(rwb, apiKey))
   }
 
-  def listAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list){
+  def listAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
     await(api.executeListAll(list, apiKey))
   }
 
-  def listPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list){
+  def listPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list) {
     await(api.executeList(list, apiKey))
   }
 
-  def delete[T](del: Request[T])(implicit f: FromJson[T]): T = loggingFailure(del){
+  def delete[T](del: Request[T])(implicit f: FromJson[T]): T = loggingFailure(del) {
     await(api.execute(del, apiKey))
   }
-
 
   def getApp = {
     val app = createApp
     apps += app
     app
   }
-
 
   override protected def afterAll() {
     implicit val ex = concurrent.ExecutionContext.Implicits.global
@@ -78,13 +73,12 @@ abstract class ApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordS
           app => destroyApp(app)
         }
       }, 5.seconds)
-     shutdown
+    shutdown
   }
 
+  def createApp: HerokuApp
 
-  def createApp:HerokuApp
+  def destroyApp(app: HerokuApp): Future[Either[ErrorResponse, HerokuApp]]
 
-  def destroyApp(app:HerokuApp):Future[Either[ErrorResponse,HerokuApp]]
-
-  def shutdown:Unit
+  def shutdown: Unit
 }

@@ -1,7 +1,7 @@
 package com.heroku.platform.api.client.spray
 
 import scala.concurrent.Future
-import com.heroku.platform.api.{HerokuApp, ErrorResponse}
+import com.heroku.platform.api.{ApiSpec, HerokuApp, ErrorResponse}
 import akka.actor.ActorSystem
 
 

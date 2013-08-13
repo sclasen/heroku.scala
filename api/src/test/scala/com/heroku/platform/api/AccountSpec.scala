@@ -1,10 +1,6 @@
-package com.heroku.platform.api.client.spray
+package com.heroku.platform.api
 
-import com.heroku.platform.api._
-
-
-
-abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj){
+abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
   val implicits: AccountRequestJson with AccountResponseJson = aj
 
@@ -20,5 +16,4 @@ abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiS
   }
 
 }
-
 
