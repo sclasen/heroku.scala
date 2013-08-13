@@ -4,9 +4,9 @@ package com.heroku.platform.api.client.spray
 import com.heroku.platform.api._
 
 
-abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits:AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson= aj
+  val implicits: AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson = aj
 
   import implicits._
 
@@ -16,7 +16,7 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
       val app = getApp
       import AppTransfer._
       create(Collaborator.Create(app.id, testCollaborator))
-      val transfer = create(Create(App(id = Some(app.id)),UserBody(email = Some(testCollaborator))))
+      val transfer = create(Create(App(id = Some(app.id)), UserBody(email = Some(testCollaborator))))
       val transferList = listAll(List())
       transferList.contains(transfer) must be(true)
       val transferInfo = info(Info(transfer.id))
@@ -29,7 +29,6 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
 }
 
 
+class SprayAppTransferSpec extends AppTransferSpec(SprayJsonBoilerplate) with SprayApiSpec
 
-class SprayAppTransferSpec extends AppTransferSpec(SprayJsonBoilerplate)
-
-class PlayAppTransferSpec extends AppTransferSpec(PlayJsonBoilerplate)
+class PlayAppTransferSpec extends AppTransferSpec(PlayJsonBoilerplate) with SprayApiSpec

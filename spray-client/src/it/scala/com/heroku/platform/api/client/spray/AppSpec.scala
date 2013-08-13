@@ -3,7 +3,7 @@ package com.heroku.platform.api.client.spray
 import com.heroku.platform.api._
 
 
-abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
 
   val implicits: HerokuAppRequestJson with HerokuAppResponseJson with ErrorResponseJson = aj
@@ -40,7 +40,7 @@ abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApi
 }
 
 
-class SprayAppSpec extends AppSpec(SprayJsonBoilerplate)
+class SprayAppSpec extends AppSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 
-class PlayAppSpec extends AppSpec(PlayJsonBoilerplate)
+class PlayAppSpec extends AppSpec(PlayJsonBoilerplate) with SprayApiSpec

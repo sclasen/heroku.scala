@@ -4,10 +4,10 @@ package com.heroku.platform.api.client.spray
 import com.heroku.platform.api._
 
 
-abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
 
-  val implicits:OAuthRequestJson with OAuthResponseJson = aj
+  val implicits: OAuthRequestJson with OAuthResponseJson = aj
 
   import implicits._
 
@@ -15,7 +15,7 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayA
   "Api for OAuth" must {
     "operate on OAuthAuthorizations" in {
       val auth = create(OAuthAuthorization.Create(List("global"), Some("OAuthSpec")))
-      val authz =listAll(OAuthAuthorization.List())
+      val authz = listAll(OAuthAuthorization.List())
       authz.contains(auth) must be(true)
       val authInfo = info(OAuthAuthorization.Info(auth.id))
       authInfo must equal(auth)
@@ -26,10 +26,10 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayA
 }
 
 
-class SprayOAuthSpec extends OAuthSpec(SprayJsonBoilerplate)
+class SprayOAuthSpec extends OAuthSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 
-class PlayOAuthSpec extends OAuthSpec(PlayJsonBoilerplate)
+class PlayOAuthSpec extends OAuthSpec(PlayJsonBoilerplate) with SprayApiSpec
 
 
 

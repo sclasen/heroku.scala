@@ -3,7 +3,8 @@ package com.heroku.platform.api.client.spray
 import com.heroku.platform.api._
 
 
-abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+
+abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj){
 
   val implicits: AccountRequestJson with AccountResponseJson = aj
 
@@ -20,7 +21,7 @@ abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends Spra
 
 }
 
-class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate)
+class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate) with SprayApiSpec
 
-class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate)
+class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate) with SprayApiSpec
 

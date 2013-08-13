@@ -3,9 +3,9 @@ package com.heroku.platform.api.client.spray
 
 import com.heroku.platform.api._
 
-abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits:ConfigVarRequestJson with ConfigVarResponseJson  = aj
+  val implicits: ConfigVarRequestJson with ConfigVarResponseJson = aj
 
   import implicits._
 
@@ -27,7 +27,7 @@ abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends Sp
 
 }
 
-class SprayConfigVarSpec extends ConfigVarSpec(SprayJsonBoilerplate)
+class SprayConfigVarSpec extends ConfigVarSpec(SprayJsonBoilerplate) with SprayApiSpec
 
-class PlayConfigVarSpec extends ConfigVarSpec(PlayJsonBoilerplate)
+class PlayConfigVarSpec extends ConfigVarSpec(PlayJsonBoilerplate) with SprayApiSpec
 

@@ -4,9 +4,9 @@ package com.heroku.platform.api.client.spray
 import com.heroku.platform.api._
 
 
-abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits:CollaboratorRequestJson with CollaboratorResponseJson = aj
+  val implicits: CollaboratorRequestJson with CollaboratorResponseJson = aj
 
   import implicits._
 
@@ -27,8 +27,8 @@ abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends
 }
 
 
-class SprayCollaboratorSpec extends CollaboratorSpec(SprayJsonBoilerplate)
+class SprayCollaboratorSpec extends CollaboratorSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 
-class PlayCollaboratorSpec extends CollaboratorSpec(PlayJsonBoilerplate)
+class PlayCollaboratorSpec extends CollaboratorSpec(PlayJsonBoilerplate) with SprayApiSpec
 
