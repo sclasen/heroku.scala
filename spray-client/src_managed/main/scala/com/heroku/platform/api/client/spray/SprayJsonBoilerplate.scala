@@ -82,8 +82,8 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val FormatOAuthTokenmodelsAccessToken: JsonFormat[OAuthToken.models.AccessToken] = jsonFormat3(OAuthToken.models.AccessToken.apply)
   implicit lazy val FormatOAuthTokenmodelsAuthorization: JsonFormat[OAuthToken.models.Authorization] = jsonFormat1(OAuthToken.models.Authorization.apply)
   implicit lazy val FormatOAuthTokenmodelsRefreshToken: JsonFormat[OAuthToken.models.RefreshToken] = jsonFormat3(OAuthToken.models.RefreshToken.apply)
-  implicit lazy val FormatAppTransferApp: JsonFormat[AppTransfer.App] = jsonFormat2(AppTransfer.App.apply)
   implicit lazy val FormatAppTransfer: JsonFormat[AppTransfer] = jsonFormat7(AppTransfer.apply)
+  implicit lazy val FormatAppTransferApp: JsonFormat[AppTransfer.App] = jsonFormat2(AppTransfer.App.apply)
   implicit lazy val FormatAddonmodelsAddonPlan: JsonFormat[Addon.models.AddonPlan] = jsonFormat1(Addon.models.AddonPlan.apply)
   implicit lazy val FormatAddon: JsonFormat[Addon] = jsonFormat5(Addon.apply)
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
@@ -142,8 +142,8 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val oauthTokenAuthorizationFromJson: FromJson[OAuthToken.models.Authorization] = from[OAuthToken.models.Authorization]
   implicit lazy val oauthTokenRefreshTokenFromJson: FromJson[OAuthToken.models.RefreshToken] = from[OAuthToken.models.RefreshToken]
   implicit lazy val oauthTokenListFromJson: FromJson[List[OAuthToken]] = from[List[OAuthToken]]
-  implicit lazy val appTransferAppFromJson: FromJson[AppTransfer.App] = from[AppTransfer.App]
   implicit lazy val appTransferFromJson: FromJson[AppTransfer] = from[AppTransfer]
+  implicit lazy val appTransferAppFromJson: FromJson[AppTransfer.App] = from[AppTransfer.App]
   implicit lazy val appTransferListFromJson: FromJson[List[AppTransfer]] = from[List[AppTransfer]]
   implicit lazy val addonPlanFromJson: FromJson[Addon.models.AddonPlan] = from[Addon.models.AddonPlan]
   implicit lazy val addonFromJson: FromJson[Addon] = from[Addon]
