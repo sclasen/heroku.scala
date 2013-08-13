@@ -69,7 +69,7 @@ object Build extends Build {
 
   def apiDeps = Seq(scalaTest)
 
-  def sprayDeps = Seq(spray, sprayJson, akka, scalaTest, playJson)
+  def sprayDeps = Seq(spray, sprayJson % "provided", akka, scalaTest, playJson % "provided")
 
   val spray = "io.spray" % "spray-client" % "1.2-20130801" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
