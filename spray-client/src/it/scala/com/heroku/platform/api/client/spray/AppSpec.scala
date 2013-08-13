@@ -39,8 +39,3 @@ abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(
 
 }
 
-
-class SprayAppSpec extends AppSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-
-class PlayAppSpec extends AppSpec(PlayJsonBoilerplate) with SprayApiSpec

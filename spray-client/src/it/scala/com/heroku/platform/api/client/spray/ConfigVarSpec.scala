@@ -27,7 +27,3 @@ abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends Ap
 
 }
 
-class SprayConfigVarSpec extends ConfigVarSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-class PlayConfigVarSpec extends ConfigVarSpec(PlayJsonBoilerplate) with SprayApiSpec
-

@@ -28,7 +28,3 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
 
 }
 
-
-class SprayAppTransferSpec extends AppTransferSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-class PlayAppTransferSpec extends AppTransferSpec(PlayJsonBoilerplate) with SprayApiSpec

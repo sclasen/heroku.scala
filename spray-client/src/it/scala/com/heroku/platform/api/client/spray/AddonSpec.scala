@@ -23,9 +23,3 @@ abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
 }
 
 
-class SprayAddonSpec extends AddonSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-
-class PlayAddonSpec extends AddonSpec(PlayJsonBoilerplate) with SprayApiSpec
-
-

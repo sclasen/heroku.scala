@@ -26,8 +26,3 @@ abstract class DomainSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSp
 
 }
 
-
-class SprayDomainSpec extends DomainSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-
-class PlayDomainSpec extends DomainSpec(PlayJsonBoilerplate) with SprayApiSpec

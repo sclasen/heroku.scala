@@ -26,9 +26,3 @@ abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends
 
 }
 
-
-class SprayCollaboratorSpec extends CollaboratorSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-
-class PlayCollaboratorSpec extends CollaboratorSpec(PlayJsonBoilerplate) with SprayApiSpec
-

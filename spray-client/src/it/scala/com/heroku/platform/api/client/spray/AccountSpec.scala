@@ -21,7 +21,4 @@ abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiS
 
 }
 
-class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate) with SprayApiSpec
 

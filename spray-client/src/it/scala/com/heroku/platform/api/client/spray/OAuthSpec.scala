@@ -26,10 +26,5 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
 }
 
 
-class SprayOAuthSpec extends OAuthSpec(SprayJsonBoilerplate) with SprayApiSpec
-
-
-class PlayOAuthSpec extends OAuthSpec(PlayJsonBoilerplate) with SprayApiSpec
-
 
 
