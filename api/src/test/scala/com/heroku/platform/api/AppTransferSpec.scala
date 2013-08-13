@@ -1,20 +1,17 @@
-package com.heroku.platform.api.client.spray
+package com.heroku.platform.api
 
+abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
-import com.heroku.platform.api._
-import SprayApiJson._
+  val implicits: AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson = aj
 
-
-class AppTransferSpec extends WordSpec with SprayApiSpec with MustMatchers {
+  import implicits._
 
   "Spray Api for App Transfers" must {
     "operate on AppTransfers" in {
       val app = getApp
       import AppTransfer._
       create(Collaborator.Create(app.id, testCollaborator))
-      val transfer = create(Create(App(id = Some(app.id)),UserBody(email = Some(testCollaborator))))
+      val transfer = create(Create(App(id = Some(app.id)), UserBody(email = Some(testCollaborator))))
       val transferList = listAll(List())
       transferList.contains(transfer) must be(true)
       val transferInfo = info(Info(transfer.id))

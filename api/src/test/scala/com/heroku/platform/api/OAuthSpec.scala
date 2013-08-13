@@ -1,17 +1,15 @@
-package com.heroku.platform.api.client.spray
+package com.heroku.platform.api
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
-import com.heroku.platform.api._
-import SprayApiJson._
+abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
+  val implicits: OAuthRequestJson with OAuthResponseJson = aj
 
-class OAuthSpec extends WordSpec with SprayApiSpec with MustMatchers {
+  import implicits._
 
-  "Spray Api for OAuth" must {
+  "Api for OAuth" must {
     "operate on OAuthAuthorizations" in {
       val auth = create(OAuthAuthorization.Create(List("global"), Some("OAuthSpec")))
-      val authz =listAll(OAuthAuthorization.List())
+      val authz = listAll(OAuthAuthorization.List())
       authz.contains(auth) must be(true)
       val authInfo = info(OAuthAuthorization.Info(auth.id))
       authInfo must equal(auth)
@@ -20,3 +18,4 @@ class OAuthSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+

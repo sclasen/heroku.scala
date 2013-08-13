@@ -1,23 +1,26 @@
 package com.heroku.platform.api
 
 import Request._
-import com.heroku.platform.api.HerokuApp.{ UpdateAppBody, CreateAppBody, AppOwner, AppRegion }
+import com.heroku.platform.api.HerokuApp.models.{ UpdateAppBody, AppOwner, CreateAppBody, AppRegion }
 
 object HerokuApp {
 
-  case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
-    if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
+  object models {
+    //STUFF HERE INSTEAD OF COMPANION SINCE THAT BREAKS PLAY JSON
+    case class AppOwner(id: Option[String] = None, email: Option[String] = None) {
+      if (id.isEmpty && email.isEmpty) throw new IllegalStateException("Need to define either id or email")
+    }
+
+    case class AppRegion(name: Option[String] = None, id: Option[String] = None)
+
+    object EU extends AppRegion(name = Some("eu"))
+
+    object US extends AppRegion(name = Some("us"))
+
+    case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None)
+
+    case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
   }
-
-  case class AppRegion(name: Option[String] = None, id: Option[String] = None)
-
-  object EU extends AppRegion(name = Some("eu"))
-
-  object US extends AppRegion(name = Some("us"))
-
-  case class CreateAppBody(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None)
-
-  case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
 
   case class Create(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAppBody, HerokuApp] {
     val endpoint = "/apps"
@@ -72,9 +75,9 @@ case class HerokuApp(buildpack_provided_description: Option[String],
 
 trait HerokuAppResponseJson {
 
-  implicit def appRegionFromJson: FromJson[HerokuApp.AppRegion]
+  implicit def appRegionFromJson: FromJson[AppRegion]
 
-  implicit def appOwnerFromJson: FromJson[HerokuApp.AppOwner]
+  implicit def appOwnerFromJson: FromJson[AppOwner]
 
   implicit def appFromJson: FromJson[HerokuApp]
 
@@ -84,7 +87,7 @@ trait HerokuAppResponseJson {
 
 trait HerokuAppRequestJson {
 
-  implicit def appRegionToJson: ToJson[HerokuApp.AppRegion]
+  implicit def appRegionToJson: ToJson[AppRegion]
 
   implicit def createAppBodyToJson: ToJson[CreateAppBody]
 

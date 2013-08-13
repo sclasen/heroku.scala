@@ -1,14 +1,12 @@
-package com.heroku.platform.api.client.spray
+package com.heroku.platform.api
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
-import com.heroku.platform.api._
-import SprayApiJson._
+abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
+  val implicits: CollaboratorRequestJson with CollaboratorResponseJson = aj
 
-class CollaboratorSpec extends WordSpec with SprayApiSpec with MustMatchers {
+  import implicits._
 
-  "Spray Api for Collaborator" must {
+  "Api for Collaborator" must {
     "operate on Collaborators" in {
       val app = getApp
       val collabAdd = create(Collaborator.Create(app.id, testCollaborator))
@@ -23,3 +21,4 @@ class CollaboratorSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+
