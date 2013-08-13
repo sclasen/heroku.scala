@@ -6,7 +6,6 @@ import scala.concurrent.duration._
 import com.heroku.platform.api._
 import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.MustMatchers
-import SprayJsonBoilerplate._
 import scala.collection.mutable.ListBuffer
 import com.heroku.platform.api.ErrorResponse
 import org.scalatest.exceptions.TestFailedException
@@ -16,7 +15,11 @@ trait SprayApiSpec extends BeforeAndAfterAll {
 
   val system = ActorSystem("test")
 
-  val api = new SprayApi(system)
+  val errFrom = new FromJson[ErrorResponse]{
+    def fromJson(json: String): ErrorResponse = ErrorResponse("testing", "123")
+  }
+
+  val api = new SprayApi(system)(errFrom)
 
   def apiKey = sys.env("TEST_API_KEY")
 
@@ -68,6 +71,8 @@ trait SprayApiSpec extends BeforeAndAfterAll {
 
 
   def getApp = {
+    import SprayJsonBoilerplate.createAppBodyToJson
+    import SprayJsonBoilerplate.appFromJson
     val app = await(api.execute(HerokuApp.Create(), apiKey))
     apps += app
     app
@@ -76,6 +81,7 @@ trait SprayApiSpec extends BeforeAndAfterAll {
 
   override protected def afterAll() {
     implicit val ex = system.dispatcher
+    import SprayJsonBoilerplate.appFromJson
     Await.ready(
       Future.sequence {
         apps.map {

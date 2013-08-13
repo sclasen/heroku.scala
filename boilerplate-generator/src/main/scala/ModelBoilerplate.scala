@@ -16,6 +16,8 @@ object ModelBoilerplate extends App {
     val ToJson = RootClass.newClass("ToJson")
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
+    val RequestWithBody = RootClass.newClass("RequestWithBody")
+    val ListRequest = RootClass.newClass("ListRequest")
     val TypeMap = Map("string" -> "String")
 
   }
@@ -59,22 +61,28 @@ object ModelBoilerplate extends App {
       actionsDefs.map {
         actionObj =>
           def params = {
-            val props = actionObj.schema.properties
+            val props = actionObj.schema.map(_.properties).getOrElse(Map.empty)
             val keys = props.keySet
-            keys.map {
-              k =>
-                val prop = props(k)
-                prop.right.map(
-                  typ =>
-                    {
-                      (VAL(k, sym.TypeMap(typ.`type`)).tree)
-                    }
-                ).fold(r => None, x => Some(x))
-            }.flatten ++ Set(VAL("extraHeaders", TYPE_MAP("String", "String")).tree)
+            extractArgumentsFromPath(actionObj) ++
+              keys.map {
+                k =>
+                  val prop = props(k)
+                  prop.right.map(
+                    typ =>
+                      {
+                        (VAL(k, sym.TypeMap(typ.`type`)).tree)
+                      }
+                  ).fold(r => None, x => Some(x))
+              }.flatten ++ Seq(VAL("extraHeaders", TYPE_MAP("String", "String")).tree)
           }.toIterable.asInstanceOf[Iterable[ValDef]]
           (CASECLASSDEF(actionObj.title) withParams params withParents (sym.Request TYPE_OF name): Tree)
       }
     )
+  }
+
+  def extractArgumentsFromPath(actionDef: Action) = {
+    val rx = """\{([a-zA-Z0-9_]+)\}*""".r
+    rx.findAllIn(actionDef.href).map(_.replaceAll("\\{", "").replaceAll("\\}", "")).map(name => (VAL(name, "String").tree))
   }
 
   val schemaObj = SchemaModel.schemaObj
@@ -82,7 +90,7 @@ object ModelBoilerplate extends App {
   case class RefInfo($ref: String)
   case class TypeInfo(`type`: String)
   case class Schema(`type`: String, properties: Map[String, Either[RefInfo, TypeInfo]])
-  case class Action(title: String, rel: String, href: String, method: String, schema: Schema)
+  case class Action(title: String, rel: String, href: String, method: String, schema: Option[Schema])
   case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, Either[RefInfo, TypeInfo]])
   case class SchemaDoc(docVersion: String, properties: Map[String, ModelInfo], links: Map[String, List[Action]])
 
@@ -140,11 +148,24 @@ object ModelBoilerplate extends App {
                   }
                 }
               }
-            }
+            },
+         {
+                      "title":  "List",
+                      "rel":    "list",
+                      "href":   "/apps",
+                      "method": "GET"
+
+                    },
+           {
+                      "title":  "Info",
+                      "rel":    "info",
+                      "href":   "/apps/{app_name_or_id}",
+                      "method": "GET"
+                    }
           ]
         }
       }
-    """
+      """
   }
 
   codez.foreach(c => println(treeToString(c)))

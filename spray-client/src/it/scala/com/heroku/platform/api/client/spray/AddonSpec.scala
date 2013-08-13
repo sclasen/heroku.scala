@@ -4,10 +4,13 @@ package com.heroku.platform.api.client.spray
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
 
 
-class AddonSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class AddonSpec extends WordSpec with SprayApiSpec with MustMatchers {
+
+  val addonImplicits:AddonRequestJson with AddonResponseJson
+
+  import addonImplicits._
 
   "SprayApi for Addons" must {
     "operate on the Addons" in {
@@ -22,3 +25,9 @@ class AddonSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+
+class SprayAddonSpec extends AddonSpec{
+  val addonImplicits: AddonRequestJson with AddonResponseJson = SprayJsonBoilerplate
+}
+
+

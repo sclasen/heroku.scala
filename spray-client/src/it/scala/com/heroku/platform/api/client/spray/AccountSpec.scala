@@ -3,10 +3,13 @@ package com.heroku.platform.api.client.spray
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
 
 
-class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers {
+
+  val accountImplicits:AccountRequestJson with AccountResponseJson
+
+  import accountImplicits._
 
   "SprayApi for Account" must {
     "operate on the Account" in {
@@ -18,3 +21,9 @@ class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+
+class SprayAccountSpec extends AccountSpec{
+  val accountImplicits: AccountRequestJson with AccountResponseJson = SprayJsonBoilerplate
+}
+
+

@@ -33,7 +33,7 @@ object Build extends Build {
   val spray_client = Project(
     id = "spray-client",
     base = file("spray-client"),
-    dependencies = Seq(api % "it->test;test->test;compile->compile"), 
+    dependencies = Seq(api % "it->test;test->test;compile->compile"),
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
   ).settings(Defaults.itSettings: _*).configs(IntegrationTest).settings(generateJsonBoilerplate:_*)
 
@@ -44,21 +44,22 @@ object Build extends Build {
     sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
     jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, streams) map {
       (sm, cp, st) =>
-        generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, st)
+        generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
+          //generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+         Seq()
     }
   )
 
-  def generate(source: File, cp: Seq[File], streams:Types.Id[Keys.TaskStreams]): Seq[File] = {
+  def generate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Seq[File] = {
     streams.log.info("Generating:%s".format(source))
-    val mainClass = "SprayJsonBoilerplateGen"
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
     if (i != 0) {
       streams.log.error("Trouble with code generator")
     }
     val code = new String(baos.toByteArray)
-    IO delete source
-    IO write(source, code)
+    //IO delete source
+    //IO write(source, code)
     Seq(source)
   }
 
@@ -67,12 +68,13 @@ object Build extends Build {
 
   def apiDeps = Seq(scalaTest)
 
-  def sprayDeps = Seq(spray, sprayJson, akka, scalaTest)
+  def sprayDeps = Seq(spray, sprayJson, akka, scalaTest, playJson)
 
   val spray = "io.spray" % "spray-client" % "1.2-20130801" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.2.3"
+  val playJson = "com.typesafe.play" %% "play-json" % "2.2.0-M2"
 
 }

@@ -5,12 +5,11 @@ import org.scalatest.matchers.MustMatchers
 import scala.io.Source
 import com.heroku.platform.api._
 import _root_.spray.json._
-import com.heroku.platform.api.client.spray.SprayJsonBoilerplate._
 import com.heroku.platform.api.Account
 import com.heroku.platform.api.HerokuApp
 import com.heroku.platform.api.Collaborator
 
-class JsonSpec extends WordSpec with MustMatchers {
+abstract class JsonSpec extends WordSpec with MustMatchers {
 
   val apiJson = {
     val apidotjson: String = Source.fromFile("spray-client/src/test/resources/api.json").mkString
@@ -54,7 +53,13 @@ class JsonSpec extends WordSpec with MustMatchers {
     }.toMap)
   }
 
-  val modelMap = List(
+  def getJsonProtocol: ApiRequestJson with ApiResponseJson
+
+  val jsonProtocol = getJsonProtocol
+
+  import jsonProtocol._
+
+  lazy val modelMap = List(
     "Account" -> implicitly[FromJson[Account]],
     "Add-on" -> implicitly[FromJson[Addon]],
     "App" -> implicitly[FromJson[HerokuApp]],
@@ -88,4 +93,8 @@ class JsonSpec extends WordSpec with MustMatchers {
     }
   }
 
+}
+
+class SprayJsonSpec extends JsonSpec {
+  def getJsonProtocol: ApiRequestJson with ApiResponseJson = SprayJsonBoilerplate
 }
