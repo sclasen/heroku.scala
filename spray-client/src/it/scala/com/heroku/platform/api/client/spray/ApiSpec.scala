@@ -1,6 +1,5 @@
 package com.heroku.platform.api.client.spray
 
-import akka.actor.ActorSystem
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import com.heroku.platform.api._
@@ -12,7 +11,6 @@ import org.scalatest.exceptions.TestFailedException
 
 abstract class ApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordSpec with BeforeAndAfterAll with  MustMatchers {
 
-  val system = ActorSystem("test")
 
   def api:Api
 
@@ -66,23 +64,27 @@ abstract class ApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordS
 
 
   def getApp = {
-    import aj._
-    val app = await(api.execute(HerokuApp.Create(), apiKey))
+    val app = createApp
     apps += app
     app
   }
 
 
   override protected def afterAll() {
-    import aj._
-    implicit val ex = system.dispatcher
+    implicit val ex = concurrent.ExecutionContext.Implicits.global
     Await.ready(
       Future.sequence {
         apps.map {
-          app => api.execute(HerokuApp.Delete(app.id), apiKey)
+          app => destroyApp(app)
         }
       }, 5.seconds)
-    println("shutting down api actor system")
-    system.shutdown
+     shutdown
   }
+
+
+  def createApp:HerokuApp
+
+  def destroyApp(app:HerokuApp):Future[Either[ErrorResponse,HerokuApp]]
+
+  def shutdown:Unit
 }
