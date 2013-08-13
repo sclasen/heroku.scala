@@ -66,8 +66,7 @@ object Build extends Build {
     val code = new String(baos.toByteArray)
     IO delete source
     IO write(source, code)
-    if(mainClass == "PlayJsonBoilerplate") Set()
-    else Set(source)
+    Set(source)
   }
 
 
