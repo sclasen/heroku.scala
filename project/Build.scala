@@ -42,15 +42,21 @@ object Build extends Build {
   lazy val generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
     sourceGenerators in Compile <+= (jsonBoilerplate in Compile).task,
     sourceManaged in Compile <<= baseDirectory / "src_managed/main/scala",
-    jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, streams) map {
-      (sm, cp, st) =>
-        generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
-          generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+    jsonBoilerplate in Compile <<= (cacheDirectory, sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, compile in api in Compile, streams) map {
+      (cacheDir, sm, cp, apiComp, st) =>
+        val apiClasses = apiComp.relations.allProducts
+        val cache =
+          FileFunction.cached(cacheDir / "autogen", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
+            in: Set[File] =>
+              generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
+                generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+          }
 
+       cache(apiClasses.toSet).toSeq
     }
   )
 
-  def generate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Seq[File] = {
+  def generate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Set[File] = {
     streams.log.info("Generating:%s".format(source))
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()
@@ -60,8 +66,8 @@ object Build extends Build {
     val code = new String(baos.toByteArray)
     IO delete source
     IO write(source, code)
-    if(mainClass == "PlayJsonBoilerplate") Seq()
-    else Seq(source)
+    if(mainClass == "PlayJsonBoilerplate") Set()
+    else Set(source)
   }
 
 
