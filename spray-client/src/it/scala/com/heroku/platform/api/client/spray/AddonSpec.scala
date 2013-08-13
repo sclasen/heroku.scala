@@ -1,18 +1,14 @@
 package com.heroku.platform.api.client.spray
 
-
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
 
+abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
 
-abstract class AddonSpec extends WordSpec with SprayApiSpec with MustMatchers {
+  val implicits:AddonRequestJson with AddonResponseJson  = aj
 
-  val addonImplicits:AddonRequestJson with AddonResponseJson
+  import implicits._
 
-  import addonImplicits._
-
-  "SprayApi for Addons" must {
+  "Api for Addons" must {
     "operate on the Addons" in {
       val app = getApp
       val addon = create(Addon.Create(app.id ,"scheduler:standard"))
@@ -26,8 +22,10 @@ abstract class AddonSpec extends WordSpec with SprayApiSpec with MustMatchers {
 
 }
 
-class SprayAddonSpec extends AddonSpec{
-  val addonImplicits: AddonRequestJson with AddonResponseJson = SprayJsonBoilerplate
-}
+
+class SprayAddonSpec extends AddonSpec(SprayJsonBoilerplate)
+
+
+class PlayAddonSpec extends AddonSpec(PlayJsonBoilerplate)
 
 

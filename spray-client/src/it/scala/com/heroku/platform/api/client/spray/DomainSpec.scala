@@ -1,14 +1,17 @@
 package com.heroku.platform.api.client.spray
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
 
 
-class DomainSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class DomainSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
 
-  "Spray Api for Domains" must {
+  val implicits:DomainRequestJson with DomainResponseJson  = aj
+
+  import implicits._
+
+
+  "Api for Domains" must {
     "operate on Domains" in {
       val app = getApp
       val domain = create(Domain.Create(app.id, "foo.bar.baz.com"))
@@ -20,4 +23,11 @@ class DomainSpec extends WordSpec with SprayApiSpec with MustMatchers {
     }
   }
 
+
 }
+
+
+class SprayDomainSpec extends DomainSpec(SprayJsonBoilerplate)
+
+
+class PlayDomainSpec extends DomainSpec(PlayJsonBoilerplate)

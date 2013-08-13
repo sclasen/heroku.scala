@@ -1,14 +1,16 @@
 package com.heroku.platform.api.client.spray
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
 
 
-class AppSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
 
-  "Spray Api for Apps" must {
+
+  val implicits: HerokuAppRequestJson with HerokuAppResponseJson with ErrorResponseJson = aj
+
+  import implicits._
+
+  "Api for Apps" must {
     "operate on Apps" in {
 
       val app = create(HerokuApp.Create())
@@ -36,3 +38,9 @@ class AppSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+
+
+class SprayAppSpec extends AppSpec(SprayJsonBoilerplate)
+
+
+class PlayAppSpec extends AppSpec(PlayJsonBoilerplate)

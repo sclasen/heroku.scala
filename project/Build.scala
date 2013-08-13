@@ -45,8 +45,8 @@ object Build extends Build {
     jsonBoilerplate in Compile <<= (sourceManaged in Compile, dependencyClasspath in Runtime in boilerplateGen, streams) map {
       (sm, cp, st) =>
         generate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
-          //generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
-         Seq()
+          generate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+
     }
   )
 
@@ -58,9 +58,10 @@ object Build extends Build {
       streams.log.error("Trouble with code generator")
     }
     val code = new String(baos.toByteArray)
-    //IO delete source
-    //IO write(source, code)
-    Seq(source)
+    IO delete source
+    IO write(source, code)
+    if(mainClass == "PlayJsonBoilerplate") Seq()
+    else Seq(source)
   }
 
 

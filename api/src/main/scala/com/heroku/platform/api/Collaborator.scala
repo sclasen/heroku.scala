@@ -1,11 +1,16 @@
 package com.heroku.platform.api
 
 import Request._
-import com.heroku.platform.api.Collaborator.{ CollaboratorBody, CollaboratedUser }
+import com.heroku.platform.api.Collaborator.models.{ CollaboratedUser, CollaboratorBody }
 
 object Collaborator {
-  case class CollaboratedUser(email: String, id: String)
-  case class CollaboratorBody(user: UserBody)
+
+  object models {
+    //STUFF HERE INSTEAD OF COMPANION SINCE THAT BREAKS PLAY JSON
+
+    case class CollaboratedUser(email: String, id: String)
+    case class CollaboratorBody(user: UserBody)
+  }
 
   case class Create(appId: String, email: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CollaboratorBody, Collaborator] {
     val expect: Set[Int] = expect201

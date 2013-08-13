@@ -1,14 +1,16 @@
 package com.heroku.platform.api.client.spray
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
+
+abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+
+  val implicits:ConfigVarRequestJson with ConfigVarResponseJson  = aj
+
+  import implicits._
 
 
-class ConfigVarSpec extends WordSpec with SprayApiSpec with MustMatchers {
-
-  "Spray Api for ConfigVars" must {
+  "Api for ConfigVars" must {
     "operate on ConfigVars" in {
       val app = getApp
       val now = System.currentTimeMillis().toString
@@ -24,3 +26,8 @@ class ConfigVarSpec extends WordSpec with SprayApiSpec with MustMatchers {
   }
 
 }
+
+class SprayConfigVarSpec extends ConfigVarSpec(SprayJsonBoilerplate)
+
+class PlayConfigVarSpec extends ConfigVarSpec(PlayJsonBoilerplate)
+

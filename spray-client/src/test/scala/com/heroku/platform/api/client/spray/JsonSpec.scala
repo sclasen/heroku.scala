@@ -98,3 +98,7 @@ abstract class JsonSpec extends WordSpec with MustMatchers {
 class SprayJsonSpec extends JsonSpec {
   def getJsonProtocol: ApiRequestJson with ApiResponseJson = SprayJsonBoilerplate
 }
+
+class PlaysonSpec extends JsonSpec {
+  def getJsonProtocol: ApiRequestJson with ApiResponseJson = PlayJsonBoilerplate
+}

@@ -24,11 +24,14 @@ trait Api {
   }
 }
 
+trait ErrorResponseJson {
+  implicit def errorResponseFromJson: FromJson[ErrorResponse]
+}
+
 trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
     with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
     with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson
-    with OAuthResponseJson with AppTransferResponseJson with AddonResponseJson {
-  implicit def errorResponseFromJson: FromJson[ErrorResponse]
+    with OAuthResponseJson with AppTransferResponseJson with AddonResponseJson with ErrorResponseJson {
   implicit def userFromJson: FromJson[User]
 }
 

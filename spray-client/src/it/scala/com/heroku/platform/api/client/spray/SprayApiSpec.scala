@@ -10,16 +10,11 @@ import scala.collection.mutable.ListBuffer
 import com.heroku.platform.api.ErrorResponse
 import org.scalatest.exceptions.TestFailedException
 
-trait SprayApiSpec extends BeforeAndAfterAll {
-  this: WordSpec with MustMatchers =>
+abstract class SprayApiSpec(val aj:ApiRequestJson with ApiResponseJson) extends WordSpec with BeforeAndAfterAll with  MustMatchers {
 
   val system = ActorSystem("test")
 
-  val errFrom = new FromJson[ErrorResponse]{
-    def fromJson(json: String): ErrorResponse = ErrorResponse("testing", "123")
-  }
-
-  val api = new SprayApi(system)(errFrom)
+  val api = new SprayApi(system)(aj)
 
   def apiKey = sys.env("TEST_API_KEY")
 

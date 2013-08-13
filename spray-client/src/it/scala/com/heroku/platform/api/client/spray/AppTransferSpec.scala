@@ -1,13 +1,15 @@
 package com.heroku.platform.api.client.spray
 
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
-import SprayJsonBoilerplate._
 
 
-class AppTransferSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
+
+  val implicits:AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson= aj
+
+  import implicits._
+
 
   "Spray Api for App Transfers" must {
     "operate on AppTransfers" in {
@@ -26,3 +28,8 @@ class AppTransferSpec extends WordSpec with SprayApiSpec with MustMatchers {
 
 }
 
+
+
+class SprayAppTransferSpec extends AppTransferSpec(SprayJsonBoilerplate)
+
+class PlayAppTransferSpec extends AppTransferSpec(PlayJsonBoilerplate)

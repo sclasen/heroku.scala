@@ -18,8 +18,9 @@ import akka.util.Timeout
 import com.heroku.platform.api.PartialResponse
 import com.heroku.platform.api.ErrorResponse
 
-class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache)(implicit ef: FromJson[ErrorResponse]) extends Api {
+class SprayApi(system: ActorSystem, apiCache: ApiCache = NoCache)(implicit erj: ErrorResponseJson) extends Api {
 
+  import erj._
   implicit val connTimeout = Timeout(10 seconds)
   implicit val executionContext = system.dispatcher
   implicit val cache = apiCache

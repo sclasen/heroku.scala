@@ -1,17 +1,15 @@
 package com.heroku.platform.api.client.spray
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
 import com.heroku.platform.api._
 
 
-abstract class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers {
+abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends SprayApiSpec(aj) {
 
-  val accountImplicits:AccountRequestJson with AccountResponseJson
+  val implicits: AccountRequestJson with AccountResponseJson = aj
 
-  import accountImplicits._
+  import implicits._
 
-  "SprayApi for Account" must {
+  "Api for Account" must {
     "operate on the Account" in {
       val acct = info(Account.Info())
       val tracking = acct.allow_tracking
@@ -22,8 +20,7 @@ abstract class AccountSpec extends WordSpec with SprayApiSpec with MustMatchers 
 
 }
 
-class SprayAccountSpec extends AccountSpec{
-  val accountImplicits: AccountRequestJson with AccountResponseJson = SprayJsonBoilerplate
-}
+class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate)
 
+class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate)
 
