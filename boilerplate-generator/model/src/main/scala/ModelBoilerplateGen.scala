@@ -54,14 +54,9 @@ object ModelBoilerplateGen extends App {
     val actionCaseClasses = actionsDefs.map {
       actionObj =>
         val paramsMap = extractArgumentsFromPath(actionObj) ++
-          actionObj.schema.map {
-            _.mapPropTypeInfo {
-              (k, typ) =>
-                System.err.println(k)
-                (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
-            }
-          }.getOrElse {
-            Seq.empty[(String, ValDef)]
+          actionObj.mapPropTypeInfo {
+            (k, typ) =>
+              (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
           }
 
         val params = paramsMap.toSeq.map(_._2)
@@ -103,18 +98,12 @@ object ModelBoilerplateGen extends App {
   }
 
   def bodyCaseClass(actionObj: Action, model: String) = {
-    val params = actionObj.schema.map {
-      _.mapPropTypeInfo {
-        (k, typ) =>
-          (PARAM(k, sym.TypeMap(typ.`type`)).tree)
-      }
-    }.getOrElse {
-      Seq.empty[ValDef]
+    val params = actionObj.mapPropTypeInfo {
+      (k, typ) =>
+        (PARAM(k, sym.TypeMap(typ.`type`)).tree)
     }
 
-    (CASECLASSDEF(s"${
-      actionObj.title
-    }${model}Body") withParams params.toIterable)
+    (CASECLASSDEF(s"${actionObj.title}${model}Body") withParams params.toIterable)
   }
 
   def createAction(modelJson: ModelInfo, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
@@ -147,7 +136,9 @@ object ModelBoilerplateGen extends App {
   }
 
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
+
   def endpoint(endRef: String) = (VAL("endpoint", StringClass) := LIT(endRef + "/"))
+
   def method(methRef: String) = (VAL("method", StringClass) := REF("DELETE"))
 
   def extractArgumentsFromPath(actionDef: Action) = {
@@ -174,7 +165,9 @@ object ModelBoilerplateGen extends App {
   }
 
   case class Action(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
-
+    def mapPropTypeInfo[T](funk: (String, TypeInfo) => T) = schema.map {
+      s => s.mapPropTypeInfo(funk)
+    }.getOrElse(Seq.empty[T])
   }
 
   case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, Either[RefInfo, TypeInfo]]) {
