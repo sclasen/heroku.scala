@@ -53,13 +53,12 @@ object ModelBoilerplateGen extends App {
     val name: String = modelJson.name
     val actionCaseClasses = actionsDefs.map {
       actionObj =>
-        val paramsMap = extractArgumentsFromPath(actionObj) ++
-          actionObj.mapPropTypeInfo {
-            (k, typ) =>
-              (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
-          }
+        val paramsMap = actionObj.mapPropTypeInfo {
+          (k, typ) =>
+            (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
+        }
 
-        val params = paramsMap.toSeq.map(_._2)
+        val params = (extractArgumentsFromPath(actionObj) ++ paramsMap).toSeq.map(_._2)
         val paramNames = paramsMap.toSeq.map(_._1)
         val extra = extraParams(actionObj)
 
@@ -67,7 +66,7 @@ object ModelBoilerplateGen extends App {
           case "create" => createAction(modelJson, paramNames, params, extra, actionObj)
           case "list" => listAction(modelJson, params, extra, actionObj)
           case "info" => infoAction(modelJson, params, extra, actionObj)
-          case "update" => updateAction(modelJson, params, extra, actionObj)
+          case "update" => updateAction(modelJson, paramNames, params, extra, actionObj)
           case "delete" => deleteAction(modelJson, params, extra, actionObj)
         }
     }
@@ -125,9 +124,11 @@ object ModelBoilerplateGen extends App {
       expect("expect200"), endpoint(actionObj.href), method("GET")): Tree)
   }
 
-  def updateAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
-    (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"Update${modelJson.name}Body", modelJson.name)) := BLOCK(
-      expect("expect200"), endpoint(actionObj.href), method("PUT")): Tree)
+  def updateAction(modelJson: ModelInfo, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
+    (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.Update${modelJson.name}Body", modelJson.name)) := BLOCK(
+      expect("expect200"), endpoint(actionObj.href), method("PUT"),
+      (VAL("body", s"models.Update${modelJson.name}Body") := (REF(s"models.Update${modelJson.name}Body") APPLY (paramNames.map(REF(_)))))
+    ): Tree)
   }
 
   def deleteAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {

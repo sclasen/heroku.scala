@@ -41,6 +41,20 @@
                 }
             },
             {
+                "title":  "Update",
+                "rel":    "update",
+                "href":   "/apps/{app_name_or_id}",
+                "method": "POST",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
                 "title":  "List",
                 "rel":    "list",
                 "href":   "/apps",
