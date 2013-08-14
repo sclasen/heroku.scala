@@ -19,6 +19,8 @@ object ModelBoilerplateGen extends App {
 
   }
 
+  def e(a: AnyRef) = System.err.println(a)
+
   //VAL("name", StringClass)
 
   def codez = {
@@ -29,49 +31,41 @@ object ModelBoilerplateGen extends App {
       t =>
         val objDef = properties(t)
         val actionsDef = links(t)
-        (BLOCK(IMPORT("com.heroku.platform.api._"), IMPORT("com.heroku.platform.api.Request._"), model(objDef), companion(objDef, actionsDef)).inPackage(sym.ApiPackage): Tree)
+        (BLOCK(
+          IMPORT("com.heroku.platform.api._"),
+          IMPORT("com.heroku.platform.api.Request._"),
+          model(objDef),
+          companion(objDef, actionsDef),
+          reqJson(objDef, actionsDef),
+          respJson(objDef, actionsDef)
+        ).inPackage(sym.ApiPackage): Tree)
     }
   }
 
   def model(modelJson: ModelInfo) = {
-    def params = {
-      val props = modelJson.properties
-      val keys = props.keySet
-      keys.map {
-        k =>
-          val prop = props(k)
-          prop.right.map(
-            typ => {
-              (PARAM(k, sym.TypeMap(typ.`type`)).tree)
-            }
-          ).fold(r => None, x => Some(x))
-      }.flatten
-    }.toIterable.asInstanceOf[Iterable[ValDef]]
+    val params = modelJson.mapPropTypeInfo {
+      (k, typ) => (PARAM(k, sym.TypeMap(typ.`type`)).tree)
+    }
     (CASECLASSDEF(modelJson.name) withParams params: Tree)
-
   }
 
   def companion(modelJson: ModelInfo, actionsDefs: List[Action]) = {
     val name: String = modelJson.name
     val actionCaseClasses = actionsDefs.map {
       actionObj =>
-        def paramsMap = {
-          val props = actionObj.schema.map(_.properties).getOrElse(Map.empty)
-          val keys = props.keySet
-          extractArgumentsFromPath(actionObj) ++
-            keys.map {
-              k =>
-                val prop = props(k)
-                prop.right.map(
-                  typ => {
-                    (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
-                  }
-                ).fold(r => None, x => Some(x))
-            }.flatten
-        }.toIterable.asInstanceOf[Iterable[(String, ValDef)]]
+        val paramsMap = extractArgumentsFromPath(actionObj) ++
+          actionObj.schema.map {
+            _.mapPropTypeInfo {
+              (k, typ) =>
+                System.err.println(k)
+                (k -> (PARAM(k, sym.TypeMap(typ.`type`)).tree))
+            }
+          }.getOrElse {
+            Seq.empty[(String, ValDef)]
+          }
 
-        val params = paramsMap.map(_._2)
-        val paramNames = paramsMap.map(_._1)
+        val params = paramsMap.toSeq.map(_._2)
+        val paramNames = paramsMap.toSeq.map(_._1)
         val extra = extraParams(actionObj)
 
         actionObj.rel match {
@@ -109,63 +103,64 @@ object ModelBoilerplateGen extends App {
   }
 
   def bodyCaseClass(actionObj: Action, model: String) = {
-    val props: Map[String, Either[RefInfo, TypeInfo]] = actionObj.schema.map(_.properties).getOrElse(Map.empty)
-    val keys = props.keySet
-    val params = keys.map {
-      k =>
-        val prop = props(k)
-        prop.right.map(
-          typ => {
-            (PARAM(k, sym.TypeMap(typ.`type`)).tree)
-          }
-        ).fold(r => None, x => Some(x))
-    }.flatten
+    val params = actionObj.schema.map {
+      _.mapPropTypeInfo {
+        (k, typ) =>
+          (PARAM(k, sym.TypeMap(typ.`type`)).tree)
+      }
+    }.getOrElse {
+      Seq.empty[ValDef]
+    }
 
     (CASECLASSDEF(s"${
       actionObj.title
-    }${model}Body") withParams params)
+    }${model}Body") withParams params.toIterable)
   }
 
   def createAction(modelJson: ModelInfo, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
+    System.err.println(paramNames)
     (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.Create${modelJson.name}Body", modelJson.name)) := BLOCK(
-      (VAL("expect", TYPE_SET(IntClass)) := REF("expect201")),
-      (VAL("endpoint", StringClass) := LIT(actionObj.href)),
-      (VAL("method", StringClass) := REF("POST")),
+      expect("expect201"), endpoint(actionObj.href), method("POST"),
       (VAL("body", s"models.Create${modelJson.name}Body") := (REF(s"models.Create${modelJson.name}Body") APPLY (paramNames.map(REF(_))))
       )): Tree)
   }
 
   def listAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
     (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (modelJson.name)) := BLOCK(
-      (VAL("endpoint", StringClass) := LIT(actionObj.href + "/")),
-      (VAL("method", StringClass) := REF("GET")),
+      endpoint(actionObj.href), method("GET"),
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (modelJson.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
   }
 
   def infoAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
     (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.Request TYPE_OF (modelJson.name)) := BLOCK(
-      (VAL("expect", TYPE_SET(IntClass)) := REF("expect200")),
-      (VAL("endpoint", StringClass) := LIT(actionObj.href + "/")),
-      (VAL("method", StringClass) := REF("GET"))): Tree)
+      expect("expect200"), endpoint(actionObj.href), method("GET")): Tree)
   }
 
   def updateAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
     (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"Update${modelJson.name}Body", modelJson.name)) := BLOCK(
-      (VAL("expect", TYPE_SET(IntClass)) := REF("expect200")),
-      (VAL("endpoint", StringClass) := LIT(actionObj.href + "/")),
-      (VAL("method", StringClass) := REF("PUT"))): Tree)
+      expect("expect200"), endpoint(actionObj.href), method("PUT")): Tree)
   }
 
   def deleteAction(modelJson: ModelInfo, params: Iterable[ValDef], extra: Iterable[ValDef], actionObj: Action) = {
     (CASECLASSDEF(actionObj.title) withParams params ++ extra withParents (sym.Request TYPE_OF (modelJson.name)) := BLOCK(
-      (VAL("expect", TYPE_SET(IntClass)) := REF("expect200")),
-      (VAL("endpoint", StringClass) := LIT(actionObj.href + "/")),
-      (VAL("method", StringClass) := REF("DELETE"))): Tree)
+      expect("expect200"), endpoint(actionObj.href), method("DELETE")): Tree)
   }
+
+  def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
+  def endpoint(endRef: String) = (VAL("endpoint", StringClass) := LIT(endRef + "/"))
+  def method(methRef: String) = (VAL("method", StringClass) := REF("DELETE"))
 
   def extractArgumentsFromPath(actionDef: Action) = {
     val rx = """\{([a-zA-Z0-9_]+)\}*""".r
-    rx.findAllIn(actionDef.href).map(_.replaceAll("\\{", "").replaceAll("\\}", "")).map(name => name -> (PARAM(name, "String").tree))
+    rx.findAllIn(actionDef.href).map(_.replaceAll("\\{", "").replaceAll("\\}", "")).map(name => name -> (PARAM(name, "String").tree)).toSeq
+  }
+
+  def reqJson(modelJson: ModelInfo, actionsDefs: List[Action]) = {
+    TRAITDEF(s"${modelJson.name}RequestJson") := BLOCK(LIT("reqJson"))
+  }
+
+  def respJson(modelJson: ModelInfo, actionsDefs: List[Action]) = {
+    TRAITDEF(s"${modelJson.name}ResponseJson") := BLOCK(LIT("reqJson"))
   }
 
   val schemaObj = SchemaModel.schemaObj
@@ -174,11 +169,30 @@ object ModelBoilerplateGen extends App {
 
   case class TypeInfo(`type`: String)
 
-  case class Schema(`type`: String, properties: Map[String, Either[RefInfo, TypeInfo]])
+  case class Schema(`type`: String, properties: Map[String, Either[RefInfo, TypeInfo]]) {
+    def mapPropTypeInfo[T](funk: (String, TypeInfo) => T) = Typez.mapPropTypeInfo(properties, funk)
+  }
 
-  case class Action(title: String, rel: String, href: String, method: String, schema: Option[Schema])
+  case class Action(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
 
-  case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, Either[RefInfo, TypeInfo]])
+  }
+
+  case class ModelInfo(`type`: String, id: String, name: String, description: String, properties: Map[String, Either[RefInfo, TypeInfo]]) {
+    def mapPropTypeInfo[T](funk: (String, TypeInfo) => T) = Typez.mapPropTypeInfo(properties, funk)
+  }
+
+  object Typez {
+    def mapPropTypeInfo[T](properties: Map[String, Either[RefInfo, TypeInfo]], funk: (String, TypeInfo) => T) = {
+      val keys = properties.keySet
+      keys.map {
+        k =>
+          val prop = properties(k)
+          prop.right.map(
+            typ => funk(k, typ)
+          ).fold(r => None, x => Some(x))
+      }.flatten
+    }
+  }
 
   case class SchemaDoc(docVersion: String, properties: Map[String, ModelInfo], links: Map[String, List[Action]])
 
