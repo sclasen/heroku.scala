@@ -22,7 +22,7 @@ object Build extends Build {
   val modelBoilerplateGen = Project(
     id = "model-boilerplate-generator",
     base = file("boilerplate-generator/model"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger, sprayJson))
+    settings = buildSettings ++ Seq(libraryDependencies ++= Seq(treehugger, playJson))
   )
 
   val api = Project(

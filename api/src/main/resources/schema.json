@@ -1,72 +1,325 @@
 {
-    "docVersion": "1",
-    "properties": {
-        "app":{
-            "type":        "object",
-            "id":          "app",
-            "name":        "App",
-            "description": "A Heroku app",
-            "properties": {
+    "definitions":  {
+        "app": {
+            "definitions": {
+                "archived_at": {
+                    "description":  "when app was archived",
+                    "example":      "2012-01-01T12:00:00Z",
+                    "format":       "date-time",
+                    "readOnly":     true,
+                    "type":         ["null","string"]
+                },
+                "buildpack_provided_description": {
+                    "description":  "description from buildpack of app",
+                    "example":      "Ruby/Rack",
+                    "readOnly":     true,
+                    "type":         ["null", "string"]
+                },
+                "created_at": {
+                    "description":  "when app was created",
+                    "example":      "2012-01-01T12:00:00Z",
+                    "format":       "date-time",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "delete": {
+                    "description":  "Delete an existing app.",
+                    "method":       "DELETE",
+                    "rel":          "delete",
+                    "title":        "Delete"
+                },
+                "git_url": {
+                    "description":  "git repo URL of app",
+                    "example":      "git@heroku.com/example.git",
+                    "pattern":      "^git@heroku\\.com/[a-z][a-z0-9-]{3,30}\\.git$",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
                 "id": {
-                    "type":        "string",
-                    "format":      "uuid",
-                    "description": "Unique app identifier",
-                    "example":     "01234567-89ab-cdef-0123-456789abcdef"
+                    "description":  "unique identifier of app",
+                    "example":      "01234567-89ab-cdef-0123-456789abcdef",
+                    "format":       "uuid",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "info": {
+                    "description":  "Info for existing app.",
+                    "method":       "GET",
+                    "rel":          "self",
+                    "title":        "Info"
+                },
+                "maintenance": {
+                    "default":      false,
+                    "description":  "maintenance status of app",
+                    "example":      false,
+                    "type":         ["boolean"]
                 },
                 "name": {
-                    "type":        "string",
-                    "description": "unique name of app",
-                    "example":     "example"
+                    "description":  "unique name of app",
+                    "example":      "example",
+                    "pattern":      "^[a-z][a-z0-9-]{3,30}$",
+                    "type":         ["string"]
                 },
                 "owner": {
-                    "$ref": "AppOwner"
-                }
-            }
-        }
-    },
-    "links": {
-        "app": [
-            {
-                "title":  "Create",
-                "rel":    "create",
-                "href":   "/apps",
-                "method": "POST",
-                "schema": {
-                    "type": "object",
                     "properties": {
-                        "name": {
-                            "type": "string"
+                        "email": {
+                            "$ref":         "#/definitions/user/definitions/email",
+                            "description":  "email address of app owner"
+                        },
+                        "id": {
+                            "$ref":         "#/definitions/user/definitions/id",
+                            "description":  "unique identifier of app owner"
                         }
                     }
-                }
-            },
-            {
-                "title":  "Update",
-                "rel":    "update",
-                "href":   "/apps/{app_name_or_id}",
-                "method": "POST",
-                "schema": {
-                    "type": "object",
+                },
+                "region": {
                     "properties": {
+                        "id": {
+                            "$ref":         "#/definitions/region/definitions/id",
+                            "description":  "unique identifier of app region"
+                        },
                         "name": {
-                            "type": "string"
+                            "$ref":         "#/definitions/region/definitions/name",
+                            "default":      "us",
+                            "description":  "unique name of app region"
                         }
                     }
+                },
+                "released_at": {
+                    "default":      null,
+                    "description":  "when app was released",
+                    "example":      "2012-01-01T12:00:00Z",
+                    "format":       "date-time",
+                    "readOnly":     true,
+                    "type":         ["null", "string"]
+                },
+                "repo_size": {
+                    "default":      null,
+                    "description":  "git repo size in bytes of app",
+                    "example":      0,
+                    "readOnly":     true,
+                    "type":         ["integer", "null"]
+                },
+                "slug_size": {
+                    "default":      null,
+                    "description":  "slug size in bytes of app",
+                    "example":      0,
+                    "readOnly":     true,
+                    "type":         ["integer", "null"]
+                },
+                "stack": {
+                    "properties": {
+                        "id": {
+                            "$ref":         "#/definitions/stack/definitions/id",
+                            "description":  "unique identifier of app stack"
+                        },
+                        "name": {
+                            "$ref":         "#/definitions/stack/definitions/name",
+                            "default":      "cedar",
+                            "description":  "unique name of app stack"
+                        }
+                    }
+                },
+                "update": {
+                    "description":  "Update an existing app.",
+                    "method":       "PATCH",
+                    "rel":          "update",
+                    "schema":       {
+                        "properties": {
+                            "maintenance":  { "$ref": "#/definitions/app/definitions/maintenance" },
+                            "name":         { "$ref": "#/definitions/app/definitions/name" }
+                        }
+                    },
+                    "title":        "Update"
+                },
+                "updated_at": {
+                    "description":  "when app was updated",
+                    "example":      "2012-01-01T12:00:00Z",
+                    "format":       "date-time",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "web_url": {
+                    "description":  "web URL of app",
+                    "example":      "http://example.herokuapp.com",
+                    "pattern":      "^http://[a-z][a-z0-9-]{3,30}\\.herokuapp\\.com$",
+                    "readOnly":     true,
+                    "type":         ["string"]
                 }
             },
-            {
-                "title":  "List",
-                "rel":    "list",
-                "href":   "/apps",
-                "method": "GET"
+            "description":  "An app represents the program that you would like to deploy and run on Heroku.",
+            "links":        [
+                {
+                    "description":  "Create a new app.",
+                    "href":         "/apps",
+                    "method":       "POST",
+                    "rel":          "create",
+                    "schema":       {
+                        "properties": {
+                            "name":   { "$ref": "#/definitions/app/definitions/name" },
+                            "region": {
+                                "oneOf": [
+                                    { "$ref": "#/definitions/region/definitions/id" },
+                                    { "$ref": "#/definitions/region/definitions/name" }
+                                ]
+                            },
+                            "stack": {
+                                "oneOf": [
+                                    { "$ref": "#/definitions/stack/definitions/id" },
+                                    { "$ref": "#/definitions/stack/definitions/name" }
+                                ]
+                            }
+                        }
+                    },
+                    "title":        "Create"
+                },
+                {
+                    "description":  "List existing apps.",
+                    "href":         "/apps",
+                    "method":       "GET",
+                    "rel":          "instances",
+                    "title":        "List"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/info",
+                    "href":         "/apps/{id}"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/info",
+                    "href":         "/apps/{name}"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/update",
+                    "href":         "/apps/{id}"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/update",
+                    "href":         "/apps/{name}"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/delete",
+                    "href":         "/apps/{id}"
+                },
+                {
+                    "$ref":         "#/definitions/app/definitions/delete",
+                    "href":         "/apps/{name}"
+                }
+            ],
+            "properties":   {
+                "archived_at":                    { "$ref": "#/definitions/app/definitions/archived_at" },
+                "buildpack_provided_description": { "$ref": "#/definitions/app/definitions/buildpack_provided_description" },
+                "created_at":                     { "$ref": "#/definitions/app/definitions/created_at" },
+                "git_url":                        { "$ref": "#/definitions/app/definitions/git_url" },
+                "id":                             { "$ref": "#/definitions/app/definitions/id" },
+                "maintenance":                    { "$ref": "#/definitions/app/definitions/maintenance" },
+                "name":                           { "$ref": "#/definitions/app/definitions/name" },
+                "owner":                          { "$ref": "#/definitions/app/definitions/owner" },
+                "region":                         { "$ref": "#/definitions/app/definitions/region" },
+                "released_at":                    { "$ref": "#/definitions/app/definitions/released_at" },
+                "repo_size":                      { "$ref": "#/definitions/app/definitions/repo_size" },
+                "slug_size":                      { "$ref": "#/definitions/app/definitions/slug_size" },
+                "stack":                          { "$ref": "#/definitions/app/definitions/stack" },
+                "updated_at":                     { "$ref": "#/definitions/app/definitions/updated_at" },
+                "web_url":                        { "$ref": "#/definitions/app/definitions/web_url" }
+            },
+            "title":        "App"
+        },
+        "region": {
+            "definitions": {
+                "id": {
+                    "description":  "unique identifier of region",
+                    "example":      "01234567-89ab-cdef-0123-456789abcdef",
+                    "format":       "uuid",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "name": {
+                    "description":  "unique name of region",
+                    "example":      "us",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                }
+            },
+            "properties":   {
+                "id": {
+                    "$ref":         "#/definitions/region/definitions/id"
+                },
+
+                "name": {
+                    "$ref":         "#/definitions/region/definitions/name"
+                }
 
             },
-            {
-                "title":  "Info",
-                "rel":    "info",
-                "href":   "/apps/{app_name_or_id}",
-                "method": "GET"
-            }
-        ]
-    }
+            "title":        "Region",
+            "description":  "A Region"
+        },
+        "stack": {
+            "definitions": {
+                "id": {
+                    "description":  "unique identifier of stack",
+                    "example":      "01234567-89ab-cdef-0123-456789abcdef",
+                    "format":       "uuid",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "name": {
+                    "description":  "unique name of stack",
+                    "example":      "cedar",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                }
+            },
+            "properties":   {
+                "id": {
+                    "$ref":         "#/definitions/stack/definitions/id"
+                },
+
+                "name": {
+                    "$ref":         "#/definitions/stack/definitions/name"
+                }
+
+            },
+            "title":        "Stack",
+            "description":  "A Stack"
+        },
+        "user": {
+            "definitions": {
+                "id": {
+                    "description":  "unique identifier of user",
+                    "example":      "01234567-89ab-cdef-0123-456789abcdef",
+                    "format":       "uuid",
+                    "readOnly":     true,
+                    "type":         ["string"]
+                },
+                "email": {
+                    "description":  "unique email address of user",
+                    "example":      "username@example.com",
+                    "format":       "email",
+                    "type":         ["string"]
+                }
+            },
+            "properties":   {
+                "id": {
+                    "$ref":         "#/definitions/user/definitions/id"
+                },
+
+                "email": {
+                    "$ref":         "#/definitions/user/definitions/email"
+                }
+
+            },
+            "title":        "User",
+            "description":  "A User"
+        }
+    },
+    "description":  "The platform API empowers developers to automate, extend and combine Heroku with other services.",
+    "properties":   {
+        "app":    { "$ref": "#/definitions/app" },
+        "user":   { "$ref": "#/definitions/user" },
+        "region": { "$ref": "#/definitions/region" },
+        "stack":  { "$ref": "#/definitions/stack" }
+    },
+    "$schema":      "http://json-schema.org/draft-04/hyper-schema",
+    "title":        "Heroku Platform API",
+    "type":         "object"
 }
