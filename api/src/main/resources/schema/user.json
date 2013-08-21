@@ -1,0 +1,31 @@
+{
+    "description":  "An user represents an individual signed up to use the Heroku platform.",
+    "id":           "schema/user",
+    "$schema":      "http://json-schema.org/draft-04/hyper-schema",
+    "title":        "Heroku Platform API - User",
+    "type":         "object",
+
+    "definitions": {
+        "id": {
+            "description":  "unique identifier of user",
+            "example":      "01234567-89ab-cdef-0123-456789abcdef",
+            "format":       "uuid",
+            "readOnly":     true,
+            "type":         ["string"]
+        },
+        "identity": {
+            "oneOf": [
+                { "$ref": "#/definitions/properties/email" },
+                { "$ref": "#/definitions/properties/id" }
+            ]
+        },
+        "email": {
+            "description":  "unique email address of user",
+            "example":      "username@example.com",
+            "format":       "email",
+            "type":         ["string"]
+        }
+    },
+    "links": [],
+    "properties": {}
+}

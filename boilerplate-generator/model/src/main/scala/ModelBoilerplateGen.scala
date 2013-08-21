@@ -1,4 +1,5 @@
 
+import java.net.URLDecoder
 import play.api.libs.json._
 import java.io.File
 import scala.io.Source
@@ -67,8 +68,9 @@ object ModelBoilerplateGen extends App {
   }
 
   def model(modelJson: ResourceDef) = {
-    val params = modelJson.mapPropTypeInfo {
-      (k, typ) => (PARAM(k, fieldType(typ.`type`)).tree)
+    val params = modelJson.properties.map {
+      case (k, Right(typ)) => (PARAM(k, fieldType(typ.`type`)).tree)
+      case (k, Left(nest)) => (PARAM(k, TYPE_REF("models." + modelJson.title + initialCap(k))).tree)
     }
     (CASECLASSDEF(modelJson.title) withParams params: Tree)
   }
@@ -363,5 +365,123 @@ object ModelBoilerplateGen extends App {
   println(Json.prettyPrint(SchemaModel.schemaObj))
   println(SchemaModel.schemaObj.as[SchemaDoc])
   codez.foreach(c => println(treeToString(c)))
+
+  object NewSchool {
+
+    implicit def fmtResource: Format[Resource] = Json.format[Resource]
+
+    implicit def fmtAction: Format[Link] = Json.format[Link]
+
+    implicit def fmtSchema: Format[Schema] = Json.format[Schema]
+
+    implicit def re[L, R](implicit l: Format[L], r: Format[R]): Format[Either[L, R]] = Format(Reads(
+      js =>
+        JsSuccess(js.validate[R].fold({
+          er =>
+            js.validate[L].fold({ el => sys.error(er.toString + el.toString + Json.prettyPrint(js)) }, { s => Left[L, R](s) })
+        }, {
+          r => Right[L, R](r)
+        }))
+    ), Writes {
+      case Right(ar) => r.writes(ar)
+      case Left(al) => l.writes(al)
+    })
+
+    implicit def fd: Format[FieldDefinition] = Json.format[FieldDefinition]
+
+    implicit def fr: Format[Ref] = Json.format[Ref]
+
+    implicit def fo: Format[OneOf] = Json.format[OneOf]
+
+    implicit def fn: Format[NestedDef] = Json.format[NestedDef]
+
+    implicit def fmtRootSchema: Format[RootSchema] = Json.format[RootSchema]
+
+    def fileToString(schemaFile: String) = Source.fromFile(schemaFile).foldLeft(new StringBuilder) {
+      case (b, c) => b.append(c)
+    }.toString
+
+    def schemaText(name: String): String = {
+      val schemaFile = s"api/src/main/resources/schema/$name.json"
+      fileToString(schemaFile)
+    }
+
+    //$ref :  #definitions/something or schema/foo#definitions/something
+    case class Ref(`$ref`: String) {
+      def path = `$ref`
+
+      def isLocal: Boolean = path.startsWith("#")
+
+      def schema: Option[String] = if (isLocal) None
+      else Some(path.substring(0, path.indexOf("#")))
+
+      def definition: String = path.substring("#/definitions/".length)
+    }
+
+    //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
+    case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String])
+
+    //these map to "inner" objects inside a top level object, like region inside app
+    case class NestedDef(properties: Map[String, Ref])
+
+    //Describes the body of a PUT/POST in a Link
+    case class Schema(properties: Map[String, Either[Either[OneOf, Ref], FieldDefinition]])
+
+    //Endpoint
+    case class Link(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
+      val refEx = """\{(.+)\}""".r
+      val encEx = """\((.+)\)""".r
+
+      def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
+        href.split('/').map {
+          //decode urlencoded $refs in the href
+          case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.getOrElse(title) + o.orFields, f => r.schema.getOrElse(title) + r.definition))
+          case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.orFields, f => r.definition))
+          case _ => None
+        }.toSeq.flatten
+      }
+    }
+
+    //in our case it is either the id or friendly id so should be size 2
+    case class OneOf(oneOf: List[Ref]) {
+      def orFields = oneOf match {
+        case one :: two :: Nil => s"${one.definition}_or_${two.definition}"
+        case _ => sys.error(s"OneOf had ${oneOf.length} items. Expected 2")
+      }
+    }
+
+    //schema for a endpoint/object type
+    case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[OneOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
+      def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[OneOf, FieldDefinition] = {
+        ref.schema.map(resource => root.resource(resource)).getOrElse(this).definitions(ref.definition)
+      }
+    }
+
+    //root schema.json
+    case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String) {
+
+      val resourceMap = new collection.mutable.HashMap[String, Resource]
+
+      def resources = properties.keys
+
+      def resource(name: String): Resource = resourceMap.getOrElseUpdate(name, loadResource(name))
+
+      def loadResource(name: String): Resource = {
+        val ref = properties(name)("$ref")
+        // "/schema/app#"
+        val schema = ref.drop("/schema".length).dropRight("#".length)
+        val text = schemaText(schema)
+        Json.parse(text).validate[Resource].fold(
+          { e => sys.error(e.toString) },
+          { res => res }
+        )
+      }
+
+      def loadAll = resources.map(resource)
+
+    }
+
+    def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).as[RootSchema]
+  }
 
 }
