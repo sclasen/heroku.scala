@@ -104,8 +104,8 @@
             "schema":       {
                 "properties": {
                     "name":   { "$ref": "#/definitions/name" },
-                    "region": { "$ref": "/schema/regions#/definitions/identity" },
-                    "stack":  { "$ref": "/schema/regions#/definitions/identity" }
+                    "region": { "$ref": "/schema/region#/definitions/identity" },
+                    "stack":  { "$ref": "/schema/region#/definitions/identity" }
                 }
             },
             "title":        "Create"
