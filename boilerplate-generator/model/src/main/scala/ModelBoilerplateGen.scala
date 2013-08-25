@@ -17,36 +17,7 @@ object ModelBoilerplateGen extends App {
     val ListRequest = RootClass.newClass("ListRequest")
   }
 
-  def initialCap(s: String) = {
-    val (f, l) = s.splitAt(1)
-    s"${
-      f.toUpperCase
-    }$l"
-  }
-
-  def e(a: AnyRef) = System.err.println(a)
-
-  def fieldType(typ: List[String]) = {
-    val isOptional = typ.contains("null")
-    val typez = typ.filter(_ != "null")
-    if (typez.length == 1) {
-      if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
-      else (TYPE_REF(initialCap(typez(0))))
-    } else {
-      throw new IllegalStateException("encountered type with more than one non null type value")
-    }
-  }
-
-  def argType(typ: List[String]) = {
-    val typez = typ.filter(_ != "null")
-    if (typez.length == 1) {
-      (TYPE_OPTION(initialCap(typez(0))))
-    } else {
-      throw new IllegalStateException("encountered type with more than one non null type value")
-    }
-  }
-
-  def codez = {
+  def api = {
     implicit val root = loadRoot
     root.resources.map(root.resource).map {
       resource =>
@@ -61,6 +32,9 @@ object ModelBoilerplateGen extends App {
     }
   }
 
+  /*
+  model case class per resource
+   */
   def model(resource: Resource)(implicit root: RootSchema) = {
     val params = resource.properties.map {
       case (k, Right(ref)) =>
@@ -72,6 +46,10 @@ object ModelBoilerplateGen extends App {
     (CASECLASSDEF(resource.name) withParams params: Tree)
   }
 
+  /*
+  companion object that holds on to the action case classes and
+  a nested models object that have req body case classes and nested values in the model
+   */
   def companion(implicit resource: Resource, root: RootSchema) = {
     val name: String = resource.name
 
@@ -109,7 +87,7 @@ object ModelBoilerplateGen extends App {
         }
     }
 
-    val modelCaseClasses = resource.links.map {
+    val bodyCaseClasses = resource.links.map {
       link =>
         link.title match {
           case "Create" | "Update" => Some(bodyCaseClass(link))
@@ -119,10 +97,19 @@ object ModelBoilerplateGen extends App {
 
     OBJECTDEF(name) := BLOCK(
       actionCaseClasses ++
-        Seq((OBJECTDEF("models") := BLOCK(modelCaseClasses ++ nestedModelClasses)))
+        Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses)))
     )
   }
 
+  def argsFromFieldDef(k: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
+
+  def argsFromOneOf(k: String, oo: OneOf)(implicit resource: Resource, root: RootSchema) = {
+    (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
+  }
+
+  /*
+  extra params for requests. extraHeaders and also range for list reqs
+   */
   def extraParams(link: Link): Seq[ValDef] = {
     val defs: Seq[ValDef] = if (link.rel == "list") {
       Seq((PARAM("range", TYPE_OPTION("String")) := NONE))
@@ -130,6 +117,9 @@ object ModelBoilerplateGen extends App {
     defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := NONE)
   }
 
+  /*
+  nested model case classes e.g AppRegion inside App
+   */
   def nestedModelClasses(implicit resource: Resource, root: RootSchema) = {
     resource.properties.map {
       case (k, Right(ref)) => None
@@ -143,13 +133,9 @@ object ModelBoilerplateGen extends App {
       }
     }.flatten
   }
-
-  def argsFromFieldDef(k: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
-
-  def argsFromOneOf(k: String, oo: OneOf)(implicit resource: Resource, root: RootSchema) = {
-    (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
-  }
-
+  /*
+  body for Create and Update calls
+  */
   def bodyCaseClass(link: Link)(implicit resource: Resource, root: RootSchema) = {
     val params = link.schema.map {
       schema =>
@@ -171,6 +157,45 @@ object ModelBoilerplateGen extends App {
     }${resource.name}Body") withParams params.toIterable): Tree)
   }
 
+  /*
+  s"${resource.name}RequestJson" trait, holds the ToJson for the resource
+   */
+  def reqJson(resource: Resource)(implicit root: RootSchema) = {
+
+    val modelToJsons = resource.links.map {
+      link =>
+        link.title match {
+          case "Create" | "Update" =>
+            val to = s"${link.title}${resource.name}Body"
+            Some(toJson(to, s"models.${to}"))
+          case _ => None
+        }
+    }.flatten
+
+    val nesteds = resource.properties.map {
+      case (k, Right(ref)) => None
+      case (k, Left(nestedDef)) =>
+        Some(toJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+    }.flatten
+
+    TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
+      modelToJsons.toSeq ++ nesteds.toSeq
+    )
+  }
+  /*
+   s"${resource.name}ResponseJson" trait, holds the FromJson for the resource
+  */
+  def respJson(resource: Resource)(implicit root: RootSchema) = {
+    val resps = resource.properties.map {
+      case (k, Right(ref)) => None
+      case (k, Left(nestedDef)) =>
+        Some(fromJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+    }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"List[${resource.name}]"))
+    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
+  }
+
+  /* implicit def ToJson*s and FromJson*s */
+
   def toJson(model: String, typ: String) = {
     DEF("ToJson" + model, sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
   }
@@ -178,6 +203,8 @@ object ModelBoilerplateGen extends App {
   def fromJson(model: String, typ: String) = {
     DEF("FromJson" + model, sym.FromJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
   }
+
+  /*request case classes*/
 
   def createAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
     System.err.println(paramNames)
@@ -220,37 +247,38 @@ object ModelBoilerplateGen extends App {
 
   def method(methRef: String) = (VAL("method", StringClass) := REF(methRef))
 
-  def reqJson(resource: Resource)(implicit root: RootSchema) = {
+  /* util */
 
-    val modelToJsons = resource.links.map {
-      link =>
-        link.title match {
-          case "Create" | "Update" =>
-            val to = s"${link.title}${resource.name}Body"
-            Some(toJson(to, s"models.${to}"))
-          case _ => None
-        }
-    }.flatten
-
-    val nesteds = resource.properties.map {
-      case (k, Right(ref)) => None
-      case (k, Left(nestedDef)) =>
-        Some(toJson(resource.name + initialCap(k), resource.name + initialCap(k)))
-    }.flatten
-
-    TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
-      modelToJsons.toSeq ++ nesteds.toSeq
-    )
+  def initialCap(s: String) = {
+    val (f, l) = s.splitAt(1)
+    s"${
+      f.toUpperCase
+    }$l"
   }
 
-  def respJson(resource: Resource)(implicit root: RootSchema) = {
-    val resps = resource.properties.map {
-      case (k, Right(ref)) => None
-      case (k, Left(nestedDef)) =>
-        Some(fromJson(resource.name + initialCap(k), resource.name + initialCap(k)))
-    }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"List[${resource.name}]"))
-    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
+  def e(a: AnyRef) = System.err.println(a)
+
+  def fieldType(typ: List[String]) = {
+    val isOptional = typ.contains("null")
+    val typez = typ.filter(_ != "null")
+    if (typez.length == 1) {
+      if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
+      else (TYPE_REF(initialCap(typez(0))))
+    } else {
+      throw new IllegalStateException("encountered type with more than one non null type value")
+    }
   }
+
+  def argType(typ: List[String]) = {
+    val typez = typ.filter(_ != "null")
+    if (typez.length == 1) {
+      (TYPE_OPTION(initialCap(typez(0))))
+    } else {
+      throw new IllegalStateException("encountered type with more than one non null type value")
+    }
+  }
+
+  /*schema.json parsing*/
 
   implicit def fmtResource: Format[Resource] = Json.format[Resource]
 
@@ -379,6 +407,6 @@ object ModelBoilerplateGen extends App {
 
   def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).as[RootSchema]
 
-  codez.foreach(t => println(treeToString(t)))
+  api.foreach(t => println(treeToString(t)))
 
 }
