@@ -54,9 +54,9 @@ object ModelBoilerplateGen extends App {
           IMPORT("com.heroku.platform.api._"),
           IMPORT("com.heroku.platform.api.Request._"),
           model(resource),
-          companion(resource, root) /*,
-          reqJson(objDef, actionsDef),
-          respJson(objDef, actionsDef)*/
+          companion(resource, root),
+          reqJson(resource),
+          respJson(resource)
         ).inPackage(sym.ApiPackage): Tree)
     }
   }
@@ -223,30 +223,34 @@ object ModelBoilerplateGen extends App {
 def extractArgumentsFromPath(actionDef: Action) = {
   val rx = """\{([a-zA-Z0-9_]+)\}*""".r
   rx.findAllIn(actionDef.href).map(_.replaceAll("\\{", "").replaceAll("\\}", "")).map(name => name -> (PARAM(name, "String").tree)).toSeq
-}
+}   */
 
-def reqJson(modelJson: ResourceDef, actionsDefs: List[Action]) = {
-  val modelToJsons = flattenActions(actionsDefs).map {
-    a =>
-      a.title match {
-        case "Create" => Some(toJson(modelJson.title, s"models.Create${modelJson.title}Body"))
-        case "List" => None
-        case "Info" => None
-        case "Update" => Some(toJson(modelJson.title, s"models.Update${modelJson.title}Body"))
-        case "Delete" => None
-        case _ => None
-      }
-  }.flatten
-  TRAITDEF(s"${modelJson.title}RequestJson") := BLOCK(
-    modelToJsons.toSeq
-  )
-}
+  //bodys, model
+  def reqJson(resource: Resource)(implicit root: RootSchema) = {
+    resource.links.map {
+      link =>
+        s"${link.title}${resource.name}Body"
+    }
 
-def respJson(modelJson: ResourceDef, actionsDefs: List[Action]) = {
-  TRAITDEF(s"${modelJson.title}ResponseJson") := BLOCK(fromJson(modelJson.title, modelJson.title))
-}
+    val modelToJsons = resource.links.map {
+      link =>
+        link.title match {
+          case "Create" | "Update" =>
+            val to = s"${link.title}${resource.name}Body"
+            Some(toJson(to, s"models.${to}"))
+          case _ => None
+        }
+    }.flatten
 
-*/
+    TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
+      modelToJsons.toSeq
+    )
+  }
+
+  def respJson(resource: Resource)(implicit root: RootSchema) = {
+    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(fromJson(resource.name, resource.name))
+  }
+
   implicit def fmtResource: Format[Resource] = Json.format[Resource]
 
   implicit def fmtAction: Format[Link] = Json.format[Link]
