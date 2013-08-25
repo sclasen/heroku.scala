@@ -172,11 +172,11 @@ object ModelBoilerplateGen extends App {
   }
 
   def toJson(model: String, typ: String) = {
-    DEF(model + "ToJson", sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
+    DEF("ToJson" + model, sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
   }
 
   def fromJson(model: String, typ: String) = {
-    DEF(model + "FromJson", sym.FromJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
+    DEF("FromJson" + model, sym.FromJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
   }
 
   def createAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
