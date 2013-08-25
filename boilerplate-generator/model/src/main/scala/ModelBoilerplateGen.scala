@@ -112,11 +112,7 @@ object ModelBoilerplateGen extends App {
     val modelCaseClasses = resource.links.map {
       link =>
         link.title match {
-          case "Create" => Some(bodyCaseClass(link))
-          case "List" => None
-          case "Info" => None
-          case "Update" => Some(bodyCaseClass(link))
-          case "Delete" => None
+          case "Create" | "Update" => Some(bodyCaseClass(link))
           case _ => None
         }
     }.flatten
