@@ -219,18 +219,8 @@ object ModelBoilerplateGen extends App {
   }
 
   def method(methRef: String) = (VAL("method", StringClass) := REF(methRef))
-  /*
-def extractArgumentsFromPath(actionDef: Action) = {
-  val rx = """\{([a-zA-Z0-9_]+)\}*""".r
-  rx.findAllIn(actionDef.href).map(_.replaceAll("\\{", "").replaceAll("\\}", "")).map(name => name -> (PARAM(name, "String").tree)).toSeq
-}   */
 
-  //bodys, model
   def reqJson(resource: Resource)(implicit root: RootSchema) = {
-    resource.links.map {
-      link =>
-        s"${link.title}${resource.name}Body"
-    }
 
     val modelToJsons = resource.links.map {
       link =>
@@ -242,13 +232,24 @@ def extractArgumentsFromPath(actionDef: Action) = {
         }
     }.flatten
 
+    val nesteds = resource.properties.map {
+      case (k, Right(ref)) => None
+      case (k, Left(nestedDef)) =>
+        Some(toJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+    }.flatten
+
     TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
-      modelToJsons.toSeq
+      modelToJsons.toSeq ++ nesteds.toSeq
     )
   }
 
   def respJson(resource: Resource)(implicit root: RootSchema) = {
-    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(fromJson(resource.name, resource.name))
+    val resps = resource.properties.map {
+      case (k, Right(ref)) => None
+      case (k, Left(nestedDef)) =>
+        Some(fromJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+    }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"List[${resource.name}]"))
+    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
   }
 
   implicit def fmtResource: Format[Resource] = Json.format[Resource]
