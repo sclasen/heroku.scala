@@ -164,8 +164,8 @@
         "region": {
             "description":  "identity of app region",
             "properties": {
-                "id":   { "$ref":  "/schema/region/definitions/id" },
-                "name": { "$ref":  "/schema/region/definitions/name" }
+                "id":   { "$ref":  "/schema/region#/definitions/id" },
+                "name": { "$ref":  "/schema/region#/definitions/name" }
             },
             "type":         ["object"]
         },
@@ -175,8 +175,8 @@
         "stack": {
             "description": "identity of app stack",
             "properties": {
-                "id":   { "$ref":  "/schema/stack/definitions/id" },
-                "name": { "$ref":  "/schema/stack/definitions/name" }
+                "id":   { "$ref":  "/schema/stack#/definitions/id" },
+                "name": { "$ref":  "/schema/stack#/definitions/name" }
             },
             "type":         ["object"]
         },

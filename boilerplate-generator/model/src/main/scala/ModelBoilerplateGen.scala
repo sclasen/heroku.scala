@@ -74,10 +74,7 @@ object ModelBoilerplateGen extends App {
 
   def companion(implicit resource: Resource, root: RootSchema) = {
     val name: String = resource.name
-    def argsFromFieldDef(k: String, fieldDef: FieldDefinition) = (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
-    def argsFromOneOf(k: String, oo: OneOf) = {
-      (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
-    }
+
     val actionCaseClasses = resource.links.map {
       link =>
         val paramsMap = link.schema.map {
@@ -112,21 +109,21 @@ object ModelBoilerplateGen extends App {
         }
     }
 
-    /* val modelCaseClasses = flattenActions(actionsDefs).map {
-      a =>
-        a.title match {
-          case "Create" => Some(bodyCaseClass(a, resource.title))
+    val modelCaseClasses = resource.links.map {
+      link =>
+        link.title match {
+          case "Create" => Some(bodyCaseClass(link))
           case "List" => None
           case "Info" => None
-          case "Update" => Some(bodyCaseClass(a, resource.title))
+          case "Update" => Some(bodyCaseClass(link))
           case "Delete" => None
           case _ => None
         }
-    }.flatten*/
+    }.flatten
 
     OBJECTDEF(name) := BLOCK(
-      actionCaseClasses /*++
-        Seq((OBJECTDEF("models") := BLOCK(modelCaseClasses)))*/
+      actionCaseClasses ++
+        Seq((OBJECTDEF("models") := BLOCK(modelCaseClasses ++ nestedModelClasses)))
     )
   }
 
@@ -137,17 +134,47 @@ object ModelBoilerplateGen extends App {
     defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := NONE)
   }
 
-  /* def bodyCaseClass(actionObj: Action, model: String) = {
-    val params = actionObj.mapPropTypeInfo {
-      (k, typ) =>
-        (PARAM(k, argType(typ.`type`)).tree)
-    }
-
-    (CASECLASSDEF(s"${
-      actionObj.title
-    }${model}Body") withParams params.toIterable)
+  def nestedModelClasses(implicit resource: Resource, root: RootSchema) = {
+    resource.properties.map {
+      case (k, Right(ref)) => None
+      case (k, Left(nestedDef)) => Some {
+        val params = nestedDef.properties.map {
+          case (name, ref) =>
+            val typ = resource.resolveFieldRef(ref).fold({ oneOf => sys.error("Not expecting oneOf") }, { fieldDef => fieldType(fieldDef.`type`) })
+            ((PARAM(name, typ) := NULL))
+        }
+        ((CASECLASSDEF(resource.name + initialCap(k)) withParams params): Tree)
+      }
+    }.flatten
   }
-*/
+
+  def argsFromFieldDef(k: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
+
+  def argsFromOneOf(k: String, oo: OneOf)(implicit resource: Resource, root: RootSchema) = {
+    (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
+  }
+
+  def bodyCaseClass(link: Link)(implicit resource: Resource, root: RootSchema) = {
+    val params = link.schema.map {
+      schema =>
+        schema.properties.map {
+          case (k, typ) =>
+            typ match {
+              case Right(fieldDef) => argsFromFieldDef(k, fieldDef)
+              case Left(Right(ref)) =>
+                resource.resolveFieldRef(ref).fold({ oneOf => argsFromOneOf(k, oneOf) }, { fieldDef => argsFromFieldDef(k, fieldDef) })
+              case Left(Left(oneOf)) => argsFromOneOf(k, oneOf)
+
+            }
+
+        }
+    }.getOrElse(Seq.empty[(String, ValDef)]).map(_._2)
+
+    ((CASECLASSDEF(s"${
+      link.title
+    }${resource.name}Body") withParams params.toIterable): Tree)
+  }
+
   def toJson(model: String, typ: String) = {
     DEF(model + "ToJson", sym.ToJson TYPE_OF typ) withFlags (Flags.IMPLICIT)
   }
@@ -272,8 +299,11 @@ def respJson(modelJson: ResourceDef, actionsDefs: List[Action]) = {
 
     def isLocal: Boolean = path.startsWith("#")
 
-    def schema: Option[String] = if (isLocal) None
-    else Some(path.substring(0, path.indexOf("#")).drop("/schema/".length))
+    def schema: Option[String] = {
+      println(path)
+      if (isLocal) None
+      else Some(path.substring(0, path.indexOf("#")).drop("/schema/".length))
+    }
 
     def definition: String = if (isLocal) path.substring("#/definitions/".length)
     else path.substring(path.indexOf("#")).drop("#/definitions/".length)
