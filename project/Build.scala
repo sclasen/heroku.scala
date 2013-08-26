@@ -56,8 +56,8 @@ object Build extends Build {
         val cache =
           FileFunction.cached(cacheDir / "json-boilerplate-generator", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
             in: Set[File] =>
-              genBoilerplate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
-                genBoilerplate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+              genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
+                genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
           }
 
        cache(apiClasses.toSet).toSeq
@@ -72,18 +72,31 @@ object Build extends Build {
     modelBoilerplate in Compile <<= (cacheDirectory, sourceManaged in Compile, dependencyClasspath in Runtime in modelBoilerplateGen, baseDirectory, streams) map {
       (cacheDir, sm, cp, base, st) =>
        val schema = Set(base / "src/main/resources/schema.json")
-       val cache =
+        genModelboilerplate(sm / "com/heroku/platform/api/model", cp.files, "ModelBoilerplateGen", st).toSeq
+
+       /* val cache =
          FileFunction.cached(cacheDir / "model-boilerplate-generator", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
            in: Set[File] =>
-              genBoilerplate(sm / "com/heroku/platform/api/model/Models.scala", cp.files, "ModelBoilerplateGen", st)
+              genModelboilerplate(sm / "com/heroku/platform/api/model", cp.files, "ModelBoilerplateGen", st)
          }
 
-        cache(schema).toSeq
+        cache(schema).toSeq*/
     }
   )
 
 
-  def genBoilerplate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Set[File] = {
+  def genModelboilerplate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Set[File] = {
+    streams.log.info("Generating:%s".format(source))
+    val baos = new ByteArrayOutputStream()
+    val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Seq(source.getAbsolutePath), None, false, CustomOutput(baos)).exitValue()
+    if (i != 0) {
+      streams.log.error("Trouble with code generator")
+    }
+    val files = new String(baos.toByteArray).split('\n').map(new File(_))
+    Set(files:_*)
+  }
+
+  def genJsonBoilerplate(source: File, cp: Seq[File], mainClass:String, streams:Types.Id[Keys.TaskStreams]): Set[File] = {
     streams.log.info("Generating:%s".format(source))
     val baos = new ByteArrayOutputStream()
     val i = new Fork.ForkScala(mainClass).fork(None, Nil, cp, Nil, None, false, CustomOutput(baos)).exitValue()

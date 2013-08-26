@@ -1,4 +1,5 @@
 
+import java.io.{ FileWriter, File }
 import java.net.URLDecoder
 import play.api.libs.json._
 import scala.io.Source
@@ -21,9 +22,11 @@ object ModelBoilerplateGen extends App {
     implicit val root = loadRoot
     root.resources.map(root.resource).map {
       resource =>
-        (BLOCK(
+        resource.name -> (BLOCK(
           IMPORT("com.heroku.platform.api._"),
           IMPORT("com.heroku.platform.api.Request._"),
+          IMPORT(s"${resource.name}._"),
+          IMPORT(s"${resource.name}.models._"),
           model(resource),
           companion(resource, root),
           reqJson(resource),
@@ -111,10 +114,12 @@ object ModelBoilerplateGen extends App {
   extra params for requests. extraHeaders and also range for list reqs
    */
   def extraParams(link: Link): Seq[ValDef] = {
-    val defs: Seq[ValDef] = if (link.rel == "list") {
+    e(link)
+    val defs: Seq[ValDef] = if (link.title == "List") {
+      e("============>")
       Seq((PARAM("range", TYPE_OPTION("String")) := NONE))
     } else Seq.empty[ValDef]
-    defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := NONE)
+    defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := REF("Map") DOT "empty")
   }
 
   /*
@@ -190,7 +195,7 @@ object ModelBoilerplateGen extends App {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
         Some(fromJson(resource.name + initialCap(k), resource.name + initialCap(k)))
-    }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"List[${resource.name}]"))
+    }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"collection.immutable.List[${resource.name}]"))
     TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
   }
 
@@ -207,7 +212,6 @@ object ModelBoilerplateGen extends App {
   /*request case classes*/
 
   def createAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    System.err.println(paramNames)
     (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.Create${resource.name}Body", resource.name)) := BLOCK(
       expect("expect201"), endpoint(link.href, hrefParams), method("POST"),
       (VAL("body", s"models.Create${resource.name}Body") := (REF(s"models.Create${resource.name}Body") APPLY (paramNames.map(REF(_))))
@@ -329,7 +333,6 @@ object ModelBoilerplateGen extends App {
     def isLocal: Boolean = path.startsWith("#")
 
     def schema: Option[String] = {
-      println(path)
       if (isLocal) None
       else Some(path.substring(0, path.indexOf("#")).drop("/schema/".length))
     }
@@ -407,6 +410,27 @@ object ModelBoilerplateGen extends App {
 
   def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).as[RootSchema]
 
-  api.foreach(t => println(treeToString(t)))
+  def generate(dir: File) = {
+    api.map {
+      case (resource, resTree) =>
+        val resFile = new File(dir, s"${resource}.scala")
+        val tree = treeToString(resTree)
+        resFile.delete()
+        val w = new FileWriter(resFile)
+        w.write(tree)
+        w.close()
+        println(resFile.getPath)
+    }
+  }
 
+  {
+    val outDir = new File(args(0))
+    generate(outDir)
+  }
+
+  /*api.foreach{
+    t =>
+      println(treeToString(t))
+  }
+*/
 }
