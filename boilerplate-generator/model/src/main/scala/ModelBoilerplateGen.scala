@@ -244,7 +244,7 @@ object ModelBoilerplateGen extends App {
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
 
   def endpoint(endRef: String, params: Seq[String]) = {
-    val endLit = endRef.replaceAll("""\{.+\}""", """\%s""")
+    val endLit = endRef.replaceAll("""\{.+?\}""", """\%s""")
     if (params.isEmpty) (VAL("endpoint", StringClass) := LIT(endLit))
     else (VAL("endpoint", StringClass) := LIT(endLit) DOT "format" APPLY (params.toSeq.map(p => REF(p)): _*))
   }
