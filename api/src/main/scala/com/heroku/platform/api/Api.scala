@@ -75,6 +75,10 @@ trait ListRequest[T] extends BaseRequest {
   def nextRequest(nextRange: String): ListRequest[T]
 }
 
+trait ErrorResponseJson {
+  implicit def errorResponseFromJson: FromJson[ErrorResponse]
+}
+
 trait Api {
 
   implicit def executionContext: ExecutionContext

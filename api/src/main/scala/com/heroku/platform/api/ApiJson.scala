@@ -4,10 +4,6 @@ case class User(id: String, email: String)
 
 case class UserBody(id: Option[String] = None, email: Option[String] = None)
 
-trait ErrorResponseJson {
-  implicit def errorResponseFromJson: FromJson[ErrorResponse]
-}
-
 trait ApiResponseJson extends HerokuAppResponseJson with AccountResponseJson with CollaboratorResponseJson
     with ConfigVarResponseJson with DomainResponseJson with DynoResponseJson with FormationResponseJson
     with KeyResponseJson with LogSessionResponseJson with RegionResponseJson with ReleaseResponseJson
