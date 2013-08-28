@@ -26,9 +26,8 @@ object ModelBoilerplateGen extends App {
           IMPORT("com.heroku.platform.api._"),
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
-          IMPORT(s"${resource.name}.models._"),
-          model(resource),
           companion(resource, root),
+          model(resource),
           reqJson(resource),
           respJson(resource)
         ).inPackage(sym.ApiPackage): Tree)
@@ -41,12 +40,17 @@ object ModelBoilerplateGen extends App {
   def model(resource: Resource)(implicit root: RootSchema) = {
     val params = resource.properties.map {
       case (k, Right(ref)) =>
-        val typ = resource.resolveFieldRef(ref).fold({ oneOf => sys.error("Not expecting oneOf") }, { fieldDef => fieldType(fieldDef.`type`) })
+        val typ = resource.resolveFieldRef(ref).fold({
+          oneOf => sys.error("Not expecting oneOf")
+        }, {
+          fieldDef => fieldType(fieldDef.`type`)
+        })
         (PARAM(k, typ).tree)
       case (k, Left(nestedDef)) =>
         (PARAM(k, TYPE_REF("models." + resource.name + initialCap(k))).tree)
     }
     (CASECLASSDEF(resource.name) withParams params: Tree)
+
   }
 
   /*
@@ -65,7 +69,11 @@ object ModelBoilerplateGen extends App {
                 typ match {
                   case Right(fieldDef) => argsFromFieldDef(k, fieldDef)
                   case Left(Right(ref)) =>
-                    resource.resolveFieldRef(ref).fold({ oneOf => argsFromOneOf(k, oneOf) }, { fieldDef => argsFromFieldDef(k, fieldDef) })
+                    resource.resolveFieldRef(ref).fold({
+                      oneOf => argsFromOneOf(k, oneOf)
+                    }, {
+                      fieldDef => argsFromFieldDef(k, fieldDef)
+                    })
                   case Left(Left(oneOf)) => argsFromOneOf(k, oneOf)
 
                 }
@@ -98,9 +106,8 @@ object ModelBoilerplateGen extends App {
         }
     }.flatten
 
-    OBJECTDEF(name) := BLOCK(
-      actionCaseClasses ++
-        Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses)))
+    OBJECTDEF(name) := BLOCK(Seq(IMPORT(s"${resource.name}.models._")) ++
+      Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses))) ++ actionCaseClasses
     )
   }
 
@@ -131,13 +138,18 @@ object ModelBoilerplateGen extends App {
       case (k, Left(nestedDef)) => Some {
         val params = nestedDef.properties.map {
           case (name, ref) =>
-            val typ = resource.resolveFieldRef(ref).fold({ oneOf => sys.error("Not expecting oneOf") }, { fieldDef => fieldType(fieldDef.`type`) })
+            val typ = resource.resolveFieldRef(ref).fold({
+              oneOf => sys.error("Not expecting oneOf")
+            }, {
+              fieldDef => fieldType(fieldDef.`type`)
+            })
             ((PARAM(name, typ) := NULL))
         }
         ((CASECLASSDEF(resource.name + initialCap(k)) withParams params): Tree)
       }
     }.flatten
   }
+
   /*
   body for Create and Update calls
   */
@@ -149,7 +161,11 @@ object ModelBoilerplateGen extends App {
             typ match {
               case Right(fieldDef) => argsFromFieldDef(k, fieldDef)
               case Left(Right(ref)) =>
-                resource.resolveFieldRef(ref).fold({ oneOf => argsFromOneOf(k, oneOf) }, { fieldDef => argsFromFieldDef(k, fieldDef) })
+                resource.resolveFieldRef(ref).fold({
+                  oneOf => argsFromOneOf(k, oneOf)
+                }, {
+                  fieldDef => argsFromFieldDef(k, fieldDef)
+                })
               case Left(Left(oneOf)) => argsFromOneOf(k, oneOf)
 
             }
@@ -180,13 +196,14 @@ object ModelBoilerplateGen extends App {
     val nesteds = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
-        Some(toJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+        Some(toJson(resource.name + initialCap(k), "models." + resource.name + initialCap(k)))
     }.flatten
 
     TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
       modelToJsons.toSeq ++ nesteds.toSeq
     )
   }
+
   /*
    s"${resource.name}ResponseJson" trait, holds the FromJson for the resource
   */
@@ -194,7 +211,7 @@ object ModelBoilerplateGen extends App {
     val resps = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
-        Some(fromJson(resource.name + initialCap(k), resource.name + initialCap(k)))
+        Some(fromJson(resource.name + initialCap(k), "models." + resource.name + initialCap(k)))
     }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"collection.immutable.List[${resource.name}]"))
     TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
   }
@@ -264,7 +281,10 @@ object ModelBoilerplateGen extends App {
 
   def fieldType(typ: List[String]) = {
     val isOptional = typ.contains("null")
-    val typez = typ.filter(_ != "null")
+    val typez = typ.filter(_ != "null").map {
+      case "integer" => "Int"
+      case x => x
+    }
     if (typez.length == 1) {
       if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
       else (TYPE_REF(initialCap(typez(0))))
@@ -282,6 +302,22 @@ object ModelBoilerplateGen extends App {
     }
   }
 
+  def aggJson(suffix: String)(implicit root: RootSchema) = {
+    root.resources.map(root.resource).filter(_.hasModel).toList.sortBy(_.name).map {
+      resource =>
+        resource.name + suffix
+    }
+  }
+
+  def reqJson(implicit root: RootSchema) = {
+    (TRAITDEF("ApiRequestJson") withParents (aggJson("RequestJson")): Tree)
+  }
+
+  def respJson(implicit root: RootSchema) = {
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: aggJson("ResponseJson")): Tree)
+  }
+
+  def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api.ErrorResponseJson"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
   /*schema.json parsing*/
 
   implicit def fmtResource: Format[Resource] = Json.format[Resource]
@@ -340,6 +376,7 @@ object ModelBoilerplateGen extends App {
     def definition: String = if (isLocal) path.substring("#/definitions/".length)
     else path.substring(path.indexOf("#")).drop("#/definitions/".length)
   }
+
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
   case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String])
 
@@ -378,7 +415,15 @@ object ModelBoilerplateGen extends App {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
       res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
     }
-    def name = initialCap(id.drop("schema/".length))
+
+    def name = {
+      initialCap(id.drop("schema/".length)) match {
+        case "App" => "HerokuApp"
+        case x => x
+      }
+    }
+
+    def hasModel = !properties.isEmpty
   }
 
   //root schema.json
@@ -410,17 +455,23 @@ object ModelBoilerplateGen extends App {
 
   def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).as[RootSchema]
 
+  def writeFile(dir: File, fileName: String, tree: String) = {
+    val resFile = new File(dir, fileName)
+    resFile.delete()
+    val w = new FileWriter(resFile)
+    w.write(tree)
+    w.close()
+    println(resFile.getPath)
+  }
+
   def generate(dir: File) = {
     api.map {
       case (resource, resTree) =>
-        val resFile = new File(dir, s"${resource}.scala")
-        val tree = treeToString(resTree)
-        resFile.delete()
-        val w = new FileWriter(resFile)
-        w.write(tree)
-        w.close()
-        println(resFile.getPath)
+        writeFile(dir, s"${resource}.scala", treeToString(resTree))
     }
+
+    writeFile(dir, s"ApiJson.scala", treeToString(apiJson(loadRoot)))
+
   }
 
   {
