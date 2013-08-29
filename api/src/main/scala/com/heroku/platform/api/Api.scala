@@ -76,7 +76,7 @@ trait ListRequest[T] extends BaseRequest {
 }
 
 trait ErrorResponseJson {
-  implicit def errorResponseFromJson: FromJson[ErrorResponse]
+  implicit def FromJsonErrorResponse: FromJson[ErrorResponse]
 }
 
 trait Api {
