@@ -35,7 +35,7 @@ trait BaseRequest {
 
   def method: String
 
-  def extraHeaders: Map[String, String]
+  def headers: Map[String, String]
 
 }
 

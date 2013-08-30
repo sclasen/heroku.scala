@@ -22,34 +22,34 @@ object HerokuApp {
     case class UpdateAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None)
   }
 
-  case class Create(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAppBody, HerokuApp] {
+  case class Create(name: Option[String] = None, stack: Option[String] = Some("cedar"), region: Option[AppRegion] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[CreateAppBody, HerokuApp] {
     val endpoint = "/apps"
     val expect = expect201
     val method = POST
     val body = CreateAppBody(name, stack, region)
   }
 
-  case class List(range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[HerokuApp] {
+  case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[HerokuApp] {
     val endpoint = "/apps"
     val method = GET
 
     def nextRequest(nextRange: String): ListRequest[HerokuApp] = this.copy(range = Some(nextRange))
   }
 
-  case class Info(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[HerokuApp] {
+  case class Info(id: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
     val endpoint = s"/apps/$id"
     val expect = expect200
     val method = GET
   }
 
-  case class Update(id: String, maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateAppBody, HerokuApp] {
+  case class Update(id: String, maintenance: Option[Boolean] = None, name: Option[String] = None, owner: Option[AppOwner] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[UpdateAppBody, HerokuApp] {
     val endpoint = s"/apps/$id"
     val expect = expect200
     val method = PATCH
     val body = UpdateAppBody(maintenance, name, owner)
   }
 
-  case class Delete(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[HerokuApp] {
+  case class Delete(id: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
     val endpoint = s"/apps/$id"
     val expect = expect200
     val method = DELETE

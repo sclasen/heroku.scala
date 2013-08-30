@@ -6,20 +6,20 @@ import com.heroku.platform.api.Formation.UpdateFormationBody
 object Formation {
   case class UpdateFormationBody(quantity: Int)
 
-  case class ListFormation(appId: String, range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Formation] {
+  case class ListFormation(appId: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Formation] {
     val endpoint: String = s"/apps/$appId/formation"
     val method: String = POST
 
     def nextRequest(nextRange: String) = this.copy(range = Some(nextRange))
   }
 
-  case class FormationInfo(appId: String, `type`: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Formation] {
+  case class FormationInfo(appId: String, `type`: String, headers: Map[String, String] = Map.empty) extends Request[Formation] {
     val endpoint: String = s"/apps/$appId/formation/${`type`}"
     val method: String = GET
     val expect = expect200
   }
 
-  case class UpdateFormation(appId: String, `type`: String, quantity: Int, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateFormationBody, Formation] {
+  case class UpdateFormation(appId: String, `type`: String, quantity: Int, headers: Map[String, String] = Map.empty) extends RequestWithBody[UpdateFormationBody, Formation] {
     val endpoint: String = s"/apps/$appId/formation/${`type`}"
     val method: String = PUT
     val expect = expect200

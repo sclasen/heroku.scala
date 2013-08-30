@@ -92,7 +92,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
   }
 
   def getHeaders(req: BaseRequest, key: String): List[HttpHeader] = {
-    req.extraHeaders.map {
+    req.headers.map {
       case (k, v) => RawHeader(k, v)
     }.toList ++ List(accept, auth(key))
   }

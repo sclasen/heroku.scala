@@ -18,20 +18,20 @@ object Account {
 
   case class PasswordChangeBody(current_password: String, password: String)
 
-  case class Info(extraHeaders: Map[String, String] = Map.empty) extends Request[Account] {
+  case class Info(headers: Map[String, String] = Map.empty) extends Request[Account] {
     val endpoint = "/account"
     val method = GET
     val expect = expect200
   }
 
-  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[UpdateBody, Account] {
+  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[UpdateBody, Account] {
     val endpoint = "/account"
     val method = PATCH
     val expect = expect200
     val body = UpdateBody(allow_tracking, email, beta)
   }
 
-  case class PasswordChangeRequest(current_password: String, password: String, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChangeBody, Account] {
+  case class PasswordChangeRequest(current_password: String, password: String, headers: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChangeBody, Account] {
     val endpoint = "/account/password"
     val method = PUT
     val expect = expect200

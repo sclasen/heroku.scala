@@ -28,27 +28,27 @@ object OAuthAuthorization {
     case class CreateAuthorizationBody(scope: collection.immutable.List[String], client: Option[CreateAuthorizationClient], description: Option[String])
 
   }
-  case class Create(scope: collection.immutable.List[String], description: Option[String] = None, client_id: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
+  case class Create(scope: collection.immutable.List[String], description: Option[String] = None, client_id: Option[String] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[CreateAuthorizationBody, OAuthAuthorization] {
     val endpoint = "/oauth/authorizations"
     val expect = expect201
     val method = POST
     val body = CreateAuthorizationBody(scope, client_id.map(CreateAuthorizationClient), description)
   }
 
-  case class List(range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[OAuthAuthorization] {
+  case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[OAuthAuthorization] {
     val endpoint = "/oauth/authorizations"
     val method = GET
 
     def nextRequest(nextRange: String): ListRequest[OAuthAuthorization] = this.copy(range = Some(nextRange))
   }
 
-  case class Info(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
+  case class Info(id: String, headers: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
     val endpoint = s"/oauth/authorizations/$id"
     val expect = expect200
     val method = GET
   }
 
-  case class Delete(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
+  case class Delete(id: String, headers: Map[String, String] = Map.empty) extends Request[OAuthAuthorization] {
     val endpoint = s"/oauth/authorizations/$id"
     val expect = expect200
     val method = DELETE

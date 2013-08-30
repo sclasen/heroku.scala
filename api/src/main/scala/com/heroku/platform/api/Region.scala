@@ -3,13 +3,13 @@ package com.heroku.platform.api
 import com.heroku.platform.api.Request._
 
 object Region {
-  case class Info(id: String, extraHeaders: Map[String, String] = Map.empty) extends Request[Region] {
+  case class Info(id: String, headers: Map[String, String] = Map.empty) extends Request[Region] {
     val endpoint = s"/regions/$id"
     val expect = expect200
     val method = GET
   }
 
-  case class List(range: Option[String] = None, extraHeaders: Map[String, String] = Map.empty) extends ListRequest[Region] {
+  case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Region] {
     val endpoint = "/regions"
     val method = GET
 

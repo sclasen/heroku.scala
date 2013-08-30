@@ -116,13 +116,13 @@ object ModelBoilerplateGen extends App {
   }
 
   /*
-  extra params for requests. extraHeaders and also range for list reqs
+  extra params for requests. range for list reqs
    */
   def extraParams(link: Link): Seq[ValDef] = {
-    val defs: Seq[ValDef] = if (link.title == "List") {
+    val defs: Seq[ValDef] = if (link.rel == "instances") {
       Seq((PARAM("range", TYPE_OPTION("String")) := NONE))
     } else Seq.empty[ValDef]
-    defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := REF("Map") DOT "empty")
+    defs ++ Seq(PARAM("headers", TYPE_MAP("String", "String")) := REF("Map") DOT "empty")
   }
 
   /*
