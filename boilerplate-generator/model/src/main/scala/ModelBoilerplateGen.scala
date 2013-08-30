@@ -88,20 +88,18 @@ object ModelBoilerplateGen extends App {
         val paramNames = paramsMap.toSeq.map(_._1)
         val extra = extraParams(link)
 
-        link.title match {
-          case "Create" => createAction(resource, paramNames, params, extra, link, hrefParamNames)
-          case "List" => listAction(resource, paramNames, params, extra, link, hrefParamNames)
-          case "Info" => infoAction(resource, paramNames, params, extra, link, hrefParamNames)
-          case "Update" => updateAction(resource, paramNames, params, extra, link, hrefParamNames)
-          case "Delete" => deleteAction(resource, paramNames, params, extra, link, hrefParamNames)
-          case x => LIT(x)
+        link.rel match {
+          case "self" | "delete" => request(resource, paramNames, params, extra, link, hrefParamNames)
+          case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
+          case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
+          case x => sys.error("======> UNKNOWN link.rel:" + x)
         }
     }
 
     val bodyCaseClasses = resource.links.map {
       link =>
-        link.title match {
-          case "Create" | "Update" => Some(bodyCaseClass(link))
+        link.rel match {
+          case "create" | "update" => Some(bodyCaseClass(link))
           case _ => None
         }
     }.flatten
@@ -121,9 +119,7 @@ object ModelBoilerplateGen extends App {
   extra params for requests. extraHeaders and also range for list reqs
    */
   def extraParams(link: Link): Seq[ValDef] = {
-    e(link)
     val defs: Seq[ValDef] = if (link.title == "List") {
-      e("============>")
       Seq((PARAM("range", TYPE_OPTION("String")) := NONE))
     } else Seq.empty[ValDef]
     defs ++ Seq(PARAM("extraHeaders", TYPE_MAP("String", "String")) := REF("Map") DOT "empty")
@@ -173,9 +169,7 @@ object ModelBoilerplateGen extends App {
         }
     }.getOrElse(Seq.empty[(String, ValDef)]).map(_._2)
 
-    ((CASECLASSDEF(s"${
-      link.title
-    }${resource.name}Body") withParams params.toIterable): Tree)
+    ((CASECLASSDEF(s"${link.title}${resource.name}Body") withParams params.toIterable): Tree)
   }
 
   /*
@@ -228,34 +222,22 @@ object ModelBoilerplateGen extends App {
 
   /*request case classes*/
 
-  def createAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.Create${resource.name}Body", resource.name)) := BLOCK(
-      expect("expect201"), endpoint(link.href, hrefParams), method("POST"),
-      (VAL("body", s"models.Create${resource.name}Body") := (REF(s"models.Create${resource.name}Body") APPLY (paramNames.map(REF(_))))
+  def request(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
+      expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
+  }
+
+  def requestWithBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.${link.title}${resource.name}Body", resource.name)) := BLOCK(
+      expect("expect201"), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
+      (VAL("body", s"models.${link.title}${resource.name}Body") := (REF(s"models.${link.title}${resource.name}Body") APPLY (paramNames.map(REF(_))))
       )): Tree)
   }
 
-  def listAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+  def listRequest(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
     (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (resource.name)) := BLOCK(
-      endpoint(link.href, hrefParams), method("GET"),
+      endpoint(link.href, hrefParams), method(link.method.toUpperCase),
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (resource.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
-  }
-
-  def infoAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
-      expect("expect200"), endpoint(link.href, hrefParams), method("GET")): Tree)
-  }
-
-  def updateAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.Update${resource.name}Body", resource.name)) := BLOCK(
-      expect("expect200"), endpoint(link.href, hrefParams), method("PUT"),
-      (VAL("body", s"models.Update${resource.name}Body") := (REF(s"models.Update${resource.name}Body") APPLY (paramNames.map(REF(_)))))
-    ): Tree)
-  }
-
-  def deleteAction(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
-      expect("expect200"), endpoint(link.href, hrefParams), method("DELETE")): Tree)
   }
 
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
