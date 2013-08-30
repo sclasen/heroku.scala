@@ -2,10 +2,6 @@ import com.heroku.platform.api._
 import java.lang.reflect._
 import java.lang.reflect.{ Type => JType }
 
-import scala.Some
-import scala.Some
-import scala.Some
-import scala.Some
 import treehugger.forest._
 import definitions._
 import treehuggerDSL._
@@ -96,7 +92,7 @@ object SprayJsonBoilerplateGen extends App {
         (DEF("fromJson") withParams (PARAM("json", "String"))) := (TRY(REF("JsonParser") APPLY REF("json") DOT "convertTo" APPLYTYPE "T")
           CATCH (
             CASE(ID("e") withType ("DeserializationException")) ==> BLOCK((
-              Predef_println APPLY REF("json")), THROW("DeserializationException", REF("e")))
+              Predef_println APPLY REF("json")), Throw(REF("e")))
           ) ENDTRY)
       )): Tree)
   }
@@ -128,7 +124,8 @@ object SprayJsonBoilerplateGen extends App {
     if (t.isInstanceOf[Class[_]]) {
       val arity = t.asInstanceOf[Class[_]].getConstructors.apply(0).getParameterTypes.size
       //implicit lazy val Format<SomeType> = jsonFormat<SomeType.arity>(SomeType.apply)
-      Some((LAZYVAL(formatName(typ), sym.JsonFormat TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF(s"jsonFormat$arity") APPLY (REF(typ) DOT "apply"): Tree))
+      if (arity == 0) None
+      else Some((LAZYVAL(formatName(typ), sym.JsonFormat TYPE_OF typ) withFlags (Flags.IMPLICIT) := REF(s"jsonFormat$arity") APPLY (REF(typ) DOT "apply"): Tree))
     } else {
       None
     }
