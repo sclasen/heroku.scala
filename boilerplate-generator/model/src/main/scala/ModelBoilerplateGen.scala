@@ -89,7 +89,7 @@ object ModelBoilerplateGen extends App {
         val extra = extraParams(link)
 
         link.rel match {
-          case "self" | "delete" => request(resource, paramNames, params, extra, link, hrefParamNames)
+          case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
           case x => sys.error("======> UNKNOWN link.rel:" + x)

@@ -21,14 +21,14 @@ object HerokuApp {
     val method: String = POST
     val body: models.CreateHerokuAppBody = models.CreateHerokuAppBody(name, region, stack)
   }
-  case class Delete(herokuapp_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
+  case class Delete(app_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/apps/%s".format(herokuapp_id_or_name)
+    val endpoint: String = "/apps/%s".format(app_id_or_name)
     val method: String = DELETE
   }
-  case class Info(herokuapp_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
+  case class Info(app_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[HerokuApp] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/apps/%s".format(herokuapp_id_or_name)
+    val endpoint: String = "/apps/%s".format(app_id_or_name)
     val method: String = GET
   }
   case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[HerokuApp] {
@@ -36,9 +36,9 @@ object HerokuApp {
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[HerokuApp] = this.copy(range = Some(nextRange))
   }
-  case class Update(herokuapp_id_or_name: String, maintenance: Option[Boolean] = None, name: Option[String] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[models.UpdateHerokuAppBody, HerokuApp] {
+  case class Update(app_id_or_name: String, maintenance: Option[Boolean] = None, name: Option[String] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[models.UpdateHerokuAppBody, HerokuApp] {
     val expect: Set[Int] = expect201
-    val endpoint: String = "/apps/%s".format(herokuapp_id_or_name)
+    val endpoint: String = "/apps/%s".format(app_id_or_name)
     val method: String = PATCH
     val body: models.UpdateHerokuAppBody = models.UpdateHerokuAppBody(maintenance, name)
   }

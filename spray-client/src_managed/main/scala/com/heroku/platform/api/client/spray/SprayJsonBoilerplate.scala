@@ -148,7 +148,7 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val addonPlanFromJson: FromJson[Addon.models.AddonPlan] = from[Addon.models.AddonPlan]
   implicit lazy val addonFromJson: FromJson[Addon] = from[Addon]
   implicit lazy val addonListFromJson: FromJson[List[Addon]] = from[List[Addon]]
-  implicit lazy val errorResponseFromJson: FromJson[ErrorResponse] = from[ErrorResponse]
+  implicit lazy val FromJsonErrorResponse: FromJson[ErrorResponse] = from[ErrorResponse]
   def from[T](implicit t: JsonFormat[T]) = new FromJson[T] {
     def fromJson(json: String) =
       try {
@@ -156,7 +156,7 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
       } catch {
         case (e: DeserializationException) => {
           println(json)
-          throw new DeserializationException(e.toString)
+          throw e
         }
       }
   }

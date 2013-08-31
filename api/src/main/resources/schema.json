@@ -1,13 +1,13 @@
 {
-    "description":  "The platform API empowers developers to automate, extend and combine Heroku with other services.",
-    "properties":   {
-        "app":          { "$ref": "/schema/app#" },
-        "collaborator": { "$ref": "/schema/collaborator#" },
-        "region":       { "$ref": "/schema/region#" },
-        "stack":        { "$ref": "/schema/stack#" },
-        "user":         { "$ref": "/schema/user#" }
-    },
-    "$schema":      "http://json-schema.org/draft-04/hyper-schema",
-    "title":        "Heroku Platform API",
-    "type":         "object"
+  "description":  "The platform API empowers developers to automate, extend and combine Heroku with other services.",
+  "properties":   {
+    "app":          { "$ref": "/schema/app#" },
+    "collaborator": { "$ref": "/schema/collaborator#" },
+    "region":       { "$ref": "/schema/region#" },
+    "stack":        { "$ref": "/schema/stack#" },
+    "user":         { "$ref": "/schema/user#" }
+  },
+  "$schema":      "http://json-schema.org/draft-04/hyper-schema",
+  "title":        "Heroku Platform API",
+  "type":         ["object"]
 }

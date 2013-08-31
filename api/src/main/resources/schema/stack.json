@@ -1,31 +1,31 @@
 {
-    "description":  "A stack represents a particular system configuration in which your application may run.",
-    "id":           "schema/stack",
-    "$schema":      "http://json-schema.org/draft-04/hyper-schema",
-    "title":        "Heroku Platform API - Stack",
-    "type":         "object",
+  "description":  "A stack represents a particular system configuration in which your application may run.",
+  "id":           "schema/stack",
+  "$schema":      "http://json-schema.org/draft-04/hyper-schema",
+  "title":        "Heroku Platform API - Stack",
+  "type":         ["object"],
 
-    "definitions": {
-        "id": {
-            "description":  "unique identifier of stack",
-            "example":      "01234567-89ab-cdef-0123-456789abcdef",
-            "format":       "uuid",
-            "readOnly":     true,
-            "type":         ["string"]
-        },
-        "identity": {
-            "oneOf": [
-                { "$ref": "#/definitions/properties/id" },
-                { "$ref": "#/definitions/properties/name" }
-            ]
-        },
-        "name": {
-            "description":  "unique name of stack",
-            "example":      "cedar",
-            "readOnly":     true,
-            "type":         ["string"]
-        }
+  "definitions": {
+    "id": {
+      "description":  "unique identifier of stack",
+      "example":      "01234567-89ab-cdef-0123-456789abcdef",
+      "format":       "uuid",
+      "readOnly":     true,
+      "type":         ["string"]
     },
-    "links": [],
-    "properties": {}
+    "identity": {
+      "oneOf": [
+        { "$ref": "/schema/stack#/definitions/id" },
+        { "$ref": "/schema/stack#/definitions/name" }
+      ]
+    },
+    "name": {
+      "description":  "unique name of stack",
+      "example":      "cedar",
+      "readOnly":     true,
+      "type":         ["string"]
+    }
+  },
+  "links": [],
+  "properties": {}
 }
