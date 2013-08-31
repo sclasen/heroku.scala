@@ -24,14 +24,14 @@ object Account {
     val expect = expect200
   }
 
-  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[UpdateBody, Account] {
+  case class Update(allow_tracking: Option[Boolean] = None, email: Option[String] = None, beta: Option[Boolean] = None) extends RequestWithBody[UpdateBody, Account] {
     val endpoint = "/account"
     val method = PATCH
     val expect = expect200
     val body = UpdateBody(allow_tracking, email, beta)
   }
 
-  case class PasswordChangeRequest(current_password: String, password: String, headers: Map[String, String] = Map.empty) extends RequestWithBody[PasswordChangeBody, Account] {
+  case class PasswordChangeRequest(current_password: String, password: String) extends RequestWithBody[PasswordChangeBody, Account] {
     val endpoint = "/account/password"
     val method = PUT
     val expect = expect200

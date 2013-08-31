@@ -47,10 +47,10 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
 
   def endpoint: String = "api.heroku.com"
 
-  def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
+  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
-    val headers = getHeaders(request, key)
-    pipeline(HttpRequest(method, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
+    val sprayHeaders = getHeaders(headers, key)
+    pipeline(HttpRequest(method, request.endpoint, sprayHeaders, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
@@ -58,22 +58,22 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     }
   }
 
-  def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = {
+  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = {
     val method = getMethod(request)
-    val headers = getHeaders(request, key)
-    pipeline(HttpRequest(method, request.endpoint, headers, HttpEntity(`application/json`, to.toJson(request.body).getBytes("UTF-8")), `HTTP/1.1`)).map {
+    val sprayHeaders = getHeaders(headers, key)
+    pipeline(HttpRequest(method, request.endpoint, sprayHeaders, HttpEntity(`application/json`, to.toJson(request.body).getBytes("UTF-8")), `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
     }
   }
 
-  def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]] = {
+  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]] = {
     val range = request.range.map {
       r => List(rangeHeader(r))
     }.getOrElse(Nil)
-    val headers = getHeaders(request, key) ++ range
-    pipeline(HttpRequest(GET, request.endpoint, headers, EmptyEntity, `HTTP/1.1`)).map {
+    val sprayHeaders = getHeaders(headers, key) ++ range
+    pipeline(HttpRequest(GET, request.endpoint, sprayHeaders, EmptyEntity, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         val response = request.getResponse(resp.status.intValue, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)
@@ -91,8 +91,8 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     }
   }
 
-  def getHeaders(req: BaseRequest, key: String): List[HttpHeader] = {
-    req.headers.map {
+  def getHeaders(headers: Map[String, String], key: String): List[HttpHeader] = {
+    headers.map {
       case (k, v) => RawHeader(k, v)
     }.toList ++ List(accept, auth(key))
   }

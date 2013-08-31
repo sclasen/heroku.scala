@@ -11,12 +11,12 @@ object Region {
   object models {
     ()
   }
-  case class Info(region_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[Region] {
+  case class Info(region_id_or_name: String) extends Request[Region] {
     val expect: Set[Int] = expect200
     val endpoint: String = "/regions/%s".format(region_id_or_name)
     val method: String = GET
   }
-  case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Region] {
+  case class List(range: Option[String] = None) extends ListRequest[Region] {
     val endpoint: String = "/regions"
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[Region] = this.copy(range = Some(nextRange))

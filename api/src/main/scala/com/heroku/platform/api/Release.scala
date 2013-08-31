@@ -6,13 +6,13 @@ case class Release(created_at: String, description: String, id: String, version:
 
 object Release {
 
-  case class Info(app_id_or_name: String, release_id_or_name: String, headers: Map[String, String] = Map.empty) extends Request[Release] {
+  case class Info(app_id_or_name: String, release_id_or_name: String) extends Request[Release] {
     val endpoint = s"/apps/$app_id_or_name/releases/$release_id_or_name"
     val expect = expect200
     val method = GET
   }
 
-  case class List(app_id_or_name: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Release] {
+  case class List(app_id_or_name: String, range: Option[String] = None) extends ListRequest[Release] {
     val endpoint = s"/apps/$app_id_or_name/releases"
     val method = GET
 

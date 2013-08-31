@@ -122,7 +122,7 @@ object ModelBoilerplateGen extends App {
     val defs: Seq[ValDef] = if (link.rel == "instances") {
       Seq((PARAM("range", TYPE_OPTION("String")) := NONE))
     } else Seq.empty[ValDef]
-    defs ++ Seq(PARAM("headers", TYPE_MAP("String", "String")) := REF("Map") DOT "empty")
+    defs
   }
 
   /*

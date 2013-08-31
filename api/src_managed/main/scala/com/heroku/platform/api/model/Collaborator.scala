@@ -12,23 +12,23 @@ object Collaborator {
     case class CreateCollaboratorBody(silent: Option[Boolean] = None, user: Option[CollaboratorUser] = None)
     case class CollaboratorUser(email: String = null, id: String = null)
   }
-  case class Create(app_id_or_name: String, silent: Option[Boolean] = None, user: Option[CollaboratorUser] = None, headers: Map[String, String] = Map.empty) extends RequestWithBody[models.CreateCollaboratorBody, Collaborator] {
+  case class Create(app_id_or_name: String, silent: Option[Boolean] = None, user: Option[CollaboratorUser] = None) extends RequestWithBody[models.CreateCollaboratorBody, Collaborator] {
     val expect: Set[Int] = expect201
     val endpoint: String = "/apps/%s/collaborators".format(app_id_or_name)
     val method: String = POST
     val body: models.CreateCollaboratorBody = models.CreateCollaboratorBody(silent, user)
   }
-  case class Delete(app_id_or_name: String, collaborator_email_or_id: String, headers: Map[String, String] = Map.empty) extends Request[Collaborator] {
+  case class Delete(app_id_or_name: String, collaborator_email_or_id: String) extends Request[Collaborator] {
     val expect: Set[Int] = expect200
     val endpoint: String = "/apps/%s/collaborators/%s".format(app_id_or_name, collaborator_email_or_id)
     val method: String = DELETE
   }
-  case class Info(app_id_or_name: String, collaborator_email_or_id: String, headers: Map[String, String] = Map.empty) extends Request[Collaborator] {
+  case class Info(app_id_or_name: String, collaborator_email_or_id: String) extends Request[Collaborator] {
     val expect: Set[Int] = expect200
     val endpoint: String = "/apps/%s/collaborators/%s".format(app_id_or_name, collaborator_email_or_id)
     val method: String = GET
   }
-  case class List(app_id_or_name: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Collaborator] {
+  case class List(app_id_or_name: String, range: Option[String] = None) extends ListRequest[Collaborator] {
     val endpoint: String = "/apps/%s/collaborators".format(app_id_or_name)
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[Collaborator] = this.copy(range = Some(nextRange))

@@ -20,34 +20,34 @@ object Addon {
 
   }
 
-  case class Create(appIdOrName: String, plan: String, config: Map[String, String] = Map.empty, headers: Map[String, String] = Map.empty) extends RequestWithBody[AddonChange, Addon] {
+  case class Create(appIdOrName: String, plan: String, config: Map[String, String] = Map.empty) extends RequestWithBody[AddonChange, Addon] {
     val expect: Set[Int] = expect201
     val endpoint: String = s"/apps/$appIdOrName/addons"
     val method: String = POST
     val body = AddonChange(if (config.isEmpty) None else Some(config), AddonPlan(plan))
   }
 
-  case class Info(appIdOrName: String, addonIdOrName: String, headers: Map[String, String] = Map.empty) extends Request[Addon] {
+  case class Info(appIdOrName: String, addonIdOrName: String) extends Request[Addon] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appIdOrName/addons/$addonIdOrName"
     val method: String = GET
   }
 
-  case class List(appIdOrName: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Addon] {
+  case class List(appIdOrName: String, range: Option[String] = None) extends ListRequest[Addon] {
     def nextRequest(nextRange: String): ListRequest[Addon] = this.copy(range = Some(nextRange))
 
     val endpoint: String = s"/apps/$appIdOrName/addons"
     val method: String = GET
   }
 
-  case class Update(appIdOrName: String, addonIdOrName: String, plan: String, config: Map[String, String] = Map.empty, headers: Map[String, String] = Map.empty) extends RequestWithBody[AddonChange, Addon] {
+  case class Update(appIdOrName: String, addonIdOrName: String, plan: String, config: Map[String, String] = Map.empty) extends RequestWithBody[AddonChange, Addon] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appIdOrName/addons/$addonIdOrName"
     val method: String = PATCH
     val body = AddonChange(if (config.isEmpty) None else Some(config), AddonPlan(plan))
   }
 
-  case class Delete(appIdOrName: String, addonIdOrName: String, headers: Map[String, String] = Map.empty) extends Request[Addon] {
+  case class Delete(appIdOrName: String, addonIdOrName: String) extends Request[Addon] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appIdOrName/addons/$addonIdOrName"
     val method: String = DELETE

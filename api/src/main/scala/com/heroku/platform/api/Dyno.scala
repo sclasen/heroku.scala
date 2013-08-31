@@ -15,27 +15,27 @@ object Dyno {
     case class DynoRelease(id: String)
   }
 
-  case class Create(appId: String, command: String, attach: Boolean = false, headers: Map[String, String] = Map.empty) extends RequestWithBody[CreateDynoBody, Dyno] {
+  case class Create(appId: String, command: String, attach: Boolean = false) extends RequestWithBody[CreateDynoBody, Dyno] {
     val expect: Set[Int] = expect201
     val endpoint: String = s"/apps/$appId/dynos"
     val method: String = POST
     val body = CreateDynoBody(command, attach)
   }
 
-  case class List(appId: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Dyno] {
+  case class List(appId: String, range: Option[String] = None) extends ListRequest[Dyno] {
     val endpoint: String = s"/apps/$appId/dynos"
     val method: String = GET
 
     def nextRequest(nextRange: String) = this.copy(range = Some(nextRange))
   }
 
-  case class Info(appId: String, dynoId: String, headers: Map[String, String] = Map.empty) extends Request[Dyno] {
+  case class Info(appId: String, dynoId: String) extends Request[Dyno] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appId/dynos/$dynoId"
     val method: String = GET
   }
 
-  case class Delete(appId: String, dynoId: String, headers: Map[String, String] = Map.empty) extends Request[Dyno] {
+  case class Delete(appId: String, dynoId: String) extends Request[Dyno] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appId/dynos/$dynoId"
     val method: String = DELETE

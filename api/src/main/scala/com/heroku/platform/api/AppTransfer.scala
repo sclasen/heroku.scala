@@ -15,34 +15,34 @@ object AppTransfer {
 
   case class CreateTransferBody(app: App, recipient: UserBody)
 
-  case class Create(app: App, recipient: UserBody, headers: Map[String, String] = Map.empty) extends RequestWithBody[CreateTransferBody, AppTransfer] {
+  case class Create(app: App, recipient: UserBody) extends RequestWithBody[CreateTransferBody, AppTransfer] {
     val endpoint = s"/account/app-transfers"
     val expect = expect201
     val method = POST
     val body = CreateTransferBody(app, recipient)
   }
 
-  case class List(range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[AppTransfer] {
+  case class List(range: Option[String] = None) extends ListRequest[AppTransfer] {
     val endpoint = "/account/app-transfers"
     val method = GET
 
     def nextRequest(nextRange: String): ListRequest[AppTransfer] = this.copy(range = Some(nextRange))
   }
 
-  case class Info(transferId: String, headers: Map[String, String] = Map.empty) extends Request[AppTransfer] {
+  case class Info(transferId: String) extends Request[AppTransfer] {
     val endpoint = s"/account/app-transfers/$transferId"
     val expect = expect200
     val method = GET
   }
 
-  case class Update(transferId: String, state: State, headers: Map[String, String] = Map.empty) extends Request[AppTransfer] {
+  case class Update(transferId: String, state: State) extends Request[AppTransfer] {
     val endpoint = s"/account/app-transfers/$transferId"
     val expect = expect200
     val method = PATCH
     val body = state
   }
 
-  case class Delete(transferId: String, headers: Map[String, String] = Map.empty) extends Request[AppTransfer] {
+  case class Delete(transferId: String) extends Request[AppTransfer] {
     val endpoint = s"/account/app-transfers/$transferId"
     val expect = expect200
     val method = DELETE

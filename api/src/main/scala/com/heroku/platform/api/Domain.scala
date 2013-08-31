@@ -6,27 +6,27 @@ import com.heroku.platform.api.Domain.CreateDomainBody
 object Domain {
   case class CreateDomainBody(hostname: String)
 
-  case class Create(appId: String, hostname: String, headers: Map[String, String] = Map.empty) extends RequestWithBody[CreateDomainBody, Domain] {
+  case class Create(appId: String, hostname: String) extends RequestWithBody[CreateDomainBody, Domain] {
     val endpoint = s"/apps/$appId/domains"
     val expect = expect201
     val method = POST
     val body = CreateDomainBody(hostname)
   }
 
-  case class List(appId: String, range: Option[String] = None, headers: Map[String, String] = Map.empty) extends ListRequest[Domain] {
+  case class List(appId: String, range: Option[String] = None) extends ListRequest[Domain] {
     val endpoint = s"/apps/$appId/domains"
     val method = GET
 
     def nextRequest(nextRange: String): ListRequest[Domain] = this.copy(range = Some(nextRange))
   }
 
-  case class Info(appId: String, domainId: String, headers: Map[String, String] = Map.empty) extends Request[Domain] {
+  case class Info(appId: String, domainId: String) extends Request[Domain] {
     val endpoint = s"/apps/$appId/domains/$domainId"
     val expect = expect200
     val method = GET
   }
 
-  case class Delete(appId: String, domainId: String, headers: Map[String, String] = Map.empty) extends Request[Domain] {
+  case class Delete(appId: String, domainId: String) extends Request[Domain] {
     val endpoint = s"/apps/$appId/domains/$domainId"
     val expect = expect200
     val method = DELETE
