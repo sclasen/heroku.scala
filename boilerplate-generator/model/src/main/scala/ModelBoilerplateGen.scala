@@ -67,14 +67,14 @@ object ModelBoilerplateGen extends App {
             schema.properties.map {
               case (k, typ) =>
                 typ match {
-                  case Right(fieldDef) => argsFromFieldDef(k, fieldDef)
+                  case Right(fieldDef) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                   case Left(Right(ref)) =>
                     resource.resolveFieldRef(ref).fold({
-                      oneOf => argsFromOneOf(k, oneOf)
+                      oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
                     }, {
-                      fieldDef => argsFromFieldDef(k, fieldDef)
+                      fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                     })
-                  case Left(Left(oneOf)) => argsFromOneOf(k, oneOf)
+                  case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
 
                 }
 
@@ -109,10 +109,14 @@ object ModelBoilerplateGen extends App {
     )
   }
 
-  def argsFromFieldDef(k: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
+  def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): (String, ValDef) = {
+    if (required) (k -> (PARAM(k, requiredArg(fieldDef.`type`))))
+    else (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
+  }
 
-  def argsFromOneOf(k: String, oo: OneOf)(implicit resource: Resource, root: RootSchema) = {
-    (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
+  def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): (String, ValDef) = {
+    if (required) (k -> (PARAM(k, requiredArg(List(resource.name + initialCap(k))))))
+    else (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
   }
 
   /*
@@ -155,15 +159,14 @@ object ModelBoilerplateGen extends App {
         schema.properties.map {
           case (k, typ) =>
             typ match {
-              case Right(fieldDef) => argsFromFieldDef(k, fieldDef)
+              case Right(fieldDef) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
               case Left(Right(ref)) =>
                 resource.resolveFieldRef(ref).fold({
-                  oneOf => argsFromOneOf(k, oneOf)
+                  oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
                 }, {
-                  fieldDef => argsFromFieldDef(k, fieldDef)
+                  fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                 })
-              case Left(Left(oneOf)) => argsFromOneOf(k, oneOf)
-
+              case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
             }
 
         }
@@ -284,6 +287,14 @@ object ModelBoilerplateGen extends App {
     }
   }
 
+  def requiredArg(typez: List[String]) = {
+    if (typez.length == 1) {
+      (TYPE_REF(initialCap(typez(0))))
+    } else {
+      throw new IllegalStateException("encountered type with more than one non null type value")
+    }
+  }
+
   def aggJson(suffix: String)(implicit root: RootSchema) = {
     root.resources.map(root.resource).filter(_.hasModel).toList.sortBy(_.name).map {
       resource =>
@@ -366,7 +377,9 @@ object ModelBoilerplateGen extends App {
   case class NestedDef(properties: Map[String, Ref])
 
   //Describes the body of a PUT/POST in a Link
-  case class Schema(properties: Map[String, Either[Either[OneOf, Ref], FieldDefinition]])
+  case class Schema(properties: Map[String, Either[Either[OneOf, Ref], FieldDefinition]], required: Option[List[String]]) {
+    def isRequired(field: String) = required.exists(_.contains(field))
+  }
 
   //Endpoint
   case class Link(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
@@ -376,7 +389,7 @@ object ModelBoilerplateGen extends App {
     def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
       href.split('/').map {
         //decode urlencoded $refs in the href
-        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.getOrElse(res.name.toLowerCase) + "_" + o.orFields, f => r.schema.getOrElse(res.name.toLowerCase) + r.definition))
+        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.getOrElse(res.name.toLowerCase) + "_" + o.orFields, f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition))
         case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.orFields, f => r.definition))
         case _ => None
       }.toSeq.flatten
@@ -397,12 +410,44 @@ object ModelBoilerplateGen extends App {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
       res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
     }
+    //Lift  StringHelpers
+    def camelify(name: String): String = {
+      def loop(x: List[Char]): List[Char] = (x: @unchecked) match {
+        case '_' :: '_' :: rest => loop('_' :: rest)
+        case '-' :: '-' :: rest => loop('-' :: rest)
+        case '-' :: c :: rest => Character.toUpperCase(c) :: loop(rest)
+        case '_' :: c :: rest => Character.toUpperCase(c) :: loop(rest)
+        case '_' :: Nil => Nil
+        case '-' :: Nil => Nil
+        case c :: rest => c :: loop(rest)
+        case Nil => Nil
+      }
+      if (name == null)
+        ""
+      else
+        loop('_' :: name.toList).mkString
+    }
 
-    def name = {
-      initialCap(id.drop("schema/".length)) match {
+    def camelifyMethod(name: String): String = {
+      val tmp: String = camelify(name)
+      if (tmp.length == 0)
+        ""
+      else
+        tmp.substring(0, 1).toLowerCase + tmp.substring(1)
+    }
+
+    lazy val name = {
+      camelify(initialCap(id.drop("schema/".length)) match {
         case "App" => "HerokuApp"
         case x => x
-      }
+      })
+    }
+
+    lazy val nameForParam = {
+      (initialCap(id.drop("schema/".length)) match {
+        case "App" => "HerokuApp"
+        case x => x
+      }).replace('-', '_')
     }
 
     def hasModel = !properties.isEmpty
