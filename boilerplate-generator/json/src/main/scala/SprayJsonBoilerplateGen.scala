@@ -92,7 +92,7 @@ object SprayJsonBoilerplateGen extends App {
         (DEF("fromJson") withParams (PARAM("json", "String"))) := (TRY(REF("JsonParser") APPLY REF("json") DOT "convertTo" APPLYTYPE "T")
           CATCH (
             CASE(ID("e") withType ("DeserializationException")) ==> BLOCK((
-              Predef_println APPLY REF("json")), Throw(REF("e")))
+              Predef_println APPLY REF("json")), THROW(REF("e")))
           ) ENDTRY)
       )): Tree)
   }

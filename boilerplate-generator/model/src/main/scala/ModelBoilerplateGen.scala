@@ -143,7 +143,9 @@ object ModelBoilerplateGen extends App {
             }, {
               fieldDef => fieldType(fieldDef.`type`)
             })
-            ((PARAM(name, typ) := NULL))
+            //Hack, fix later.
+            if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
+            else ((PARAM(name, typ) := NULL))
         }
         ((CASECLASSDEF(resource.name + initialCap(k)) withParams params): Tree)
       }
