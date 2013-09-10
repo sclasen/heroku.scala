@@ -46,6 +46,8 @@ object ModelBoilerplateGen extends App {
           fieldDef => fieldType(fieldDef.`type`)
         })
         (PARAM(k, typ).tree)
+      case (k, Left(nestedDef)) if nestedDef.optional =>
+        (PARAM(k, TYPE_OPTION("models." + resource.name + initialCap(k))).tree)
       case (k, Left(nestedDef)) =>
         (PARAM(k, TYPE_REF("models." + resource.name + initialCap(k))).tree)
     }
@@ -376,7 +378,9 @@ object ModelBoilerplateGen extends App {
   case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String])
 
   //these map to "inner" objects inside a top level object, like region inside app
-  case class NestedDef(properties: Map[String, Ref])
+  case class NestedDef(properties: Map[String, Ref], `type`: List[String]) {
+    val optional = `type`.contains("null")
+  }
 
   //Describes the body of a PUT/POST in a Link
   case class Schema(properties: Map[String, Either[Either[OneOf, Ref], FieldDefinition]], required: Option[List[String]]) {
@@ -391,7 +395,7 @@ object ModelBoilerplateGen extends App {
     def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
       href.split('/').map {
         //decode urlencoded $refs in the href
-        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.getOrElse(res.name.toLowerCase) + "_" + o.orFields, f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition))
+        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields, f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition))
         case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.orFields, f => r.definition))
         case _ => None
       }.toSeq.flatten
