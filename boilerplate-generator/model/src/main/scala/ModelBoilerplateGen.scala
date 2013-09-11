@@ -186,8 +186,8 @@ object ModelBoilerplateGen extends App {
 
     val modelToJsons = resource.links.map {
       link =>
-        link.title match {
-          case "Create" | "Update" =>
+        link.rel match {
+          case "create" | "update" =>
             val to = s"${link.title}${resource.name}Body"
             Some(toJson(to, s"models.${to}"))
           case _ => None
@@ -230,8 +230,12 @@ object ModelBoilerplateGen extends App {
   /*request case classes*/
 
   def request(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
-      expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
+    if ((params ++ extra).isEmpty)
+      (CASEOBJECTDEF(link.title) withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
+        expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
+    else
+      (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
+        expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 
   def requestWithBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
