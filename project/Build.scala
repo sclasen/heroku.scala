@@ -5,6 +5,15 @@ import com.typesafe.sbt.SbtScalariform._
 
 object Build extends Build {
 
+  val withManaged =
+    List(
+      sourceDirectories in ScalariformKeys.format := (sourceDirectories in ScalariformKeys.format).value ++ Seq(sourceManaged.value)
+    )
+
+  //inConfig(Compile)(withManaged)
+
+  //inConfig(Test)(withManaged)
+
   val buildSettings = Seq(
     organization := "com.heroku.api",
     version := "0.0.1-SNAPSHOT",
@@ -29,7 +38,7 @@ object Build extends Build {
     id = "api",
     base = file("api"),
     settings = buildSettings ++ Seq(libraryDependencies ++= apiDeps)
-  ).settings(generateModelBoilerplate:_*)
+  ).settings(generateModelBoilerplate:_*).settings(inConfig(Compile)(withManaged):_*)
 
 
   val jsonBoilerplateGen = Project(
@@ -63,6 +72,10 @@ object Build extends Build {
        cache(apiClasses.toSet).toSeq
     }
   )
+
+
+
+
 
   lazy val modelBoilerplate = TaskKey[Seq[File]]("model-boilerplate", "Generate Model Boilerplate")
 
