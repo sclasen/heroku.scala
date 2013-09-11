@@ -360,18 +360,14 @@ object ModelBoilerplateGen extends App {
   }
 
   //$ref :  #definitions/something or schema/foo#definitions/something
+  // new single file
+  // #/definitions/account-feature/definitions/id
   case class Ref(`$ref`: String) {
     def path = `$ref`
 
-    def isLocal: Boolean = path.startsWith("#")
+    def schema: Option[String] = Some(path.split('/')(2))
 
-    def schema: Option[String] = {
-      if (isLocal) None
-      else Some(path.substring(0, path.indexOf("#")).drop("/schema/".length))
-    }
-
-    def definition: String = if (isLocal) path.substring("#/definitions/".length)
-    else path.substring(path.indexOf("#")).drop("#/definitions/".length)
+    def definition: String = path.split('/')(4)
   }
 
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
@@ -406,7 +402,8 @@ object ModelBoilerplateGen extends App {
   case class OneOf(oneOf: List[Ref]) {
     def orFields = oneOf match {
       case one :: two :: Nil => s"${one.definition}_or_${two.definition}"
-      case _ => sys.error(s"OneOf had ${oneOf.length} items. Expected 2")
+      case one :: Nil => s"${one.definition}"
+      case _ => sys.error(s"OneOf had ${oneOf.length} items. Expected 1 or 2")
     }
   }
 
@@ -460,7 +457,7 @@ object ModelBoilerplateGen extends App {
   }
 
   //root schema.json
-  case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String) {
+  case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String, definitions: Map[String, Resource]) {
 
     val resourceMap = new collection.mutable.HashMap[String, Resource]
 
@@ -469,17 +466,7 @@ object ModelBoilerplateGen extends App {
     def resource(name: String): Resource = resourceMap.getOrElseUpdate(name, loadResource(name))
 
     def loadResource(name: String): Resource = {
-      val ref = properties(name)("$ref")
-      // "/schema/app#"
-      val schema = ref.drop("/schema".length).dropRight("#".length)
-      val text = schemaText(schema)
-      Json.parse(text).validate[Resource].fold(
-        {
-          e => sys.error(e.toString)
-        }, {
-          res => res
-        }
-      )
+      definitions(name)
     }
 
     def loadAll = resources.map(resource)
