@@ -320,6 +320,7 @@ object ModelBoilerplateGen extends App {
 
   def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api.ErrorResponseJson"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
   /*schema.json parsing*/
+  implicit def fmtAI: Format[ArrayItems] = Json.format[ArrayItems]
 
   implicit def fmtResource: Format[Resource] = Json.format[Resource]
 
@@ -329,16 +330,16 @@ object ModelBoilerplateGen extends App {
 
   implicit def re[L, R](implicit l: Format[L], r: Format[R]): Format[Either[L, R]] = Format(Reads(
     js =>
-      JsSuccess(js.validate[R].fold({
+      js.validate[R].fold({
         er =>
           js.validate[L].fold({
-            el => sys.error(er.toString + el.toString + Json.prettyPrint(js))
+            el => JsError(er.toString + el.toString + Json.prettyPrint(js))
           }, {
-            s => Left[L, R](s)
+            s => JsSuccess(Left[L, R](s))
           })
       }, {
-        r => Right[L, R](r)
-      }))
+        r => JsSuccess(Right[L, R](r))
+      })
   ), Writes {
     case Right(ar) => r.writes(ar)
     case Left(al) => l.writes(al)
@@ -374,8 +375,9 @@ object ModelBoilerplateGen extends App {
     def definition: String = path.split('/')(4)
   }
 
+  case class ArrayItems(`type`: String)
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
-  case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String])
+  case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
 
   //these map to "inner" objects inside a top level object, like region inside app
   case class NestedDef(properties: Map[String, Ref], `type`: List[String]) {
