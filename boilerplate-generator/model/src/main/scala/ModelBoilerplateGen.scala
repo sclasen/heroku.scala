@@ -43,7 +43,7 @@ object ModelBoilerplateGen extends App {
         val typ = resource.resolveFieldRef(ref).fold({
           oneOf => sys.error("Not expecting oneOf")
         }, {
-          fieldDef => fieldType(fieldDef.`type`)
+          fieldDef => fieldType(fieldDef)
         })
         (PARAM(k, typ).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
@@ -119,14 +119,16 @@ object ModelBoilerplateGen extends App {
   }
 
   def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required) (k -> (PARAM(k, requiredArg(fieldDef.`type`))))
-    else (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE)))
+    Seq(if (required) (k -> (PARAM(k, requiredArg(fieldDef))))
+    else (k -> (PARAM(k, argType(fieldDef)) := NONE)))
   }
 
   def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required) (k -> (PARAM(k, requiredArg(List(resource.name + initialCap(k))))))
-    else (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE)))
+    Seq(if (required) (k -> (PARAM(k, requiredArg(hollowFieldDef(List(resource.name + initialCap(k)))))))
+    else (k -> (PARAM(k, argType(hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
   }
+
+  def hollowFieldDef(typez: List[String]): FieldDefinition = FieldDefinition(None, None, None, None, typez, None)
 
   /*
   extra params for requests. range for list reqs
@@ -150,7 +152,7 @@ object ModelBoilerplateGen extends App {
             val typ = resource.resolveFieldRef(ref).fold({
               oneOf => sys.error("Not expecting oneOf")
             }, {
-              fieldDef => fieldType(fieldDef.`type`)
+              fieldDef => fieldType(fieldDef)
             })
             //Hack, fix later.
             if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
@@ -287,7 +289,8 @@ object ModelBoilerplateGen extends App {
 
   def e(a: AnyRef) = System.err.println(a)
 
-  def fieldType(typ: List[String]) = {
+  def fieldType(fieldDef: FieldDefinition) = {
+    val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
     val typez = typ.filter(_ != "null").map {
       case "integer" => "Int"
@@ -301,18 +304,30 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def argType(typ: List[String]) = {
+  def argType(fieldDef: FieldDefinition) = {
+    val typ = fieldDef.`type`
     val typez = typ.filter(_ != "null")
     if (typez.length == 1) {
-      (TYPE_OPTION(initialCap(typez(0))))
+      fieldDef.items.map {
+        items =>
+          (TYPE_OPTION(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+      }.getOrElse {
+        (TYPE_OPTION(initialCap(typez(0))))
+      }
     } else {
       throw new IllegalStateException("encountered type with more than one non null type value")
     }
   }
 
-  def requiredArg(typez: List[String]) = {
+  def requiredArg(fieldDef: FieldDefinition) = {
+    val typez = fieldDef.`type`
     if (typez.length == 1) {
-      (TYPE_REF(initialCap(typez(0))))
+      fieldDef.items.map {
+        items =>
+          (TYPE_REF(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+      }.getOrElse {
+        (TYPE_REF(initialCap(typez(0))))
+      }
     } else {
       throw new IllegalStateException("encountered type with more than one non null type value")
     }
@@ -392,7 +407,7 @@ object ModelBoilerplateGen extends App {
 
   case class ArrayItems(`type`: String)
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
-  case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
+  case class FieldDefinition(description: Option[String], example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
 
   //these map to "inner" objects inside a top level object, like region inside app
   case class NestedDef(properties: Map[String, Ref], `type`: List[String]) {

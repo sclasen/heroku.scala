@@ -136,6 +136,6 @@ object Build extends Build {
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.3.0"
-  val playJson = "com.typesafe.play" %% "play-json" % "2.2.0-M2"
+  val playJson = "com.typesafe.play" %% "play-json" % "2.2.0"
 
 }

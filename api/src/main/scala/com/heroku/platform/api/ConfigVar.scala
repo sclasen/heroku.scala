@@ -9,7 +9,7 @@ object ConfigVar {
     val method: String = GET
   }
 
-  case class Update(appId: String, configVarsToSet: Map[String, String] = Map.empty, configVarsToRemove: Set[String]) extends RequestWithBody[Map[String, String], Map[String, String]] {
+  case class Update(appId: String, configVarsToSet: Map[String, String] = Map.empty, configVarsToRemove: Set[String] = Set.empty) extends RequestWithBody[Map[String, String], Map[String, String]] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$appId/config-vars"
     val method: String = PATCH
