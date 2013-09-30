@@ -47,9 +47,9 @@ object ModelBoilerplateGen extends App {
         })
         (PARAM(k, typ).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
-        (PARAM(k, TYPE_OPTION("models." + resource.name + initialCap(k))).tree)
+        (PARAM(k, TYPE_OPTION("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
       case (k, Left(nestedDef)) =>
-        (PARAM(k, TYPE_REF("models." + resource.name + initialCap(k))).tree)
+        (PARAM(k, TYPE_REF("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
     }
     (CASECLASSDEF(resource.name) withParams params: Tree)
 
@@ -66,10 +66,18 @@ object ModelBoilerplateGen extends App {
       link =>
         val paramsMap = link.schema.map {
           schema =>
-            schema.properties.map {
+            schema.properties.flatMap {
               case (k, typ) =>
                 typ match {
-                  case Right(fieldDef) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+                  case Right(Right(fieldDef)) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+                  case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
+                    case (nk, nref) =>
+                      resource.resolveFieldRef(nref).fold({
+                        oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                      }, {
+                        fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+                      })
+                  }
                   case Left(Right(ref)) =>
                     resource.resolveFieldRef(ref).fold({
                       oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
@@ -77,7 +85,6 @@ object ModelBoilerplateGen extends App {
                       fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                     })
                   case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
-
                 }
 
             }
@@ -111,14 +118,14 @@ object ModelBoilerplateGen extends App {
     )
   }
 
-  def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): (String, ValDef) = {
-    if (required) (k -> (PARAM(k, requiredArg(fieldDef.`type`))))
-    else (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE))
+  def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
+    Seq(if (required) (k -> (PARAM(k, requiredArg(fieldDef.`type`))))
+    else (k -> (PARAM(k, argType(fieldDef.`type`)) := NONE)))
   }
 
-  def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): (String, ValDef) = {
-    if (required) (k -> (PARAM(k, requiredArg(List(resource.name + initialCap(k))))))
-    else (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE))
+  def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
+    Seq(if (required) (k -> (PARAM(k, requiredArg(List(resource.name + initialCap(k))))))
+    else (k -> (PARAM(k, argType(List(resource.name + initialCap(k)))) := NONE)))
   }
 
   /*
@@ -149,7 +156,7 @@ object ModelBoilerplateGen extends App {
             if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
             else ((PARAM(name, typ) := NULL))
         }
-        ((CASECLASSDEF(resource.name + initialCap(k)) withParams params): Tree)
+        ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(k))) withParams params): Tree)
       }
     }.flatten
   }
@@ -160,10 +167,18 @@ object ModelBoilerplateGen extends App {
   def bodyCaseClass(link: Link)(implicit resource: Resource, root: RootSchema) = {
     val params = link.schema.map {
       schema =>
-        schema.properties.map {
+        schema.properties.flatMap {
           case (k, typ) =>
             typ match {
-              case Right(fieldDef) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+              case Right(Right(fieldDef)) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+              case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
+                case (nk, nref) =>
+                  resource.resolveFieldRef(nref).fold({
+                    oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                  }, {
+                    fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+                  })
+              }
               case Left(Right(ref)) =>
                 resource.resolveFieldRef(ref).fold({
                   oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
@@ -197,7 +212,7 @@ object ModelBoilerplateGen extends App {
     val nesteds = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
-        Some(toJson(resource.name + initialCap(k), "models." + resource.name + initialCap(k)))
+        Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
     TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
@@ -212,7 +227,7 @@ object ModelBoilerplateGen extends App {
     val resps = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
-        Some(fromJson(resource.name + initialCap(k), "models." + resource.name + initialCap(k)))
+        Some(fromJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"collection.immutable.List[${resource.name}]"))
     TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
   }
@@ -385,7 +400,7 @@ object ModelBoilerplateGen extends App {
   }
 
   //Describes the body of a PUT/POST in a Link
-  case class Schema(properties: Map[String, Either[Either[OneOf, Ref], FieldDefinition]], required: Option[List[String]]) {
+  case class Schema(properties: Map[String, Either[Either[OneOf, Ref], Either[NestedDef, FieldDefinition]]], required: Option[List[String]]) {
     def isRequired(field: String) = required.exists(_.contains(field))
   }
 
@@ -457,14 +472,14 @@ object ModelBoilerplateGen extends App {
     lazy val name = {
       camelify(initialCap(id.drop("schema/".length)) match {
         case "App" => "HerokuApp"
-        case x => x
+        case x => x.replace("Oauth", "OAuth")
       })
     }
 
     lazy val nameForParam = {
       (initialCap(id.drop("schema/".length)) match {
         case "App" => "HerokuApp"
-        case x => x
+        case x => x.replace("Oauth", "OAuth")
       }).replace('-', '_')
     }
 
