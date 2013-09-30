@@ -176,7 +176,7 @@ object ModelBoilerplateGen extends App {
         }
     }.getOrElse(Seq.empty[(String, ValDef)]).map(_._2)
 
-    ((CASECLASSDEF(s"${link.title}${resource.name}Body") withParams params.toIterable): Tree)
+    ((CASECLASSDEF(s"${link.action}${resource.name}Body") withParams params.toIterable): Tree)
   }
 
   /*
@@ -188,7 +188,7 @@ object ModelBoilerplateGen extends App {
       link =>
         link.rel match {
           case "create" | "update" =>
-            val to = s"${link.title}${resource.name}Body"
+            val to = s"${link.action}${resource.name}Body"
             Some(toJson(to, s"models.${to}"))
           case _ => None
         }
@@ -231,22 +231,22 @@ object ModelBoilerplateGen extends App {
 
   def request(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
     if ((params ++ extra).isEmpty)
-      (CASEOBJECTDEF(link.title) withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
+      (CASEOBJECTDEF(link.action) withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
         expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
     else
-      (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
+      (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.Request TYPE_OF (resource.name)) := BLOCK(
         expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 
   def requestWithBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.${link.title}${resource.name}Body", resource.name)) := BLOCK(
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.${link.action}${resource.name}Body", resource.name)) := BLOCK(
       expect("expect201"), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
-      (VAL("body", s"models.${link.title}${resource.name}Body") := (REF(s"models.${link.title}${resource.name}Body") APPLY (paramNames.map(REF(_))))
+      (VAL("body", s"models.${link.action}${resource.name}Body") := (REF(s"models.${link.action}${resource.name}Body") APPLY (paramNames.map(REF(_))))
       )): Tree)
   }
 
   def listRequest(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.title) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (resource.name)) := BLOCK(
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (resource.name)) := BLOCK(
       endpoint(link.href, hrefParams), method(link.method.toUpperCase),
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (resource.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
   }
@@ -311,14 +311,14 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents (aggJson("RequestJson")): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarResponseJson" :: "AddonResponseJson" :: aggJson("RequestJson")): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: aggJson("ResponseJson")): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: aggJson("ResponseJson")): Tree)
   }
 
-  def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api.ErrorResponseJson"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
+  def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api._"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
   /*schema.json parsing*/
   implicit def fmtAI: Format[ArrayItems] = Json.format[ArrayItems]
 
@@ -402,6 +402,9 @@ object ModelBoilerplateGen extends App {
         case _ => None
       }.toSeq.flatten
     }
+    def action: String = {
+      Resource.camelify(title.replace(" ", "_"))
+    }
   }
 
   //in our case it is either the id or friendly id so should be size 2
@@ -413,13 +416,7 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  //schema for a endpoint/object type
-  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[OneOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
-    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[OneOf, FieldDefinition] = {
-      val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
-      res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
-    }
-    //Lift  StringHelpers
+  object Resource {
     def camelify(name: String): String = {
       def loop(x: List[Char]): List[Char] = (x: @unchecked) match {
         case '_' :: '_' :: rest => loop('_' :: rest)
@@ -444,6 +441,18 @@ object ModelBoilerplateGen extends App {
       else
         tmp.substring(0, 1).toLowerCase + tmp.substring(1)
     }
+  }
+
+  //schema for a endpoint/object type
+  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[OneOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
+    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[OneOf, FieldDefinition] = {
+      val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
+      res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
+    }
+    //Lift  StringHelpers
+
+    def camelify(name: String) = Resource.camelify(name)
+    def camelifyMethod(name: String) = Resource.camelifyMethod(name)
 
     lazy val name = {
       camelify(initialCap(id.drop("schema/".length)) match {
@@ -465,9 +474,11 @@ object ModelBoilerplateGen extends App {
   //root schema.json
   case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String, definitions: Map[String, Resource]) {
 
+    val byHand = Set("config-var", "addon")
+
     val resourceMap = new collection.mutable.HashMap[String, Resource]
 
-    def resources = properties.keys
+    def resources = properties.keys.filter(k => !(byHand.contains(k)))
 
     def resource(name: String): Resource = resourceMap.getOrElseUpdate(name, loadResource(name))
 
