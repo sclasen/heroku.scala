@@ -11,6 +11,7 @@ abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
       val app = getApp
       val addon = create(Addon.Create(app.id, "scheduler:standard"))
       val addonList = listAll(Addon.List(app.id))
+      println(addonList)
       addonList.contains(addon) must be(true)
       val addonInfo = info(Addon.Info(app.id, addon.id))
       addonInfo must equal(addon)

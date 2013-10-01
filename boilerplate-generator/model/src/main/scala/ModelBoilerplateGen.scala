@@ -10,7 +10,7 @@ import treehuggerDSL._
 object ModelBoilerplateGen extends App {
 
   object sym {
-    val ApiPackage = "com.heroku.platform.api.model"
+    val ApiPackage = "com.heroku.platform.api"
     val ToJson = RootClass.newClass("ToJson")
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
@@ -43,9 +43,11 @@ object ModelBoilerplateGen extends App {
         val typ = resource.resolveFieldRef(ref).fold({
           oneOf => sys.error("Not expecting oneOf")
         }, {
-          fieldDef => fieldType(fieldDef)
+          fieldDef => fieldType(k, fieldDef)(resource)
         })
         (PARAM(k, typ).tree)
+      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" =>
+        (PARAM(k, TYPE_OPTION("String")).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
         (PARAM(k, TYPE_OPTION("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
       case (k, Left(nestedDef)) =>
@@ -119,13 +121,13 @@ object ModelBoilerplateGen extends App {
   }
 
   def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required) (k -> (PARAM(k, requiredArg(fieldDef))))
-    else (k -> (PARAM(k, argType(fieldDef)) := NONE)))
+    Seq(if (required || (k == "grant" && resource.id == "schema/oauth-token")) (k -> (PARAM(k, requiredArg(k, fieldDef))))
+    else (k -> (PARAM(k, argType(k, fieldDef)) := NONE)))
   }
 
   def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required) (k -> (PARAM(k, requiredArg(hollowFieldDef(List(resource.name + initialCap(k)))))))
-    else (k -> (PARAM(k, argType(hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
+    Seq(if (required) (k -> (PARAM(k, requiredArg(k, hollowFieldDef(List(resource.name + initialCap(k)))))))
+    else (k -> (PARAM(k, argType(k, hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
   }
 
   def hollowFieldDef(typez: List[String]): FieldDefinition = FieldDefinition(None, None, None, None, typez, None)
@@ -152,7 +154,7 @@ object ModelBoilerplateGen extends App {
             val typ = resource.resolveFieldRef(ref).fold({
               oneOf => sys.error("Not expecting oneOf")
             }, {
-              fieldDef => fieldType(fieldDef)
+              fieldDef => fieldType(name, fieldDef)
             })
             //Hack, fix later.
             if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
@@ -256,8 +258,9 @@ object ModelBoilerplateGen extends App {
   }
 
   def requestWithBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    val exp = if (link.rel == "create") "expect201" else "expect200"
     (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.${link.action}${resource.name}Body", resource.name)) := BLOCK(
-      expect("expect201"), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
+      expect(exp), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
       (VAL("body", s"models.${link.action}${resource.name}Body") := (REF(s"models.${link.action}${resource.name}Body") APPLY (paramNames.map(REF(_))))
       )): Tree)
   }
@@ -289,13 +292,10 @@ object ModelBoilerplateGen extends App {
 
   def e(a: AnyRef) = System.err.println(a)
 
-  def fieldType(fieldDef: FieldDefinition) = {
+  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
     val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
-    val typez = typ.filter(_ != "null").map {
-      case "integer" => "Int"
-      case x => x
-    }
+    val typez = convertTypes(fieldDef.`type`)
     if (typez.length == 1) {
       if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
       else (TYPE_REF(initialCap(typez(0))))
@@ -304,9 +304,8 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def argType(fieldDef: FieldDefinition) = {
-    val typ = fieldDef.`type`
-    val typez = typ.filter(_ != "null")
+  def argType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+    val typez = convertTypes(fieldDef.`type`)
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
@@ -319,8 +318,8 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def requiredArg(fieldDef: FieldDefinition) = {
-    val typez = fieldDef.`type`
+  def requiredArg(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+    val typez = convertTypes(fieldDef.`type`)
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
@@ -333,6 +332,24 @@ object ModelBoilerplateGen extends App {
     }
   }
 
+  def specialCase(resource: Resource, field: String) = {
+    (resource.id, field) match {
+      case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
+      case ("schema/oauth-token", "client") => Some((TYPE_OPTION("OAuthTokenClient")))
+      case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
+      case ("schema/oauth-token", "refresh_token") => Some((TYPE_OPTION("OAuthTokenRefreshToken")))
+      case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
+      case _ => None
+    }
+  }
+
+  def convertTypes(types: List[String]) = {
+    types.filter(_ != "null").map {
+      case "integer" => "Int"
+      case x => x
+    }
+  }
+
   def aggJson(suffix: String)(implicit root: RootSchema) = {
     root.resources.map(root.resource).filter(_.hasModel).toList.sortBy(_.name).map {
       resource =>
@@ -341,7 +358,7 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarResponseJson" :: "AddonResponseJson" :: aggJson("RequestJson")): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: aggJson("RequestJson")): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
@@ -504,7 +521,7 @@ object ModelBoilerplateGen extends App {
   //root schema.json
   case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String, definitions: Map[String, Resource]) {
 
-    val byHand = Set("config-var", "addon")
+    val byHand = Set("config-var", "addon", "log-drain")
 
     val resourceMap = new collection.mutable.HashMap[String, Resource]
 

@@ -17,6 +17,7 @@ import akka.pattern._
 import akka.util.Timeout
 import com.heroku.platform.api.PartialResponse
 import com.heroku.platform.api.ErrorResponse
+import spray.http.HttpEntity.Empty
 
 class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api {
 
@@ -50,7 +51,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
   def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
     val sprayHeaders = getHeaders(headers, key)
-    pipeline(HttpRequest(method, request.endpoint, sprayHeaders, EmptyEntity, `HTTP/1.1`)).map {
+    pipeline(HttpRequest(method, request.endpoint, sprayHeaders, Empty, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
@@ -73,7 +74,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
       r => List(rangeHeader(r))
     }.getOrElse(Nil)
     val sprayHeaders = getHeaders(headers, key) ++ range
-    pipeline(HttpRequest(GET, request.endpoint, sprayHeaders, EmptyEntity, `HTTP/1.1`)).map {
+    pipeline(HttpRequest(GET, request.endpoint, sprayHeaders, Empty, `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
         val response = request.getResponse(resp.status.intValue, responseHeaders, resp.header[NextRange].map(_.value), resp.entity.asString)

@@ -25,7 +25,7 @@ object Build extends Build {
       "spray repo" at "http://repo.spray.io",
       "spray nightlies" at "http://nightlies.spray.io/",
       "sonatype" at "https://oss.sonatype.org/content/groups/public")
-  ) ++ Defaults.defaultSettings ++ scalariformSettings
+  ) ++ Defaults.defaultSettings ++ scalariformSettings ++ Seq( testOptions in Test += Tests.Argument("-oF"),  testOptions in IntegrationTest += Tests.Argument("-oF"))
 
 
   val modelBoilerplateGen = Project(
@@ -65,17 +65,13 @@ object Build extends Build {
         val cache =
           FileFunction.cached(cacheDir / "json-boilerplate-generator", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
             in: Set[File] =>
-              genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st) ++
-                genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)
+              genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala", cp.files, "SprayJsonBoilerplateGen", st)/* ++
+                genJsonBoilerplate(sm / "com/heroku/platform/api/client/spray/PlayJsonBoilerplate.scala", cp.files, "PlayJsonBoilerplateGen", st)*/
           }
 
        cache(apiClasses.toSet).toSeq
     }
   )
-
-
-
-
 
   lazy val modelBoilerplate = TaskKey[Seq[File]]("model-boilerplate", "Generate Model Boilerplate")
 
@@ -85,15 +81,13 @@ object Build extends Build {
     modelBoilerplate in Compile <<= (cacheDirectory, sourceManaged in Compile, dependencyClasspath in Runtime in modelBoilerplateGen, baseDirectory, streams) map {
       (cacheDir, sm, cp, base, st) =>
        val schema = Set(base / "src/main/resources/schema.json")
-        genModelboilerplate(sm / "com/heroku/platform/api/model", cp.files, "ModelBoilerplateGen", st).toSeq
-
-       /* val cache =
+       val cache =
          FileFunction.cached(cacheDir / "model-boilerplate-generator", inStyle = FilesInfo.hash, outStyle = FilesInfo.hash) {
            in: Set[File] =>
-              genModelboilerplate(sm / "com/heroku/platform/api/model", cp.files, "ModelBoilerplateGen", st)
+              genModelboilerplate(sm / "com/heroku/platform/api", cp.files, "ModelBoilerplateGen", st)
          }
 
-        cache(schema).toSeq*/
+        cache(schema).toSeq
     }
   )
 
@@ -131,7 +125,7 @@ object Build extends Build {
 
 
 
-  val spray = "io.spray" % "spray-client" % "1.2-M8" % "compile"
+  val spray = "io.spray" % "spray-client" % "1.2-20130928" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"

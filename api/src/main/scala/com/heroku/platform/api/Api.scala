@@ -40,6 +40,7 @@ trait BaseRequest {
 trait Request[O] extends BaseRequest {
 
   def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[ErrorResponse, O] = {
+    println(status)
     if (expect.contains(status)) {
       Right(f.fromJson(body))
     } else {
