@@ -25,8 +25,8 @@ object LogDrain {
     val endpoint: String = "/apps/%s/log-drains/%s".format(app_id_or_name, log_drain_id_or_url)
     val method: String = GET
   }
-  case class List(app_id_or_name: String, log_drain_id_or_url: String, range: Option[String] = None) extends ListRequest[LogDrain] {
-    val endpoint: String = "/apps/%s/log-drainds/%s".format(app_id_or_name, log_drain_id_or_url)
+  case class List(app_id_or_name: String, range: Option[String] = None) extends ListRequest[LogDrain] {
+    val endpoint: String = "/apps/%s/log-drains".format(app_id_or_name)
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[LogDrain] = this.copy(range = Some(nextRange))
   }
@@ -36,9 +36,11 @@ case class LogDrain(url: String, addon: Option[models.LogDrainAddon], id: String
 
 trait LogDrainRequestJson {
   implicit def ToJsonCreateLogDrainBody: ToJson[models.CreateLogDrainBody]
+  implicit def ToJsonLogDrainAddon: ToJson[models.LogDrainAddon]
 }
 
 trait LogDrainResponseJson {
   implicit def FromJsonLogDrain: FromJson[LogDrain]
+  implicit def FromJsonLogDrainAddon: FromJson[models.LogDrainAddon]
   implicit def FromJsonListLogDrain: FromJson[collection.immutable.List[LogDrain]]
 }

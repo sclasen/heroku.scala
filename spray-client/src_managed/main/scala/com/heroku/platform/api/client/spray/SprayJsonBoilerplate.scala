@@ -13,6 +13,8 @@ object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiReques
   }
   implicit lazy val FormatAddonmodelsAddonChange: JsonFormat[Addon.models.AddonChange] = jsonFormat2(Addon.models.AddonChange.apply)
   implicit lazy val FormatAddonmodelsAddonPlan: JsonFormat[Addon.models.AddonPlan] = jsonFormat1(Addon.models.AddonPlan.apply)
+  implicit lazy val FormatLogDrainmodelsLogDrainAddon: JsonFormat[LogDrain.models.LogDrainAddon] = jsonFormat1(LogDrain.models.LogDrainAddon.apply)
+  implicit lazy val FormatLogDrainmodelsCreateLogDrainBody: JsonFormat[LogDrain.models.CreateLogDrainBody] = jsonFormat2(LogDrain.models.CreateLogDrainBody.apply)
   implicit lazy val FormatAccountmodelsUpdateAccountBody: JsonFormat[Account.models.UpdateAccountBody] = jsonFormat2(Account.models.UpdateAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangeEmailAccountBody: JsonFormat[Account.models.ChangeEmailAccountBody] = jsonFormat2(Account.models.ChangeEmailAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangePasswordAccountBody: JsonFormat[Account.models.ChangePasswordAccountBody] = jsonFormat2(Account.models.ChangePasswordAccountBody.apply)
@@ -58,6 +60,8 @@ object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiReques
   implicit lazy val FormatSslEndpointmodelsUpdateSslEndpointBody: JsonFormat[SslEndpoint.models.UpdateSslEndpointBody] = jsonFormat3(SslEndpoint.models.UpdateSslEndpointBody.apply)
   implicit lazy val addonChangeToJson: ToJson[Addon.models.AddonChange] = to[Addon.models.AddonChange]
   implicit lazy val addonPlanToJson: ToJson[Addon.models.AddonPlan] = to[Addon.models.AddonPlan]
+  implicit lazy val ToJsonLogDrainAddon: ToJson[LogDrain.models.LogDrainAddon] = to[LogDrain.models.LogDrainAddon]
+  implicit lazy val ToJsonCreateLogDrainBody: ToJson[LogDrain.models.CreateLogDrainBody] = to[LogDrain.models.CreateLogDrainBody]
   implicit lazy val ToJsonUpdateAccountBody: ToJson[Account.models.UpdateAccountBody] = to[Account.models.UpdateAccountBody]
   implicit lazy val ToJsonChangeEmailAccountBody: ToJson[Account.models.ChangeEmailAccountBody] = to[Account.models.ChangeEmailAccountBody]
   implicit lazy val ToJsonChangePasswordAccountBody: ToJson[Account.models.ChangePasswordAccountBody] = to[Account.models.ChangePasswordAccountBody]
@@ -111,6 +115,8 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
   implicit lazy val FormatAddonmodelsAddonPlan: JsonFormat[Addon.models.AddonPlan] = jsonFormat1(Addon.models.AddonPlan.apply)
   implicit lazy val FormatAddon: JsonFormat[Addon] = jsonFormat5(Addon.apply)
+  implicit lazy val FormatLogDrain: JsonFormat[LogDrain] = jsonFormat5(LogDrain.apply)
+  implicit lazy val FormatLogDrainmodelsLogDrainAddon: JsonFormat[LogDrain.models.LogDrainAddon] = jsonFormat1(LogDrain.models.LogDrainAddon.apply)
   implicit lazy val FormatAccount: JsonFormat[Account] = jsonFormat8(Account.apply)
   implicit lazy val FormatAccountFeature: JsonFormat[AccountFeature] = jsonFormat7(AccountFeature.apply)
   implicit lazy val FormatAddonService: JsonFormat[AddonService] = jsonFormat4(AddonService.apply)
@@ -123,7 +129,7 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val FormatCollaborator: JsonFormat[Collaborator] = jsonFormat4(Collaborator.apply)
   implicit lazy val FormatDomain: JsonFormat[Domain] = jsonFormat4(Domain.apply)
   implicit lazy val FormatDynomodelsDynoRelease: JsonFormat[Dyno.models.DynoRelease] = jsonFormat2(Dyno.models.DynoRelease.apply)
-  implicit lazy val FormatDyno: JsonFormat[Dyno] = jsonFormat11(Dyno.apply)
+  implicit lazy val FormatDyno: JsonFormat[Dyno] = jsonFormat10(Dyno.apply)
   implicit lazy val FormatFormation: JsonFormat[Formation] = jsonFormat7(Formation.apply)
   implicit lazy val FormatHerokuAppmodelsHerokuAppStack: JsonFormat[HerokuApp.models.HerokuAppStack] = jsonFormat2(HerokuApp.models.HerokuAppStack.apply)
   implicit lazy val FormatHerokuAppmodelsHerokuAppRegion: JsonFormat[HerokuApp.models.HerokuAppRegion] = jsonFormat2(HerokuApp.models.HerokuAppRegion.apply)
@@ -155,6 +161,8 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val FormatStack: JsonFormat[Stack] = jsonFormat5(Stack.apply)
   implicit lazy val addonChangeToJson: ToJson[Addon.models.AddonChange] = SprayJsonIgnoreNullBoilerplate.addonChangeToJson
   implicit lazy val addonPlanToJson: ToJson[Addon.models.AddonPlan] = SprayJsonIgnoreNullBoilerplate.addonPlanToJson
+  implicit lazy val ToJsonLogDrainAddon: ToJson[LogDrain.models.LogDrainAddon] = SprayJsonIgnoreNullBoilerplate.ToJsonLogDrainAddon
+  implicit lazy val ToJsonCreateLogDrainBody: ToJson[LogDrain.models.CreateLogDrainBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateLogDrainBody
   implicit lazy val ToJsonUpdateAccountBody: ToJson[Account.models.UpdateAccountBody] = SprayJsonIgnoreNullBoilerplate.ToJsonUpdateAccountBody
   implicit lazy val ToJsonChangeEmailAccountBody: ToJson[Account.models.ChangeEmailAccountBody] = SprayJsonIgnoreNullBoilerplate.ToJsonChangeEmailAccountBody
   implicit lazy val ToJsonChangePasswordAccountBody: ToJson[Account.models.ChangePasswordAccountBody] = SprayJsonIgnoreNullBoilerplate.ToJsonChangePasswordAccountBody
@@ -203,6 +211,9 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val addonPlanFromJson: FromJson[Addon.models.AddonPlan] = from[Addon.models.AddonPlan]
   implicit lazy val addonFromJson: FromJson[Addon] = from[Addon]
   implicit lazy val addonListFromJson: FromJson[List[Addon]] = from[List[Addon]]
+  implicit lazy val FromJsonLogDrain: FromJson[LogDrain] = from[LogDrain]
+  implicit lazy val FromJsonLogDrainAddon: FromJson[LogDrain.models.LogDrainAddon] = from[LogDrain.models.LogDrainAddon]
+  implicit lazy val FromJsonListLogDrain: FromJson[List[LogDrain]] = from[List[LogDrain]]
   implicit lazy val FromJsonAccount: FromJson[Account] = from[Account]
   implicit lazy val FromJsonListAccount: FromJson[List[Account]] = from[List[Account]]
   implicit lazy val FromJsonAccountFeature: FromJson[AccountFeature] = from[AccountFeature]

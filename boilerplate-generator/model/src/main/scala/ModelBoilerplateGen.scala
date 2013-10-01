@@ -358,11 +358,11 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: aggJson("RequestJson")): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: "LogDrainRequestJson" :: aggJson("RequestJson")): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: aggJson("ResponseJson")): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: "LogDrainResponseJson" :: aggJson("ResponseJson")): Tree)
   }
 
   def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api._"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)

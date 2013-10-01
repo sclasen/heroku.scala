@@ -1405,16 +1405,13 @@
         },
         {
           "description": "List existing dynos.",
-          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/dynos/{(%23%2Fdefinitions%2Fdyno%2Fdefinitions%2Fidentity)}",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/dynos",
           "method": "GET",
           "rel": "instances",
           "title": "List"
         }
       ],
       "properties": {
-        "attach": {
-          "$ref": "#/definitions/dyno/definitions/attach"
-        },
         "attach_url": {
           "$ref": "#/definitions/dyno/definitions/attach_url"
         },
@@ -1697,7 +1694,7 @@
         },
         {
           "description": "List existing keys.",
-          "href": "/account/keys/{(%23%2Fdefinitions%2Fkey%2Fdefinitions%2Fidentity)}",
+          "href": "/account/keys",
           "method": "GET",
           "rel": "instances",
           "title": "List"
