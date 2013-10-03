@@ -16,10 +16,12 @@ abstract class AppSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(
       appList.contains(app) must be(true)
 
       val infoByName = info(HerokuApp.Info(app.name))
-      infoByName must equal(app)
+      infoByName.id must equal(app.id)
+      infoByName.created_at must equal(app.created_at)
 
       val infoById = info(HerokuApp.Info(app.id))
-      infoById must equal(app)
+      infoById.id must equal(app.id)
+      infoById.created_at must equal(app.created_at)
 
       val newname = s"${app.name}-foo"
       val updated = update(HerokuApp.Update(app.id, Some(true), Some(newname)))
