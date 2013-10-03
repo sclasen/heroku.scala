@@ -16,6 +16,18 @@ class SprayLogDrainSpec extends LogDrainSpec(SprayJsonBoilerplate) with SprayApi
 
 class SprayLogSessionSpec extends LogSessionSpec(SprayJsonBoilerplate) with SprayApiSpec
 
+class SprayPlanSpec extends PlanSpec(SprayJsonBoilerplate) with SprayApiSpec
+
+class SprayRateLimitSpec extends RateLimitSpec(SprayJsonBoilerplate) with SprayApiSpec
+
+class SprayRegionSpec extends RegionSpec(SprayJsonBoilerplate) with SprayApiSpec
+
+class SprayReleaseSpec extends ReleaseSpec(SprayJsonBoilerplate) with SprayApiSpec
+
+class SpraySslEndpointSpec extends SslEndpointSpec(SprayJsonBoilerplate) with SprayApiSpec
+
+class SprayStackSpec extends StackSpec(SprayJsonBoilerplate) with SprayApiSpec
+
 //class PlayAccountSpec extends AccountSpec(PlayJsonBoilerplate) with SprayApiSpec
 
 class SprayAddonSpec extends AddonSpec(SprayJsonBoilerplate) with SprayApiSpec

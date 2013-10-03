@@ -2664,7 +2664,7 @@
         },
         {
           "description": "List existing plans.",
-          "href": "/addon-services/{(%23%2Fdefinitions%2Fplan%2Fdefinitions%2Fidentity)}/plans",
+          "href": "/addon-services/{(%23%2Fdefinitions%2Faddon-service%2Fdefinitions%2Fidentity)}/plans",
           "method": "GET",
           "rel": "instances",
           "title": "List"

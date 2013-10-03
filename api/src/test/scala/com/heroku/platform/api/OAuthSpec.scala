@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: OAuthAuthorizationRequestJson with OAuthAuthorizationResponseJson = aj
+  val implicits: OAuthAuthorizationRequestJson with OAuthAuthorizationResponseJson with OAuthClientRequestJson with OAuthClientResponseJson with OAuthTokenRequestJson with OAuthTokenResponseJson = aj
 
   import implicits._
 
@@ -14,6 +14,13 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
       val authInfo = info(OAuthAuthorization.Info(auth.id))
       authInfo must equal(auth)
       delete(OAuthAuthorization.Delete(auth.id))
+    }
+    "operate on OAuthClients" in {
+      pending
+    }
+
+    "operate on OAuthTokens" in {
+      pending
     }
   }
 
