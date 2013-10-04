@@ -25,7 +25,7 @@ object ModelBoilerplateGen extends App {
         val ids: Seq[Tree] = Seq(resourceIdentity(resource),
           resourceIdentityCompanion(resource)).flatten
         resource.name -> (BLOCK(
-          Seq(IMPORT("com.heroku.platform.api._"),
+          Seq(
             IMPORT("com.heroku.platform.api.Request._"),
             IMPORT(s"${resource.name}._"),
             companion(resource, root),
@@ -177,8 +177,8 @@ object ModelBoilerplateGen extends App {
               fieldDef => fieldType(name, fieldDef)
             })
             //Hack, fix later.
-            if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
-            else ((PARAM(name, typ) := NULL))
+            (PARAM(name, typ): ValDef)
+
         }
         ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(k))) withParams params): Tree)
       }
