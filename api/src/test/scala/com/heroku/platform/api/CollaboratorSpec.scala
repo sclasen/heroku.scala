@@ -11,7 +11,7 @@ abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends
   "Api for Collaborator" must {
     "operate on Collaborators" in {
       val app = getApp
-      val collabAdd = create(Collaborator.Create(app.id, user = AccountIdentity.byEmail(testCollaborator)))
+      val collabAdd = create(Collaborator.Create(app.id, user = CollaboratorUser(testCollaborator)))
       val collabList = listPage(Collaborator.List(app.id))
       collabList.isComplete must be(true)
       collabList.list.isEmpty must be(false)

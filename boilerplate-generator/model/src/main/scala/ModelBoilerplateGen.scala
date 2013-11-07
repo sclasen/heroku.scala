@@ -22,18 +22,14 @@ object ModelBoilerplateGen extends App {
     implicit val root = loadRoot
     root.resources.map(root.resource).map {
       resource =>
-        val ids: Seq[Tree] = Seq(resourceIdentity(resource),
-          resourceIdentityCompanion(resource)).flatten
         resource.name -> (BLOCK(
-          Seq(
-            IMPORT("com.heroku.platform.api.Request._"),
-            IMPORT(s"${resource.name}._"),
-            companion(resource, root),
-            model(resource)) ++
-            ids ++
-            Seq(
-              reqJson(resource),
-              respJson(resource))
+          IMPORT("com.heroku.platform.api._"),
+          IMPORT("com.heroku.platform.api.Request._"),
+          IMPORT(s"${resource.name}._"),
+          companion(resource, root),
+          model(resource),
+          reqJson(resource),
+          respJson(resource)
         ).inPackage(sym.ApiPackage): Tree)
     }
   }
@@ -86,11 +82,11 @@ object ModelBoilerplateGen extends App {
                   }
                   case Left(Right(ref)) =>
                     resource.resolveFieldRef(ref).fold({
-                      oneOf => identityFromOneOf(k, ref, schema.isRequired(k))
+                      oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
                     }, {
                       fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                     })
-                  case Left(Left(oneOf)) => sys.error("unused")
+                  case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
                 }
 
             }
@@ -134,22 +130,6 @@ object ModelBoilerplateGen extends App {
     else (k -> (PARAM(k, argType(k, hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
   }
 
-  def identityFromOneOf(k: String, ref: Ref, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    val res = Resource.camelify(ref.schema.map {
-      schema =>
-        schema.replace("oauth", "OAuth")
-    }.map {
-      case "app" => "HerokuApp"
-      case x => x
-    }.get)
-    val typ = s"${res}Identity"
-    if (required)
-      Seq((k -> (PARAM(k, requiredArg(k, hollowFieldDef(List(typ)))))))
-    else
-      Seq((k -> (PARAM(k, argType(k, hollowFieldDef(List(typ, "null")))) := NONE)))
-
-  }
-
   def hollowFieldDef(typez: List[String]): FieldDefinition = FieldDefinition(None, None, None, None, typez, None)
 
   /*
@@ -177,8 +157,8 @@ object ModelBoilerplateGen extends App {
               fieldDef => fieldType(name, fieldDef)
             })
             //Hack, fix later.
-            (PARAM(name, typ): ValDef)
-
+            if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
+            else ((PARAM(name, typ) := NULL))
         }
         ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(k))) withParams params): Tree)
       }
@@ -205,64 +185,17 @@ object ModelBoilerplateGen extends App {
               }
               case Left(Right(ref)) =>
                 resource.resolveFieldRef(ref).fold({
-                  oneOf => identityFromOneOf(k, ref, schema.isRequired(k))
+                  oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
                 }, {
                   fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                 })
-              case Left(Left(oneOf)) => sys.error("unused")
+              case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
             }
 
         }
     }.getOrElse(Seq.empty[(String, ValDef)]).map(_._2)
 
     ((CASECLASSDEF(s"${link.action}${resource.name}Body") withParams params.toIterable): Tree)
-  }
-
-  /*
-
-  case class CollaboratorIdentity private [api](email:Option[String],id:Option[String])
-object CollaboratorIdentity{
-  def byEmail(email:String) = CollaboratorIdentity(Some(email),None)
-  def byId(id:String) = CollaboratorIdentity(None,Some(id))
-}
-   */
-
-  def resourceIdentity(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
-    resource.definitions.get("identity").flatMap {
-      id =>
-        id match {
-          case Left(oneOf) =>
-            val params = oneOf.oneOf.map {
-              one => (PARAM(one.definition, TYPE_OPTION("String")): ValDef)
-            }
-            Some((CASECLASSDEF(s"${initialCap(resource.name)}Identity") withParams params.toIterable): Tree)
-          case _ => None
-        }
-    }
-  }
-
-  def resourceIdentityCompanion(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
-    resource.definitions.get("identity").flatMap {
-      id =>
-        id match {
-          case Left(oneOf) =>
-            val defs = oneOf.oneOf match {
-              case one :: two :: Nil =>
-                Seq((DEF(s"by${initialCap(one.definition)}") withParams (PARAM(one.definition, "String"))) :=
-                  REF(s"${initialCap(resource.name)}Identity") APPLY Seq((REF("Some") APPLY REF(one.definition)), REF("None")),
-                  (DEF(s"by${initialCap(two.definition)}") withParams (PARAM(two.definition, "String"))) :=
-                    REF(s"${initialCap(resource.name)}Identity") APPLY Seq(REF("None"), (REF("Some") APPLY REF(two.definition)))
-                )
-
-              case one :: Nil => Seq((DEF(s"by${initialCap(one.definition)}") withParams (PARAM(one.definition, "String"))) :=
-                REF(s"${initialCap(resource.name)}Identity") APPLY Seq((REF("Some") APPLY REF(one.definition)))
-              )
-            }
-
-            Some((CASEOBJECTDEF(s"${initialCap(resource.name)}Identity") := BLOCK(defs)): Tree)
-          case _ => None
-        }
-    }
   }
 
   /*
@@ -286,10 +219,8 @@ object CollaboratorIdentity{
         Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
-    val id = resource.definitions.get("identity").map(_ => toJson(s"${initialCap(resource.name)}Identity", s"${initialCap(resource.name)}Identity"))
-
     TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
-      modelToJsons.toSeq ++ nesteds.toSeq ++ id.toSeq
+      modelToJsons.toSeq ++ nesteds.toSeq
     )
   }
 
