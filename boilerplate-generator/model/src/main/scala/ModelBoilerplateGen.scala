@@ -125,7 +125,7 @@ object ModelBoilerplateGen extends App {
     else (k -> (PARAM(k, argType(k, fieldDef)) := NONE)))
   }
 
-  def argsFromOneOf(k: String, oo: OneOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
+  def argsFromOneOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
     Seq(if (required) (k -> (PARAM(k, requiredArg(k, hollowFieldDef(List(resource.name + initialCap(k)))))))
     else (k -> (PARAM(k, argType(k, hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
   }
@@ -396,7 +396,7 @@ object ModelBoilerplateGen extends App {
 
   implicit def fr: Format[Ref] = Json.format[Ref]
 
-  implicit def fo: Format[OneOf] = Json.format[OneOf]
+  implicit def fo: Format[AnyOf] = Json.format[AnyOf]
 
   implicit def fn: Format[NestedDef] = Json.format[NestedDef]
 
@@ -432,7 +432,7 @@ object ModelBoilerplateGen extends App {
   }
 
   //Describes the body of a PUT/POST in a Link
-  case class Schema(properties: Map[String, Either[Either[OneOf, Ref], Either[NestedDef, FieldDefinition]]], required: Option[List[String]]) {
+  case class Schema(properties: Map[String, Either[Either[AnyOf, Ref], Either[NestedDef, FieldDefinition]]], required: Option[List[String]]) {
     def isRequired(field: String) = required.exists(_.contains(field))
   }
 
@@ -455,11 +455,11 @@ object ModelBoilerplateGen extends App {
   }
 
   //in our case it is either the id or friendly id so should be size 2
-  case class OneOf(oneOf: List[Ref]) {
-    def orFields = oneOf match {
+  case class AnyOf(anyOf: List[Ref]) {
+    def orFields = anyOf match {
       case one :: two :: Nil => s"${one.definition}_or_${two.definition}"
       case one :: Nil => s"${one.definition}"
-      case _ => sys.error(s"OneOf had ${oneOf.length} items. Expected 1 or 2")
+      case _ => sys.error(s"OneOf had ${anyOf.length} items. Expected 1 or 2")
     }
   }
 
@@ -491,8 +491,8 @@ object ModelBoilerplateGen extends App {
   }
 
   //schema for a endpoint/object type
-  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[OneOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
-    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[OneOf, FieldDefinition] = {
+  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[AnyOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
+    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[AnyOf, FieldDefinition] = {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
       res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
     }
@@ -537,7 +537,12 @@ object ModelBoilerplateGen extends App {
 
   }
 
-  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).as[RootSchema]
+  val transformConfigVars = (__ \ "definitions" \ "config-var").json.prune
+
+  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(transformConfigVars).map { js =>
+    e(Json.prettyPrint(js))
+    js
+  }.get.as[RootSchema]
 
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)

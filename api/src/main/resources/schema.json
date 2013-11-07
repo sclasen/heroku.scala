@@ -52,7 +52,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/account-feature/definitions/id"
             },
@@ -158,20 +158,14 @@
           "description": "whether to utilize beta Heroku features",
           "example": false,
           "type": [
-            "boolean", "null"
+            "boolean",
+            "null"
           ]
         },
         "created_at": {
           "description": "when account was created",
           "example": "2012-01-01T12:00:00Z",
           "format": "date-time",
-          "readOnly": true,
-          "type": [
-            "string"
-          ]
-        },
-        "current_password": {
-          "description": "the current password on the account",
           "readOnly": true,
           "type": [
             "string"
@@ -195,7 +189,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/account/definitions/email"
             },
@@ -213,8 +207,17 @@
             "string"
           ]
         },
+        "new_password": {
+          "description": "the new password for the account when changing the password",
+          "example": "newpassword",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
         "password": {
-          "description": "desired password on the account",
+          "description": "current password on the account",
+          "example": "currentpassword",
           "readOnly": true,
           "type": [
             "string"
@@ -258,8 +261,14 @@
               },
               "beta": {
                 "$ref": "#/definitions/account/definitions/beta"
+              },
+              "password": {
+                "$ref": "#/definitions/account/definitions/password"
               }
-            }
+            },
+            "required": [
+              "password"
+            ]
           },
           "title": "Update"
         },
@@ -270,15 +279,15 @@
           "rel": "update",
           "schema": {
             "properties": {
-              "current_password": {
-                "$ref": "#/definitions/account/definitions/current_password"
-              },
               "email": {
                 "$ref": "#/definitions/account/definitions/email"
+              },
+              "password": {
+                "$ref": "#/definitions/account/definitions/password"
               }
             },
             "required": [
-              "current_password",
+              "password",
               "email"
             ]
           },
@@ -291,15 +300,15 @@
           "rel": "update",
           "schema": {
             "properties": {
-              "current_password": {
-                "$ref": "#/definitions/account/definitions/current_password"
+              "new_password": {
+                "$ref": "#/definitions/account/definitions/new_password"
               },
               "password": {
                 "$ref": "#/definitions/account/definitions/password"
               }
             },
             "required": [
-              "current_password",
+              "new_password",
               "password"
             ]
           },
@@ -361,7 +370,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/addon-service/definitions/id"
             },
@@ -419,7 +428,144 @@
         }
       }
     },
-
+    "addon": {
+      "description": "Add-ons represent add-ons that have been provisioned for an app.",
+      "id": "schema/addon",
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "title": "Heroku Platform API - Add-on",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+        "created_at": {
+          "description": "when add-on was updated",
+          "example": "2012-01-01T12:00:00Z",
+          "format": "date-time",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "id": {
+          "description": "unique identifier of add-on",
+          "example": "01234567-89ab-cdef-0123-456789abcdef",
+          "format": "uuid",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/addon/definitions/id"
+            }
+          ]
+        },
+        "updated_at": {
+          "description": "when add-on was updated",
+          "example": "2012-01-01T12:00:00Z",
+          "format": "date-time",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        }
+      },
+      "links": [
+        {
+          "description": "Create a new add-on.",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/addons",
+          "method": "POST",
+          "rel": "create",
+          "schema": {
+            "properties": {
+              "config": {
+                "additionalProperties": false,
+                "description": "custom add-on provisioning options",
+                "example": {
+                  "db-version": "1.2.3"
+                },
+                "patternProperties": {
+                  "^\\w+$": {
+                    "type": [
+                      "string"
+                    ]
+                  }
+                },
+                "type": [
+                  "object"
+                ]
+              },
+              "plan": {
+                "$ref": "#/definitions/plan/definitions/identity"
+              }
+            }
+          },
+          "title": "Create"
+        },
+        {
+          "description": "Delete an existing add-on.",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/addons/{(%23%2Fdefinitions%2Faddon%2Fdefinitions%2Fidentity)}",
+          "method": "DELETE",
+          "rel": "destroy",
+          "title": "Delete"
+        },
+        {
+          "description": "Info for an existing add-on.",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/addons/{(%23%2Fdefinitions%2Faddon%2Fdefinitions%2Fidentity)}",
+          "method": "GET",
+          "rel": "self",
+          "title": "Info"
+        },
+        {
+          "description": "List existing add-ons.",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/addons",
+          "method": "GET",
+          "rel": "instances",
+          "title": "List"
+        },
+        {
+          "description": "Update an existing add-on.",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/addons/{(%23%2Fdefinitions%2Faddon%2Fdefinitions%2Fidentity)}",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "plan": {
+                "$ref": "#/definitions/plan/definitions/identity"
+              }
+            }
+          },
+          "title": "Update"
+        }
+      ],
+      "properties": {
+        "created_at": {
+          "$ref": "#/definitions/addon/definitions/created_at"
+        },
+        "id": {
+          "$ref": "#/definitions/addon/definitions/id"
+        },
+        "plan": {
+          "description": "identity of add-on plan",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/plan/definitions/id"
+            },
+            "name": {
+              "$ref": "#/definitions/plan/definitions/name"
+            }
+          },
+          "type": [
+            "object"
+          ]
+        },
+        "updated_at": {
+          "$ref": "#/definitions/addon/definitions/updated_at"
+        }
+      }
+    },
     "app-feature": {
       "description": "An app feature represents a Heroku labs capability that can be enabled or disabled for an app on Heroku.",
       "id": "schema/app-feature",
@@ -471,7 +617,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/app/definitions/id"
             },
@@ -583,7 +729,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/app-transfer/definitions/id"
             }
@@ -786,7 +932,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/app/definitions/id"
             },
@@ -1039,7 +1185,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/collaborator/definitions/email"
             },
@@ -1081,7 +1227,9 @@
                 "$ref": "#/definitions/account/definitions/identity"
               }
             },
-            "required":["user"]
+            "required": [
+              "user"
+            ]
           },
           "title": "Create"
         },
@@ -1132,8 +1280,64 @@
           ]
         }
       }
-
-
+    },
+    "config-var": {
+      "description": "Config Vars allow you to manage the configuration information provided to an app on Heroku.",
+      "id": "schema/config-var",
+      "$schema": "http://json-schema.org/draft-04/hyper-schema",
+      "title": "Heroku Platform API - Config Vars",
+      "type": [
+        "object"
+      ],
+      "definitions": {
+      },
+      "links": [
+        {
+          "description": "Get config-vars for app.",
+          "href": "/apps/{app_id_or_name}/config-vars",
+          "method": "GET",
+          "rel": "self",
+          "title": "Info"
+        },
+        {
+          "description": "Update config-vars for app. You can update existing config-vars by setting them again, and remove by setting it to `NULL`.",
+          "href": "/apps/{app_id_or_name}/config-vars",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "additionalProperties": false,
+            "description": "hash of config changes – update values or delete by seting it to NULL",
+            "example": {
+              "FOO": null,
+              "BAZ": "grault"
+            },
+            "patternProperties": {
+              "^\\w+$": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": [
+              "object"
+            ]
+          },
+          "title": "Update"
+        }
+      ],
+      "example": {
+        "FOO": "bar",
+        "BAZ": "qux"
+      },
+      "patternProperties": {
+        "^\\w+$": {
+          "type": [
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "domain": {
       "description": "Domains define what web routes should be routed to an app on Heroku.",
@@ -1171,7 +1375,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/domain/definitions/id"
             },
@@ -1286,10 +1490,18 @@
           ]
         },
         "env": {
+          "additionalProperties": false,
           "description": "custom environment to add to the dyno config vars",
           "example": {
             "COLUMNS": "80",
             "LINES": "24"
+          },
+          "patternProperties": {
+            "^\\w+$": {
+              "type": [
+                "string"
+              ]
+            }
           },
           "type": [
             "object"
@@ -1305,7 +1517,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/dyno/definitions/id"
             },
@@ -1324,9 +1536,9 @@
         },
         "size": {
           "description": "dyno size (default: 1)",
-          "example": 1,
+          "example": "1",
           "type": [
-            "integer"
+            "string"
           ]
         },
         "state": {
@@ -1490,7 +1702,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/formation/definitions/id"
             },
@@ -1633,7 +1845,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/key/definitions/id"
             },
@@ -1761,7 +1973,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/log-drain/definitions/id"
             },
@@ -1821,7 +2033,7 @@
         },
         {
           "description": "List existing log drains.",
-          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/log-drainds/{(%23%2Fdefinitions%2Flog-drain%2Fdefinitions%2Fidentity)}",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/log-drains",
           "method": "GET",
           "rel": "instances",
           "title": "List"
@@ -1879,7 +2091,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/log-session/definitions/id"
             }
@@ -2000,7 +2212,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/oauth-authorization/definitions/id"
             }
@@ -2129,6 +2341,7 @@
             }
           },
           "type": [
+            "null",
             "object"
           ]
         },
@@ -2186,10 +2399,18 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/oauth-client/definitions/id"
             }
+          ]
+        },
+        "ignores_delinquent": {
+          "description": "whether the client is still operable given a delinquent account",
+          "example": false,
+          "readOnly": true,
+          "type": [
+            "boolean", "null"
           ]
         },
         "name": {
@@ -2240,7 +2461,8 @@
               "redirect_uri": {
                 "$ref": "#/definitions/oauth-client/definitions/redirect_uri"
               }
-            }
+            },
+            "required": ["name", "redirect_uri"]
           },
           "title": "Create"
         },
@@ -2289,6 +2511,9 @@
         },
         "id": {
           "$ref": "#/definitions/oauth-client/definitions/id"
+        },
+        "ignores_delinquent": {
+          "$ref": "#/definitions/oauth-client/definitions/ignores_delinquent"
         },
         "name": {
           "$ref": "#/definitions/oauth-client/definitions/name"
@@ -2389,7 +2614,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/oauth-token/definitions/id"
             }
@@ -2457,7 +2682,9 @@
             }
           },
           "required": [
-            "grant:type"
+            "grant",
+            "client",
+            "refresh_token"
           ],
           "title": "Create"
         }
@@ -2603,7 +2830,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/plan/definitions/id"
             },
@@ -2773,7 +3000,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/region/definitions/id"
             },
@@ -2869,7 +3096,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/release/definitions/id"
             },
@@ -3002,7 +3229,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/ssl-endpoint/definitions/id"
             },
@@ -3164,7 +3391,7 @@
           ]
         },
         "identity": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/definitions/stack/definitions/name"
             },

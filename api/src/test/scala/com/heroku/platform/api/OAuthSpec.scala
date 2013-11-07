@@ -16,7 +16,11 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
       delete(OAuthAuthorization.Delete(auth.id))
     }
     "operate on OAuthClients" in {
-      pending
+      val client = create(OAuthClient.Create("test-client", "https://example.com/foo"))
+      val clients = listAll(OAuthClient.List())
+      clients must contain(client)
+      info(OAuthClient.Info(client.id)) must equal(client)
+      delete(OAuthClient.Delete(client.id)) must equal(client)
     }
 
     "operate on OAuthTokens" in {
