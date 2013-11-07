@@ -13,8 +13,8 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
     "operate on AppTransfers" in {
       val app = getApp
       import AppTransfer._
-      create(Collaborator.Create(app.id, user = CollaboratorUser(testCollaborator)))
-      val transfer = create(Create(AppTransferApp(id = app.id), AppTransferRecipient(email = testCollaborator)))
+      create(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
+      val transfer = create(Create(app.id, recipient_email_or_id = testCollaborator))
       val transferList = listAll(List())
       transferList.contains(transfer) must be(true)
       val transferInfo = info(Info(transfer.id))

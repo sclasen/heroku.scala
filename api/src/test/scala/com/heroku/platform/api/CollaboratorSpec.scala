@@ -1,7 +1,5 @@
 package com.heroku.platform.api
 
-import com.heroku.platform.api.Collaborator.models.CollaboratorUser
-
 abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
   val implicits: CollaboratorRequestJson with CollaboratorResponseJson = aj
@@ -11,7 +9,7 @@ abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends
   "Api for Collaborator" must {
     "operate on Collaborators" in {
       val app = getApp
-      val collabAdd = create(Collaborator.Create(app.id, user = CollaboratorUser(testCollaborator)))
+      val collabAdd = create(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
       val collabList = listPage(Collaborator.List(app.id))
       collabList.isComplete must be(true)
       collabList.list.isEmpty must be(false)

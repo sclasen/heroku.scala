@@ -75,18 +75,18 @@ object ModelBoilerplateGen extends App {
                   case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
                     case (nk, nref) =>
                       resource.resolveFieldRef(nref).fold({
-                        oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                        oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
                       }, {
                         fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                       })
                   }
                   case Left(Right(ref)) =>
                     resource.resolveFieldRef(ref).fold({
-                      oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                      oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
                     }, {
                       fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                     })
-                  case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                  case Left(Left(oneOf)) => argsFromAnyOf(k, oneOf, schema.isRequired(k))
                 }
 
             }
@@ -121,16 +121,20 @@ object ModelBoilerplateGen extends App {
   }
 
   def argsFromFieldDef(k: String, fieldDef: FieldDefinition, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required || (k == "grant" && resource.id == "schema/oauth-token")) (k -> (PARAM(k, requiredArg(k, fieldDef))))
+    Seq(if (required) (k -> (PARAM(k, requiredArg(k, fieldDef))))
     else (k -> (PARAM(k, argType(k, fieldDef)) := NONE)))
   }
 
-  def argsFromOneOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
-    Seq(if (required) (k -> (PARAM(k, requiredArg(k, hollowFieldDef(List(resource.name + initialCap(k)))))))
-    else (k -> (PARAM(k, argType(k, hollowFieldDef(List(resource.name + initialCap(k))))) := NONE)))
+  def argsFromAnyOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
+    val field = s"${k}_${oo.orFields}"
+    Seq(if (required) (field -> (PARAM(field, TYPE_REF("String"))))
+    else (field -> (PARAM(field, TYPE_OPTION("String")) := NONE)))
   }
 
-  def hollowFieldDef(typez: List[String]): FieldDefinition = FieldDefinition(None, None, None, None, typez, None)
+  def bodyArgsFromAnyOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
+    Seq(if (required) (k -> (PARAM(k, TYPE_REF("String"))))
+    else (k -> (PARAM(k, TYPE_OPTION("String")) := NONE)))
+  }
 
   /*
   extra params for requests. range for list reqs
@@ -158,7 +162,7 @@ object ModelBoilerplateGen extends App {
             })
             //Hack, fix later.
             if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
-            else ((PARAM(name, typ) := NULL))
+            else ((PARAM(name, typ): ValDef))
         }
         ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(k))) withParams params): Tree)
       }
@@ -178,18 +182,18 @@ object ModelBoilerplateGen extends App {
               case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
                 case (nk, nref) =>
                   resource.resolveFieldRef(nref).fold({
-                    oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                    oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
                   }, {
                     fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                   })
               }
               case Left(Right(ref)) =>
                 resource.resolveFieldRef(ref).fold({
-                  oneOf => argsFromOneOf(k, oneOf, schema.isRequired(k))
+                  oneOf => bodyArgsFromAnyOf(k, oneOf, schema.isRequired(k))
                 }, {
                   fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                 })
-              case Left(Left(oneOf)) => argsFromOneOf(k, oneOf, schema.isRequired(k))
+              case Left(Left(oneOf)) => argsFromAnyOf(k, oneOf, schema.isRequired(k))
             }
 
         }
@@ -336,7 +340,7 @@ object ModelBoilerplateGen extends App {
     (resource.id, field) match {
       case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
       case ("schema/oauth-token", "client") => Some((TYPE_OPTION("OAuthTokenClient")))
-      case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
+      case ("schema/oauth-token", "grant") => Some((TYPE_OPTION("OAuthTokenGrant")))
       case ("schema/oauth-token", "refresh_token") => Some((TYPE_OPTION("OAuthTokenRefreshToken")))
       case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
       case _ => None
@@ -539,10 +543,7 @@ object ModelBoilerplateGen extends App {
 
   val transformConfigVars = (__ \ "definitions" \ "config-var").json.prune
 
-  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(transformConfigVars).map { js =>
-    e(Json.prettyPrint(js))
-    js
-  }.get.as[RootSchema]
+  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(transformConfigVars).get.as[RootSchema]
 
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)
