@@ -10,12 +10,16 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
     "operate on OAuthAuthorizations" in {
       import primary._
       val auth = request(OAuthAuthorization.Create(scope = Array("global"), description = Some("OAuthSpec")))
-      val authz = requestAll(OAuthAuthorization.List())
-      authz.contains(auth) must be(true)
-      val authInfo = request(OAuthAuthorization.Info(auth.id))
-      authInfo must equal(auth)
-      request(OAuthAuthorization.Delete(auth.id))
+      try {
+        val authz = requestAll(OAuthAuthorization.List())
+        authz.map(_.id) must contain(auth.id)
+        val authInfo = request(OAuthAuthorization.Info(auth.id))
+        authInfo.id must equal(auth.id)
+      } finally {
+        request(OAuthAuthorization.Delete(auth.id))
+      }
     }
+
     "operate on OAuthClients" in {
       import primary._
       val client = request(OAuthClient.Create("test-client", "https://example.com/foo"))

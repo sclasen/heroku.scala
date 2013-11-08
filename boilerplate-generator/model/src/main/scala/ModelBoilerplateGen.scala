@@ -310,12 +310,10 @@ object ModelBoilerplateGen extends App {
   def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
     val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
-    val typez = convertTypes(fieldDef.`type`)
-    if (typez.length == 1) {
-      if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
-      else (TYPE_REF(initialCap(typez(0))))
+    if (isOptional) {
+      argType(name, fieldDef)
     } else {
-      throw new IllegalStateException("encountered type with more than one non null type value")
+      requiredArg(name, fieldDef)
     }
   }
 
@@ -353,6 +351,8 @@ object ModelBoilerplateGen extends App {
   def specialCase(resource: Resource, field: String) = {
     (resource.id, field) match {
       case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
+      case ("schema/slug", "process_types") => Some((TYPE_MAP("String", "String")))
+      case ("schema/slug", "blob") => Some((TYPE_MAP("String", "String")))
       case ("schema/oauth-token", "client") => Some((TYPE_OPTION("OAuthTokenClient")))
       case ("schema/oauth-token", "grant") => Some((TYPE_OPTION("OAuthTokenGrant")))
       case ("schema/oauth-token", "refresh_token") => Some((TYPE_OPTION("OAuthTokenRefreshToken")))
@@ -557,7 +557,7 @@ object ModelBoilerplateGen extends App {
 
   }
 
-  /*drop config vars since they yse the funky patternProperties*/
+  /*drop config vars since they use the funky patternProperties*/
   val pruneConfigVars = (__ \ "definitions" \ "config-var").json.prune
 
   def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(pruneConfigVars).get.as[RootSchema]
