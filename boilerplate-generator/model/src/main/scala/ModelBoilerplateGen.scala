@@ -7,6 +7,12 @@ import treehugger.forest._
 import definitions._
 import treehuggerDSL._
 
+
+/*
+this generates scala source for schema.json
+the names of the files are printed to standard out so sbt knows to compile them
+if you need debug logging use the method `e` which prints to standard err instead.
+*/
 object ModelBoilerplateGen extends App {
 
   object sym {
@@ -20,10 +26,10 @@ object ModelBoilerplateGen extends App {
 
   def api = {
     implicit val root = loadRoot
-    root.resources.map(root.resource).map {
+    /*for each non empty resource generate the scala source*/
+    root.resources.values.filter(_.nonEmpty).map {
       resource =>
         resource.name -> (BLOCK(
-          IMPORT("com.heroku.platform.api._"),
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
           companion(resource, root),
@@ -125,12 +131,20 @@ object ModelBoilerplateGen extends App {
     else (k -> (PARAM(k, argType(k, fieldDef)) := NONE)))
   }
 
+  /*
+   e.g the app_id_or_name and recipient_email_or_id in
+   case class Create(app_id_or_name: String, recipient_email_or_id: String)
+   */
   def argsFromAnyOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
     val field = s"${k}_${oo.orFields}"
     Seq(if (required) (field -> (PARAM(field, TYPE_REF("String"))))
     else (field -> (PARAM(field, TYPE_OPTION("String")) := NONE)))
   }
 
+  /*
+  e.g the app and recipient in
+  case class CreateAppTransferBody(app: String, recipient: String)
+   */
   def bodyArgsFromAnyOf(k: String, oo: AnyOf, required: Boolean)(implicit resource: Resource, root: RootSchema): Seq[(String, ValDef)] = {
     Seq(if (required) (k -> (PARAM(k, TYPE_REF("String"))))
     else (k -> (PARAM(k, TYPE_OPTION("String")) := NONE)))
@@ -160,9 +174,7 @@ object ModelBoilerplateGen extends App {
             }, {
               fieldDef => fieldType(name, fieldDef)
             })
-            //Hack, fix later.
-            if (typ.toString() == "Int") (PARAM(name, typ): ValDef)
-            else ((PARAM(name, typ): ValDef))
+            (PARAM(name, typ): ValDef)
         }
         ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(k))) withParams params): Tree)
       }
@@ -336,6 +348,10 @@ object ModelBoilerplateGen extends App {
     }
   }
 
+
+  /*
+  special case handling of fields that this generator cant deal with yet, or where there are incinsistencies btw doc and api behavior (stack)
+  */
   def specialCase(resource: Resource, field: String) = {
     (resource.id, field) match {
       case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
@@ -355,7 +371,7 @@ object ModelBoilerplateGen extends App {
   }
 
   def aggJson(suffix: String)(implicit root: RootSchema) = {
-    root.resources.map(root.resource).filter(_.hasModel).toList.sortBy(_.name).map {
+    root.resources.values.filter(_.nonEmpty).toList.sortBy(_.name).map {
       resource =>
         resource.name + suffix
     }
@@ -448,7 +464,12 @@ object ModelBoilerplateGen extends App {
     def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
       href.split('/').map {
         //decode urlencoded $refs in the href
-        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map(r => res.resolveFieldRef(r).fold(o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields, f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition))
+        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map {
+          r =>
+            res.resolveFieldRef(r).fold(
+              o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields,
+              f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition)
+        }
         case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.orFields, f => r.definition))
         case _ => None
       }.toSeq.flatten
@@ -468,6 +489,7 @@ object ModelBoilerplateGen extends App {
   }
 
   object Resource {
+    //Lift  StringHelpers
     def camelify(name: String): String = {
       def loop(x: List[Char]): List[Char] = (x: @unchecked) match {
         case '_' :: '_' :: rest => loop('_' :: rest)
@@ -500,7 +522,6 @@ object ModelBoilerplateGen extends App {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
       res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
     }
-    //Lift  StringHelpers
 
     def camelify(name: String) = Resource.camelify(name)
     def camelifyMethod(name: String) = Resource.camelifyMethod(name)
@@ -520,6 +541,11 @@ object ModelBoilerplateGen extends App {
     }
 
     def hasModel = !properties.isEmpty
+
+    def hasLinks = !links.isEmpty
+
+    def nonEmpty = hasModel || hasLinks
+
   }
 
   //root schema.json
@@ -527,23 +553,16 @@ object ModelBoilerplateGen extends App {
 
     val byHand = Set("config-var", "addon", "log-drain")
 
-    val resourceMap = new collection.mutable.HashMap[String, Resource]
+    def resources = definitions.filter(kv => !(byHand.contains(kv._1)))
 
-    def resources = properties.keys.filter(k => !(byHand.contains(k)))
-
-    def resource(name: String): Resource = resourceMap.getOrElseUpdate(name, loadResource(name))
-
-    def loadResource(name: String): Resource = {
-      definitions(name)
-    }
-
-    def loadAll = resources.map(resource)
+    def resource(name: String): Resource = definitions(name)
 
   }
 
-  val transformConfigVars = (__ \ "definitions" \ "config-var").json.prune
+  /*drop config vars since they yse the funky patternProperties*/
+  val pruneConfigVars = (__ \ "definitions" \ "config-var").json.prune
 
-  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(transformConfigVars).get.as[RootSchema]
+  def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(pruneConfigVars).get.as[RootSchema]
 
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)
@@ -568,10 +587,4 @@ object ModelBoilerplateGen extends App {
     val outDir = new File(args(0))
     generate(outDir)
   }
-
-  /*api.foreach{
-    t =>
-      println(treeToString(t))
-  }
-*/
 }
