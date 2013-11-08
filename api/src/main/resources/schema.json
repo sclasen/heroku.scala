@@ -3271,7 +3271,7 @@
           "example": "60883d9e8947a57e04dc9124f25df004866a2051",
           "readOnly": false,
           "type": [
-            "string"
+            "null", "string"
           ]
         },
         "created_at": {
