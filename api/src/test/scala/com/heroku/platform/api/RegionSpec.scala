@@ -8,10 +8,11 @@ abstract class RegionSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSp
 
   "Api for Regions" must {
     "operate on Regions" in {
-      val regions = listAll(Region.List())
+      import primary._
+      val regions = requestAll(Region.List())
       val region = regions(0)
-      val byId = execute(Region.Info(region.id))
-      val byName = execute(Region.Info(region.name))
+      val byId = request(Region.Info(region.id))
+      val byName = request(Region.Info(region.name))
       region must equal(byId)
       region must equal(byName)
     }

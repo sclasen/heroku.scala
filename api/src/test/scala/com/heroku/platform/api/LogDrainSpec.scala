@@ -11,23 +11,24 @@ abstract class LogDrainSpec(aj: ApiRequestJson with ApiResponseJson) extends Api
 
   "Api for LogDrains" must {
     "operate on LogDrains" in {
+      import primary._
       val app = getApp
       tryDrain(app, "https://example.com/foo") must be(true)
-      val drains = listAll(LogDrain.List(app.name))
+      val drains = requestAll(LogDrain.List(app.name))
       val created = drains(0)
-      val drainByid = execute(LogDrain.Info(app.id, created.id))
+      val drainByid = request(LogDrain.Info(app.id, created.id))
       drainByid must equal(created)
       //todo deal with urlencoding urls
       //val drainByUrl = info(LogDrain.Info(app.id, "https://example.com/foo"))
       //drainByUrl must equal(created)
-      val deleted = execute(LogDrain.Delete(app.id, created.id))
+      val deleted = request(LogDrain.Delete(app.id, created.id))
     }
   }
 
   def tryDrain(app: HerokuApp, drain: String, tries: Int = 10): Boolean = {
     if (tries == 0) false
     else {
-      Await.result(api.execute(LogDrain.Create(app.id, drain), apiKey), 5 seconds) match {
+      Await.result(api.execute(LogDrain.Create(app.id, drain), primaryTestApiKey), 5 seconds) match {
         case Left(ErrorResponse(id, msg)) if msg.startsWith("Could not list logplex drains. Please try again later.") =>
           println("Could not list logplex drains. Please try again later.")
           Thread.sleep(1000)

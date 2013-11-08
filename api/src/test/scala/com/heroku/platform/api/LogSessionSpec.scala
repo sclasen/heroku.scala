@@ -11,6 +11,7 @@ abstract class LogSessionSpec(aj: ApiRequestJson with ApiResponseJson) extends A
 
   "Api for LogSessions" must {
     "operate on LogSessions" in {
+      import primary._
       val app = getApp
       trySession(app) must equal(true)
     }
@@ -19,7 +20,7 @@ abstract class LogSessionSpec(aj: ApiRequestJson with ApiResponseJson) extends A
   def trySession(app: HerokuApp, tries: Int = 10): Boolean = {
     if (tries == 0) false
     else {
-      Await.result(api.execute(LogSession.Create(app.id), apiKey), 5 seconds) match {
+      Await.result(api.execute(LogSession.Create(app.id), primaryTestApiKey), 5 seconds) match {
         case Left(ErrorResponse(id, msg)) if msg.startsWith("Logplex was just enabled for this app") =>
           println("Logplex was just enabled for this app")
           Thread.sleep(1000)

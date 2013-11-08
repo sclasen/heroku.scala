@@ -10,13 +10,14 @@ abstract class KeySpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(
 
   "Api for Keys" must {
     "operate on Keys" in {
+      import primary._
       val key = Source.fromFile("api/src/test/resources/test_key.pub").getLines().foldLeft(new StringBuilder)(_.append(_)).toString
-      val created = execute(Key.Create(key))
-      val keys = listAll(Key.List())
+      val created = request(Key.Create(key))
+      val keys = requestAll(Key.List())
       keys(0) must equal(created)
-      val keyInfo = execute(Key.Info(created.fingerprint))
+      val keyInfo = request(Key.Info(created.fingerprint))
       keyInfo must equal(created)
-      val deleted = execute(Key.Delete(created.id))
+      val deleted = request(Key.Delete(created.id))
     }
   }
 

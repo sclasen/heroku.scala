@@ -8,7 +8,8 @@ abstract class RateLimitSpec(aj: ApiRequestJson with ApiResponseJson) extends Ap
 
   "Api for RateLimits" must {
     "operate on RateLimits" in {
-      val limit = execute(RateLimit.Info)
+      import primary._
+      val limit = request(RateLimit.Info)
       limit.remaining must be > 0
     }
   }

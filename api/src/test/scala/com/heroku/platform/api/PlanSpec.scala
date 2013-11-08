@@ -8,11 +8,12 @@ abstract class PlanSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec
 
   "Api for Plans" must {
     "operate on Plans" in {
-      val svcs = listAll(AddonService.List())
+      import primary._
+      val svcs = requestAll(AddonService.List())
       val svc = svcs(0)
-      val plans = listAll(Plan.List(svc.id))
+      val plans = requestAll(Plan.List(svc.id))
       val plan = plans(0)
-      val pinfo = execute(Plan.Info(svc.name, plan.id))
+      val pinfo = request(Plan.Info(svc.name, plan.id))
       pinfo must equal(plan)
     }
   }

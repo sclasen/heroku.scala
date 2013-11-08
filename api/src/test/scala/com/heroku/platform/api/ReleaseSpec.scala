@@ -8,6 +8,7 @@ abstract class ReleaseSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiS
 
   "Api for Releases" must {
     "operate on Releases" in {
+      import primary._
       pending
     }
 

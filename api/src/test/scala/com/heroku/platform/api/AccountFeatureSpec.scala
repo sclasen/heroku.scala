@@ -8,10 +8,11 @@ abstract class AccountFeatureSpec(aj: ApiRequestJson with ApiResponseJson) exten
 
   "Api for AccountFeature" must {
     "operate on AccountFeatures" in {
-      val features = listAll(AccountFeature.List())
-      val feature = execute(AccountFeature.Info(features(0).id))
+      import primary._
+      val features = requestAll(AccountFeature.List())
+      val feature = request(AccountFeature.Info(features(0).id))
       feature must equal(features(0))
-      val updated = execute(AccountFeature.Update(feature.id, !feature.enabled))
+      val updated = request(AccountFeature.Update(feature.id, !feature.enabled))
       updated.enabled must equal(!feature.enabled)
     }
   }

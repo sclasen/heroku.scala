@@ -8,6 +8,7 @@ abstract class SslEndpointSpec(aj: ApiRequestJson with ApiResponseJson) extends 
 
   "Api for SslEndpoints" must {
     "operate on SslEndpoints" in {
+      import primary._
       pending
     }
 

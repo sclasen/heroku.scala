@@ -8,19 +8,21 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
 
   "Api for OAuth" must {
     "operate on OAuthAuthorizations" in {
-      val auth = execute(OAuthAuthorization.Create(scope = Array("global"), description = Some("OAuthSpec")))
-      val authz = listAll(OAuthAuthorization.List())
+      import primary._
+      val auth = request(OAuthAuthorization.Create(scope = Array("global"), description = Some("OAuthSpec")))
+      val authz = requestAll(OAuthAuthorization.List())
       authz.contains(auth) must be(true)
-      val authInfo = execute(OAuthAuthorization.Info(auth.id))
+      val authInfo = request(OAuthAuthorization.Info(auth.id))
       authInfo must equal(auth)
-      execute(OAuthAuthorization.Delete(auth.id))
+      request(OAuthAuthorization.Delete(auth.id))
     }
     "operate on OAuthClients" in {
-      val client = execute(OAuthClient.Create("test-client", "https://example.com/foo"))
-      val clients = listAll(OAuthClient.List())
+      import primary._
+      val client = request(OAuthClient.Create("test-client", "https://example.com/foo"))
+      val clients = requestAll(OAuthClient.List())
       clients must contain(client)
-      execute(OAuthClient.Info(client.id)) must equal(client)
-      execute(OAuthClient.Delete(client.id)) must equal(client)
+      request(OAuthClient.Info(client.id)) must equal(client)
+      request(OAuthClient.Delete(client.id)) must equal(client)
     }
 
     "operate on OAuthTokens" in {

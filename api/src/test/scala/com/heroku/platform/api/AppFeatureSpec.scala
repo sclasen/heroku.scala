@@ -8,11 +8,12 @@ abstract class AppFeatureSpec(aj: ApiRequestJson with ApiResponseJson) extends A
 
   "Api for AppFeature" must {
     "operate on AppFeatures" in {
+      import primary._
       val app = getApp
-      val features = listAll(AppFeature.List(app.id))
-      val feature = execute(AppFeature.Info(app.name, features(0).id))
+      val features = requestAll(AppFeature.List(app.id))
+      val feature = request(AppFeature.Info(app.name, features(0).id))
       feature must equal(features(0))
-      val updated = execute(AppFeature.Update(app.id, feature.id, !feature.enabled))
+      val updated = request(AppFeature.Update(app.id, feature.id, !feature.enabled))
       updated.enabled must equal(!feature.enabled)
     }
   }
