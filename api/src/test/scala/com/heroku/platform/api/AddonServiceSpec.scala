@@ -9,8 +9,8 @@ abstract class AddonServiceSpec(aj: ApiRequestJson with ApiResponseJson) extends
   "Api for AddonServices" must {
     "operate on AddonServices" in {
       val services = listAll(AddonService.List())
-      val serviceByName = info(AddonService.Info(services(0).name))
-      val serviceById = info(AddonService.Info(services(0).id))
+      val serviceByName = execute(AddonService.Info(services(0).name))
+      val serviceById = execute(AddonService.Info(services(0).id))
       serviceByName must equal(serviceById)
     }
   }

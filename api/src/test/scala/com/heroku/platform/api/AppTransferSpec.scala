@@ -13,14 +13,14 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
     "operate on AppTransfers" in {
       val app = getApp
       import AppTransfer._
-      create(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
-      val transfer = create(Create(app.id, recipient_email_or_id = testCollaborator))
+      execute(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
+      val transfer = execute(Create(app.id, recipient_email_or_id = testCollaborator))
       val transferList = listAll(List())
       transferList.contains(transfer) must be(true)
-      val transferInfo = info(Info(transfer.id))
+      val transferInfo = execute(Info(transfer.id))
       transferInfo must equal(transfer)
       //TODO TEST UPDATE to accept/decline
-      delete(Delete(transfer.id))
+      execute(Delete(transfer.id))
     }
   }
 

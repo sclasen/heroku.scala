@@ -35,16 +35,12 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
     }
   }
 
-  def create[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
+  def execute[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
     await(api.execute(rwb, apiKey))
   }
 
-  def info[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
+  def execute[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
     await(api.execute(req, apiKey))
-  }
-
-  def update[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
-    await(api.execute(rwb, apiKey))
   }
 
   def listAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
@@ -53,10 +49,6 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
 
   def listPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list) {
     await(api.executeList(list, apiKey))
-  }
-
-  def delete[T](del: Request[T])(implicit f: FromJson[T]): T = loggingFailure(del) {
-    await(api.execute(del, apiKey))
   }
 
   def getApp = {

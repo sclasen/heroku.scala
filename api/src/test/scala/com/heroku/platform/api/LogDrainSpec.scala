@@ -15,12 +15,12 @@ abstract class LogDrainSpec(aj: ApiRequestJson with ApiResponseJson) extends Api
       tryDrain(app, "https://example.com/foo") must be(true)
       val drains = listAll(LogDrain.List(app.name))
       val created = drains(0)
-      val drainByid = info(LogDrain.Info(app.id, created.id))
+      val drainByid = execute(LogDrain.Info(app.id, created.id))
       drainByid must equal(created)
       //todo deal with urlencoding urls
       //val drainByUrl = info(LogDrain.Info(app.id, "https://example.com/foo"))
       //drainByUrl must equal(created)
-      val deleted = delete(LogDrain.Delete(app.id, created.id))
+      val deleted = execute(LogDrain.Delete(app.id, created.id))
     }
   }
 

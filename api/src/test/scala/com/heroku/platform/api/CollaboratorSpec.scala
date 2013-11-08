@@ -9,14 +9,14 @@ abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends
   "Api for Collaborator" must {
     "operate on Collaborators" in {
       val app = getApp
-      val collabAdd = create(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
+      val collabAdd = execute(Collaborator.Create(app.id, user_email_or_id = testCollaborator))
       val collabList = listPage(Collaborator.List(app.id))
       collabList.isComplete must be(true)
       collabList.list.isEmpty must be(false)
       collabList.list.contains(collabAdd) must be(true)
-      val collabInfo = info(Collaborator.Info(app.id, collabAdd.id))
+      val collabInfo = execute(Collaborator.Info(app.id, collabAdd.id))
       collabInfo must equal(collabAdd)
-      delete(Collaborator.Delete(app.id, collabAdd.id))
+      execute(Collaborator.Delete(app.id, collabAdd.id))
     }
   }
 

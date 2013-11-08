@@ -7,7 +7,6 @@ import treehugger.forest._
 import definitions._
 import treehuggerDSL._
 
-
 /*
 this generates scala source for schema.json
 the names of the files are printed to standard out so sbt knows to compile them
@@ -347,7 +346,6 @@ object ModelBoilerplateGen extends App {
       throw new IllegalStateException("encountered type with more than one non null type value")
     }
   }
-
 
   /*
   special case handling of fields that this generator cant deal with yet, or where there are incinsistencies btw doc and api behavior (stack)

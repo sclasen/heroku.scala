@@ -12,7 +12,7 @@ abstract class PlanSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec
       val svc = svcs(0)
       val plans = listAll(Plan.List(svc.id))
       val plan = plans(0)
-      val pinfo = info(Plan.Info(svc.name, plan.id))
+      val pinfo = execute(Plan.Info(svc.name, plan.id))
       pinfo must equal(plan)
     }
   }

@@ -10,8 +10,8 @@ abstract class StackSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
     "operate on Stacks" in {
       val stacks = listAll(Stack.List())
       val stack = stacks(0)
-      val byId = info(Stack.Info(stack.id))
-      val byName = info(Stack.Info(stack.name))
+      val byId = execute(Stack.Info(stack.id))
+      val byName = execute(Stack.Info(stack.name))
       stack must equal(byId)
       stack must equal(byName)
     }
