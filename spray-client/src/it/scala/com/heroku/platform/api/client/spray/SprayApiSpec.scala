@@ -14,12 +14,12 @@ trait SprayApiSpec {
 
   def createApp: HerokuApp = {
     import aj._
-    await(api.execute(HerokuApp.Create(), apiKey))
+    await(api.execute(HerokuApp.Create(), primaryTestApiKey))
   }
 
   def destroyApp(app: HerokuApp): Future[Either[ErrorResponse, HerokuApp]] = {
     import aj._
-    api.execute(HerokuApp.Delete(app.id), apiKey)
+    api.execute(HerokuApp.Delete(app.id), primaryTestApiKey)
   }
 
   def shutdown {

@@ -8,13 +8,15 @@ abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
 
   "Api for Addons" must {
     "operate on the Addons" in {
+      import primary._
       val app = getApp
-      val addon = create(Addon.Create(app.id, "scheduler:standard"))
-      val addonList = listAll(Addon.List(app.id))
+      val addon = request(Addon.Create(app.id, "scheduler:standard"))
+      val addonList = requestAll(Addon.List(app.id))
+      println(addonList)
       addonList.contains(addon) must be(true)
-      val addonInfo = info(Addon.Info(app.id, addon.id))
+      val addonInfo = request(Addon.Info(app.id, addon.id))
       addonInfo must equal(addon)
-      delete(Addon.Delete(app.id, addon.id))
+      request(Addon.Delete(app.id, addon.id))
     }
   }
 

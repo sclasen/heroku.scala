@@ -11,9 +11,17 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
 
   def api: Api
 
-  def apiKey = sys.env("TEST_API_KEY")
+  def primaryTestApiKey = sys.env("TEST_API_KEY_1")
 
-  def testCollaborator = sys.env("TEST_COLLABORATOR")
+  def primaryTestUser = sys.env("TEST_USER_1")
+
+  def primaryTestPassword = sys.env("TEST_PASSWORD_1")
+
+  def secondaryTestApiKey = sys.env("TEST_API_KEY_2")
+
+  def secondaryTestUser = sys.env("TEST_USER_2")
+
+  def secondaryTestPassword = sys.env("TEST_PASSWORD_2")
 
   val apps = ListBuffer.empty[HerokuApp]
 
@@ -35,36 +43,35 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
     }
   }
 
-  def create[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
-    await(api.execute(rwb, apiKey))
-  }
+  val primary = ApiWrapper(primaryTestApiKey)
 
-  def info[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
-    await(api.execute(req, apiKey))
-  }
+  val secondary = ApiWrapper(secondaryTestApiKey)
 
-  def update[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
-    await(api.execute(rwb, apiKey))
-  }
+  case class ApiWrapper(apiKey: String) {
 
-  def listAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
-    await(api.executeListAll(list, apiKey))
-  }
+    def request[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
+      await(api.execute(rwb, apiKey))
+    }
 
-  def listPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list) {
-    await(api.executeList(list, apiKey))
-  }
+    def request[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
+      await(api.execute(req, apiKey))
+    }
 
-  def delete[T](del: Request[T])(implicit f: FromJson[T]): T = loggingFailure(del) {
-    await(api.execute(del, apiKey))
-  }
+    def requestAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
+      await(api.executeListAll(list, apiKey))
+    }
 
-  def getApp = {
-    val app = createApp
-    apps += app
-    app
-  }
+    def requestPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list) {
+      await(api.executeList(list, apiKey))
+    }
 
+    def getApp = {
+      val app = createApp
+      apps += app
+      app
+    }
+
+  }
   override protected def afterAll() {
     implicit val ex = concurrent.ExecutionContext.Implicits.global
     Await.ready(

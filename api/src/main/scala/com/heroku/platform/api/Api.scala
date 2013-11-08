@@ -35,13 +35,12 @@ trait BaseRequest {
 
   def method: String
 
-  def extraHeaders: Map[String, String]
-
 }
 
 trait Request[O] extends BaseRequest {
 
   def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[ErrorResponse, O] = {
+    println(status)
     if (expect.contains(status)) {
       Right(f.fromJson(body))
     } else {
@@ -75,23 +74,35 @@ trait ListRequest[T] extends BaseRequest {
   def nextRequest(nextRange: String): ListRequest[T]
 }
 
+trait ErrorResponseJson {
+  implicit def FromJsonErrorResponse: FromJson[ErrorResponse]
+}
+
 trait Api {
 
   implicit def executionContext: ExecutionContext
 
-  def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]]
+  def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = execute[T](request, key, Map.empty[String, String])
 
-  def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]]
+  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]]
 
-  def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]]
+  def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = execute[I, O](request, key, Map.empty[String, String])
 
-  def executeListAll[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, List[T]]] = listAll(request, key, List.empty)
+  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]]
 
-  private def listAll[T](request: ListRequest[T], key: String, acc: List[T])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, List[T]]] = {
+  def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]] = executeList[T](request, key, Map.empty[String, String])
+
+  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]]
+
+  def executeListAll[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, List[T]]] = executeListAll[T](request, key, Map.empty[String, String])
+
+  def executeListAll[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, List[T]]] = listAll(request, key, headers, List.empty)
+
+  private def listAll[T](request: ListRequest[T], key: String, headers: Map[String, String], acc: List[T])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, List[T]]] = {
     executeList(request, key).flatMap {
       case Left(e) => Future.successful(Left(e))
       case Right(p) if p.isComplete => Future.successful(Right(acc ++ p.list))
-      case Right(p) => listAll(request.nextRequest(p.nextRange.get), key, acc ++ p.list)
+      case Right(p) => listAll(request.nextRequest(p.nextRange.get), key, headers, acc ++ p.list)
     }
   }
 }
