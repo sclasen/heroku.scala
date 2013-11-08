@@ -6,13 +6,13 @@ Async Scala Client for the V3 version of the heroku API.
 
 ```
 import com.heroku.platform.api._
-import com.heroku.platform.api.client.spray.SprayApiJson._
+import com.heroku.platform.api.client.spray.SprayJsonBoilerplate
 import com.heroku.platform.api.client.spray.SprayApi
 import akka.actor._
 
 val system = ActorSystem("api")
 
-val api = new SprayApi(system)
+val api = new SprayApi(system)(SprayJsonBoilerplate)
 
 val apiKey = ...
 
