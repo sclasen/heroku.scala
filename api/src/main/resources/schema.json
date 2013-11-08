@@ -3142,15 +3142,15 @@
           "description": "Rollback to an existing release.",
           "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/releases",
           "method": "POST",
-          "rel": "update",
+          "rel": "create",
           "schema": {
             "properties": {
-              "id": {
+              "release": {
                 "$ref": "#/definitions/release/definitions/id"
               }
             },
             "required": [
-              "id"
+              "release"
             ]
           },
           "title": "Rollback"
