@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class RateLimitSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: RateLimitRequestJson with RateLimitResponseJson = aj
+  val implicits: RateLimitResponseJson = aj
 
   import implicits._
 

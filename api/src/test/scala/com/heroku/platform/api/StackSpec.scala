@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class StackSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: StackRequestJson with StackResponseJson = aj
+  val implicits: StackResponseJson = aj
 
   import implicits._
 

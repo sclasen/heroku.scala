@@ -29,13 +29,13 @@ object ModelBoilerplateGen extends App {
     /*for each non empty resource generate the scala source*/
     root.resources.values.filter(_.nonEmpty).map {
       resource =>
-        resource.name -> (BLOCK(
+        resource.name -> (BLOCK(Seq(
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
           companion(resource, root) withDoc (resource.description),
-          model(resource) withDoc (resource.description),
-          reqJson(resource) withDoc (s"json serializers related to ${resource.name}"),
-          respJson(resource) withDoc (s"json deserializers related to ${resource.name}")
+          model(resource) withDoc (resource.description)) ++
+          Seq(reqJson(resource).map(_ withDoc (s"json serializers related to ${resource.name}")),
+            respJson(resource).map(_ withDoc (s"json deserializers related to ${resource.name}"))).flatten
         ).inPackage(sym.ApiPackage): Tree)
     }
   }
@@ -219,7 +219,7 @@ object ModelBoilerplateGen extends App {
   /*
   s"${resource.name}RequestJson" trait, holds the ToJson for the resource
    */
-  def reqJson(resource: Resource)(implicit root: RootSchema) = {
+  def reqJson(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
 
     val modelToJsons = resource.links.map {
       link =>
@@ -237,21 +237,23 @@ object ModelBoilerplateGen extends App {
         Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
-    TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
-      modelToJsons.toSeq ++ nesteds.toSeq
-    )
+    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq
+
+    if (toJsons.isEmpty) None
+    else Some(TRAITDEF(s"${resource.name}RequestJson") := BLOCK(toJsons))
   }
 
   /*
    s"${resource.name}ResponseJson" trait, holds the FromJson for the resource
   */
-  def respJson(resource: Resource)(implicit root: RootSchema) = {
+  def respJson(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
     val resps = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
         Some(fromJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"collection.immutable.List[${resource.name}]"))
-    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
+    if (resps.isEmpty) None
+    else Some(TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps))
   }
 
   /* implicit def ToJson*s and FromJson*s */
@@ -354,7 +356,7 @@ object ModelBoilerplateGen extends App {
   }
 
   /*
-  special case handling of fields that this generator cant deal with yet, or where there are incinsistencies btw doc and api behavior (stack)
+  special case handling of fields that this generator cant deal with yet, or where there are inconsistencies btw doc and api behavior (stack)
   */
   def specialCase(resource: Resource, field: String) = {
     (resource.id, field) match {
@@ -376,22 +378,30 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def aggJson(suffix: String)(implicit root: RootSchema) = {
+  def aggReqJson(implicit root: RootSchema): List[String] = {
     root.resources.values.filter(_.nonEmpty).toList.sortBy(_.name).map {
       resource =>
-        resource.name + suffix
-    }
+        reqJson(resource).map(t => resource.name + "RequestJson")
+    }.flatten
+  }
+
+  def aggRespJson(implicit root: RootSchema): List[String] = {
+    root.resources.values.filter(_.nonEmpty).toList.sortBy(_.name).map {
+      resource =>
+        respJson(resource).map(t => resource.name + "ResponseJson")
+    }.flatten
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: "LogDrainRequestJson" :: aggJson("RequestJson")): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: "LogDrainRequestJson" :: aggReqJson): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: "LogDrainResponseJson" :: aggJson("ResponseJson")): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: "LogDrainResponseJson" :: aggRespJson): Tree)
   }
 
-  def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api._"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
+  def apiJson(implicit root: RootSchema) = (BLOCK(reqJson, respJson).inPackage(sym.ApiPackage): Tree)
+
   /*schema.json parsing*/
   implicit def fmtAI: Format[ArrayItems] = Json.format[ArrayItems]
 
