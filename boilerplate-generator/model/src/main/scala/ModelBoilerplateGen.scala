@@ -32,7 +32,7 @@ object ModelBoilerplateGen extends App {
         resource.name -> (BLOCK(
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
-          companion(resource, root),
+          companion(resource, root) withDoc (resource.description),
           model(resource),
           reqJson(resource),
           respJson(resource)
@@ -105,13 +105,14 @@ object ModelBoilerplateGen extends App {
         val paramNames = paramsMap.toSeq.map(_._1)
         val extra = extraParams(link)
 
-        link.rel match {
+        val req = link.rel match {
           case "destroy" if resource.id == "schema/dyno" => requestWithoutBody(resource, paramNames, params, extra, link, hrefParamNames)
           case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
           case x => sys.error("======> UNKNOWN link.rel:" + x)
         }
+        (req: Tree) withDoc (link.description)
     }
 
     val bodyCaseClasses = resource.links.map {
@@ -462,7 +463,7 @@ object ModelBoilerplateGen extends App {
   }
 
   //Endpoint
-  case class Link(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
+  case class Link(description: String, title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
     val refEx = """\{(.+)\}""".r
     val encEx = """\((.+)\)""".r
 
