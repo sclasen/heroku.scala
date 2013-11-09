@@ -33,9 +33,9 @@ object ModelBoilerplateGen extends App {
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
           companion(resource, root) withDoc (resource.description),
-          model(resource),
-          reqJson(resource),
-          respJson(resource)
+          model(resource) withDoc (resource.description),
+          reqJson(resource) withDoc (s"json serializers related to ${resource.name}"),
+          respJson(resource) withDoc (s"json deserializers related to ${resource.name}")
         ).inPackage(sym.ApiPackage): Tree)
     }
   }
