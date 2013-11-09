@@ -57,7 +57,7 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
       await(api.execute(req, apiKey))
     }
 
-    def request[T](req: RequestWithoutResponse) = loggingFailure(req) {
+    def request[T](req: RequestWithEmptyResponse) = loggingFailure(req) {
       await(api.execute(req, apiKey))
     }
 

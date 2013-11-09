@@ -20,7 +20,7 @@ object ModelBoilerplateGen extends App {
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
     val RequestWithBody = RootClass.newClass("RequestWithBody")
-    val RequestWithoutResponse = RootClass.newClass("RequestWithoutResponse")
+    val RequestWithEmptyResponse = RootClass.newClass("RequestWithEmptyResponse")
     val ListRequest = RootClass.newClass("ListRequest")
   }
 
@@ -52,7 +52,7 @@ object ModelBoilerplateGen extends App {
           fieldDef => fieldType(k, fieldDef)(resource)
         })
         (PARAM(k, typ).tree)
-      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" =>
+      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" => /*Hack, fix*/
         (PARAM(k, TYPE_OPTION("String")).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
         (PARAM(k, TYPE_OPTION("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
@@ -106,7 +106,7 @@ object ModelBoilerplateGen extends App {
         val extra = extraParams(link)
 
         val req = link.rel match {
-          case "destroy" if resource.id == "schema/dyno" => requestWithoutBody(resource, paramNames, params, extra, link, hrefParamNames)
+          case "destroy" if resource.id == "schema/dyno" => requestWithEmptyResponse(resource, paramNames, params, extra, link, hrefParamNames)
           case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
@@ -291,8 +291,8 @@ object ModelBoilerplateGen extends App {
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (resource.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
   }
 
-  def requestWithoutBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithoutResponse) := BLOCK(
+  def requestWithEmptyResponse(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithEmptyResponse) := BLOCK(
       expect("expect202"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 

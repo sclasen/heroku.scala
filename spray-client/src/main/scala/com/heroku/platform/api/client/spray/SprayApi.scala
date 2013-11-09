@@ -9,15 +9,15 @@ import _root_.spray.http._
 import _root_.spray.http.HttpMethods._
 import _root_.spray.client.pipelining._
 import com.heroku.platform.api._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.Await
 import akka.actor.ActorSystem
 import concurrent.duration._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import com.heroku.platform.api.PartialResponse
-import com.heroku.platform.api.ErrorResponse
 import spray.http.HttpEntity.Empty
+import com.heroku.platform.api.Api.FutureResponse
 
 class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api {
 
@@ -48,7 +48,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
 
   def endpoint: String = "api.heroku.com"
 
-  def execute(request: RequestWithoutResponse, key: String, headers: Map[String, String]): Future[Either[ErrorResponse, Unit]] = {
+  def execute(request: RequestWithEmptyResponse, key: String, headers: Map[String, String]): FutureResponse[Unit] = {
     val method = getMethod(request)
     val sprayHeaders = getHeaders(headers, key)
     pipeline(HttpRequest(method, request.endpoint, sprayHeaders, Empty, `HTTP/1.1`)).map {
@@ -59,7 +59,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     }
   }
 
-  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
+  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): FutureResponse[T] = {
     val method = getMethod(request)
     val sprayHeaders = getHeaders(headers, key)
     pipeline(HttpRequest(method, request.endpoint, sprayHeaders, Empty, `HTTP/1.1`)).map {
@@ -70,7 +70,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     }
   }
 
-  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O]): Future[Either[ErrorResponse, O]] = {
+  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O]): FutureResponse[O] = {
     val method = getMethod(request)
     val sprayHeaders = getHeaders(headers, key)
     pipeline(HttpRequest(method, request.endpoint, sprayHeaders, HttpEntity(`application/json`, to.toJson(request.body).getBytes("UTF-8")), `HTTP/1.1`)).map {
@@ -80,7 +80,7 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     }
   }
 
-  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): Future[Either[ErrorResponse, PartialResponse[T]]] = {
+  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): FutureResponse[PartialResponse[T]] = {
     val range = request.range.map {
       r => List(rangeHeader(r))
     }.getOrElse(Nil)
