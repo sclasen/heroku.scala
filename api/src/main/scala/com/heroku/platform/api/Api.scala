@@ -20,6 +20,7 @@ object Request {
   val v3json = "application/vnd.heroku+json; version=3"
   val expect200 = Set(200)
   val expect201 = Set(201)
+  val expect202 = Set(202)
   val GET = "GET"
   val PUT = "PUT"
   val PATCH = "PATCH"
@@ -35,6 +36,18 @@ trait BaseRequest {
 
   def method: String
 
+}
+
+trait RequestWithoutResponse extends BaseRequest {
+
+  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit e: FromJson[ErrorResponse]): Either[ErrorResponse, Unit] = {
+    println(status)
+    if (expect.contains(status)) {
+      Right(())
+    } else {
+      Left(e.fromJson(body))
+    }
+  }
 }
 
 trait Request[O] extends BaseRequest {
@@ -81,6 +94,10 @@ trait ErrorResponseJson {
 trait Api {
 
   implicit def executionContext: ExecutionContext
+
+  def execute(request: RequestWithoutResponse, key: String): Future[Either[ErrorResponse, Unit]] = execute(request, key, Map.empty[String, String])
+
+  def execute(request: RequestWithoutResponse, key: String, headers: Map[String, String]): Future[Either[ErrorResponse, Unit]]
 
   def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = execute[T](request, key, Map.empty[String, String])
 

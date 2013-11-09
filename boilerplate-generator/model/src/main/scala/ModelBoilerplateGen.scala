@@ -20,6 +20,7 @@ object ModelBoilerplateGen extends App {
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
     val RequestWithBody = RootClass.newClass("RequestWithBody")
+    val RequestWithoutResponse = RootClass.newClass("RequestWithoutResponse")
     val ListRequest = RootClass.newClass("ListRequest")
   }
 
@@ -105,6 +106,7 @@ object ModelBoilerplateGen extends App {
         val extra = extraParams(link)
 
         link.rel match {
+          case "destroy" if resource.id == "schema/dyno" => requestWithoutBody(resource, paramNames, params, extra, link, hrefParamNames)
           case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
@@ -284,6 +286,11 @@ object ModelBoilerplateGen extends App {
     (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (resource.name)) := BLOCK(
       endpoint(link.href, hrefParams), method(link.method.toUpperCase),
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (resource.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
+  }
+
+  def requestWithoutBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithoutResponse) := BLOCK(
+      expect("expect202"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))

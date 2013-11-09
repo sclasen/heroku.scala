@@ -57,6 +57,10 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
       await(api.execute(req, apiKey))
     }
 
+    def request[T](req: RequestWithoutResponse) = loggingFailure(req) {
+      await(api.execute(req, apiKey))
+    }
+
     def requestAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
       await(api.executeListAll(list, apiKey))
     }

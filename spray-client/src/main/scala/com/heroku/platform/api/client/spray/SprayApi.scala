@@ -48,6 +48,17 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
 
   def endpoint: String = "api.heroku.com"
 
+  def execute(request: RequestWithoutResponse, key: String, headers: Map[String, String]): Future[Either[ErrorResponse, Unit]] = {
+    val method = getMethod(request)
+    val sprayHeaders = getHeaders(headers, key)
+    pipeline(HttpRequest(method, request.endpoint, sprayHeaders, Empty, `HTTP/1.1`)).map {
+      resp =>
+        val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
+        val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
+        response
+    }
+  }
+
   def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): Future[Either[ErrorResponse, T]] = {
     val method = getMethod(request)
     val sprayHeaders = getHeaders(headers, key)
