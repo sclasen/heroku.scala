@@ -11,7 +11,7 @@ trait SprayApiSpec {
 
   val system = ActorSystem("test")
 
-  val api = new SprayApi(system)(aj)
+  val api = new SprayApi(system)
 
   def createApp: HerokuApp = {
     import aj._

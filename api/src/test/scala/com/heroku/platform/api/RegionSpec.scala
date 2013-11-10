@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class RegionSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: RegionResponseJson = aj
+  val implicits: RegionResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

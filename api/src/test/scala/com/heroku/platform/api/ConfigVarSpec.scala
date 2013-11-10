@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class ConfigVarSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: ConfigVarRequestJson with ConfigVarResponseJson = aj
+  val implicits: ConfigVarRequestJson with ConfigVarResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

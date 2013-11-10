@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class ReleaseSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: ReleaseRequestJson with ReleaseResponseJson with ConfigVarRequestJson with ConfigVarResponseJson = aj
+  val implicits: ReleaseRequestJson with ReleaseResponseJson with ConfigVarRequestJson with ConfigVarResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

@@ -5,7 +5,7 @@ import com.heroku.platform.api.AppTransfer.models.{ AppTransferRecipient, AppTra
 
 abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson = aj
+  val implicits: AppTransferRequestJson with AppTransferResponseJson with CollaboratorRequestJson with CollaboratorResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

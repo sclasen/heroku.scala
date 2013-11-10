@@ -6,19 +6,26 @@ Async Scala Client for the V3 version of the heroku API.
 
 ```
 import com.heroku.platform.api._
-import com.heroku.platform.api.client.spray.SprayJsonBoilerplate
+import com.heroku.platform.api.client.spray.SprayJsonBoilerplate._
 import com.heroku.platform.api.client.spray.SprayApi
 import akka.actor._
 
 val system = ActorSystem("api")
+implicit val ctx = system.dispatcher
 
-val api = new SprayApi(system)(SprayJsonBoilerplate)
+val api = SprayApi(system)
 
 val apiKey = ...
 
 api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map{
-   case Left(ErrorResponse(_, msg)) => println(s"failed to create app: $msg")
-   case Right(app) => println(s"created app: ${app.name}, id is ${app.id}")
+   case Left(Response(status, headers, ErrorResponse(id, msg))) => println(s"failed to create app: $msg")
+   case Right(Response(status, headers, app)) => println(s"created app: ${app.name}, id is ${app.id}")
+}
+
+val simpleApi = SimpleApi(api, apiKey)
+
+simpleApi.execute(HerokuApp.Info("my-app")).map{
+    app:HerokuApp => println(s"got app info for ${app.name}")
 }
 ```
 

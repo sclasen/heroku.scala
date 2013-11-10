@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class DynoSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: DynoRequestJson with DynoResponseJson = aj
+  val implicits: DynoRequestJson with DynoResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

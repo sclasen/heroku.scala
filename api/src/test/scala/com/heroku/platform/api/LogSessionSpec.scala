@@ -5,7 +5,7 @@ import scala.concurrent.Await
 
 abstract class LogSessionSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: LogSessionRequestJson with LogSessionResponseJson = aj
+  val implicits: LogSessionRequestJson with LogSessionResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

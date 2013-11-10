@@ -44,7 +44,6 @@ trait BaseRequest {
 trait RequestWithEmptyResponse extends BaseRequest {
 
   def getResponse(status: Int, headers: Map[String, String], body: String)(implicit e: FromJson[ErrorResponse]): Either[Response[ErrorResponse], Response[Unit]] = {
-    println(status)
     if (expect.contains(status)) {
       Right(Response(status, headers, ()))
     } else {
@@ -56,7 +55,6 @@ trait RequestWithEmptyResponse extends BaseRequest {
 trait Request[O] extends BaseRequest {
 
   def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[Response[ErrorResponse], Response[O]] = {
-    println(status)
     if (expect.contains(status)) {
       Right(Response(status, headers, f.fromJson(body)))
     } else {
@@ -102,27 +100,27 @@ trait Api {
 
   implicit def executionContext: ExecutionContext
 
-  def execute(request: RequestWithEmptyResponse, key: String): FutureResponse[Unit] = execute(request, key, Map.empty[String, String])
+  def execute(request: RequestWithEmptyResponse, key: String)(implicit e: FromJson[ErrorResponse]): FutureResponse[Unit] = execute(request, key, Map.empty[String, String])
 
-  def execute(request: RequestWithEmptyResponse, key: String, headers: Map[String, String]): FutureResponse[Unit]
+  def execute(request: RequestWithEmptyResponse, key: String, headers: Map[String, String])(implicit e: FromJson[ErrorResponse]): FutureResponse[Unit]
 
-  def execute[T](request: Request[T], key: String)(implicit f: FromJson[T]): FutureResponse[T] = execute[T](request, key, Map.empty[String, String])
+  def execute[T](request: Request[T], key: String)(implicit f: FromJson[T], e: FromJson[ErrorResponse]): FutureResponse[T] = execute[T](request, key, Map.empty[String, String])
 
-  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T]): FutureResponse[T]
+  def execute[T](request: Request[T], key: String, headers: Map[String, String])(implicit f: FromJson[T], e: FromJson[ErrorResponse]): FutureResponse[T]
 
-  def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O]): FutureResponse[O] = execute[I, O](request, key, Map.empty[String, String])
+  def execute[I, O](request: RequestWithBody[I, O], key: String)(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): FutureResponse[O] = execute[I, O](request, key, Map.empty[String, String])
 
-  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O]): FutureResponse[O]
+  def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): FutureResponse[O]
 
-  def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): FutureResponse[PartialResponse[T]] = executeList[T](request, key, Map.empty[String, String])
+  def executeList[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): FutureResponse[PartialResponse[T]] = executeList[T](request, key, Map.empty[String, String])
 
-  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): FutureResponse[PartialResponse[T]]
+  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): FutureResponse[PartialResponse[T]]
 
-  def executeListAll[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]]): FutureResponse[List[T]] = executeListAll[T](request, key, Map.empty[String, String])
+  def executeListAll[T](request: ListRequest[T], key: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): FutureResponse[List[T]] = executeListAll[T](request, key, Map.empty[String, String])
 
-  def executeListAll[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]]): FutureResponse[List[T]] = listAll(request, key, headers, List.empty)
+  def executeListAll[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): FutureResponse[List[T]] = listAll(request, key, headers, List.empty)
 
-  private def listAll[T](request: ListRequest[T], key: String, headers: Map[String, String], acc: List[T])(implicit f: FromJson[List[T]]): FutureResponse[List[T]] = {
+  private def listAll[T](request: ListRequest[T], key: String, headers: Map[String, String], acc: List[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): FutureResponse[List[T]] = {
     executeList(request, key).flatMap {
       case Left(e) => Future.successful(Left(e))
       case Right(p) if p.body.isComplete => Future.successful(Right(Response(p.status, p.headers, acc ++ p.body.list)))
@@ -131,3 +129,20 @@ trait Api {
   }
 }
 
+case class SimpleApi(api: Api, apiKey: String) {
+
+  implicit val ctx = api.executionContext
+
+  def fold[T](either: Either[Response[ErrorResponse], Response[T]]): T = {
+    either.fold(e => sys.error(e.toString), s => s.body)
+  }
+
+  def execute(request: RequestWithEmptyResponse)(implicit e: FromJson[ErrorResponse]): Future[Unit] = api.execute(request, apiKey).map(fold)
+
+  def execute[T](request: Request[T])(implicit f: FromJson[T], e: FromJson[ErrorResponse]): Future[T] = api.execute(request, apiKey).map(fold)
+
+  def execute[I, O](request: RequestWithBody[I, O])(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): Future[O] = api.execute[I, O](request, apiKey).map(fold)
+
+  def executeListAll[T](request: ListRequest[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Future[List[T]] = api.executeListAll[T](request, apiKey).map(fold)
+
+}

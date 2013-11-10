@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class SlugSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: SlugRequestJson with SlugResponseJson = aj
+  val implicits: SlugRequestJson with SlugResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

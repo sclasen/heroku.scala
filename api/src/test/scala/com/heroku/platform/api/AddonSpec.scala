@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AddonRequestJson with AddonResponseJson = aj
+  val implicits: AddonRequestJson with AddonResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

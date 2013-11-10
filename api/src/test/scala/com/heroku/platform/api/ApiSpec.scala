@@ -28,6 +28,7 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
 
   def await[T](future: Future[Either[Response[ErrorResponse], Response[T]]], d: Duration = 5.seconds): T = {
     val resp = Await.result(future, d)
+    println(resp.fold(_.status, _.status))
     if (resp.isLeft)
       throw new TestFailedException(s"result was not right: ${resp.left.get}", 1)
     else
@@ -50,23 +51,23 @@ abstract class ApiSpec(val aj: ApiRequestJson with ApiResponseJson) extends Word
 
   case class ApiWrapper(apiKey: String) {
 
-    def request[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T]): T = loggingFailure(rwb) {
+    def request[I, T](rwb: RequestWithBody[I, T])(implicit t: ToJson[I], f: FromJson[T], e: FromJson[ErrorResponse]): T = loggingFailure(rwb) {
       await(api.execute(rwb, apiKey))
     }
 
-    def request[T](req: Request[T])(implicit f: FromJson[T]): T = loggingFailure(req) {
+    def request[T](req: Request[T])(implicit f: FromJson[T], e: FromJson[ErrorResponse]): T = loggingFailure(req) {
       await(api.execute(req, apiKey))
     }
 
-    def request[T](req: RequestWithEmptyResponse) = loggingFailure(req) {
+    def request[T](req: RequestWithEmptyResponse)(implicit e: FromJson[ErrorResponse]) = loggingFailure(req) {
       await(api.execute(req, apiKey))
     }
 
-    def requestAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): List[T] = loggingFailure(list) {
+    def requestAll[T](list: ListRequest[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): List[T] = loggingFailure(list) {
       await(api.executeListAll(list, apiKey))
     }
 
-    def requestPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]]): PartialResponse[T] = loggingFailure(list) {
+    def requestPage[T](list: ListRequest[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): PartialResponse[T] = loggingFailure(list) {
       await(api.executeList(list, apiKey))
     }
 

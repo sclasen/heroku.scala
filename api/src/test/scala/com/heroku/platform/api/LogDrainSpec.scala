@@ -5,7 +5,7 @@ import scala.concurrent.duration._
 
 abstract class LogDrainSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: LogDrainRequestJson with LogDrainResponseJson = aj
+  val implicits: LogDrainRequestJson with LogDrainResponseJson with ErrorResponseJson = aj
 
   import implicits._
 
