@@ -11,6 +11,8 @@ trait FromJson[T] {
   def fromJson(json: String): T
 }
 
+case class Response[T](status: Int, headers: Map[String, String], body: T)
+
 case class ErrorResponse(id: String, message: String)
 
 case class PartialResponse[T](list: List[T], nextRange: Option[String]) {
@@ -41,24 +43,24 @@ trait BaseRequest {
 
 trait RequestWithEmptyResponse extends BaseRequest {
 
-  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit e: FromJson[ErrorResponse]): Either[ErrorResponse, Unit] = {
+  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit e: FromJson[ErrorResponse]): Either[Response[ErrorResponse], Response[Unit]] = {
     println(status)
     if (expect.contains(status)) {
-      Right(())
+      Right(Response(status, headers, ()))
     } else {
-      Left(e.fromJson(body))
+      Left(Response(status, headers, e.fromJson(body)))
     }
   }
 }
 
 trait Request[O] extends BaseRequest {
 
-  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[ErrorResponse, O] = {
+  def getResponse(status: Int, headers: Map[String, String], body: String)(implicit f: FromJson[O], e: FromJson[ErrorResponse]): Either[Response[ErrorResponse], Response[O]] = {
     println(status)
     if (expect.contains(status)) {
-      Right(f.fromJson(body))
+      Right(Response(status, headers, f.fromJson(body)))
     } else {
-      Left(e.fromJson(body))
+      Left(Response(status, headers, e.fromJson(body)))
     }
   }
 }
@@ -75,13 +77,13 @@ trait ListRequest[T] extends BaseRequest {
 
   def range: Option[String]
 
-  def getResponse(status: Int, headers: Map[String, String], nextRange: Option[String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[ErrorResponse, PartialResponse[T]] = {
+  def getResponse(status: Int, headers: Map[String, String], nextRange: Option[String], body: String)(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Either[Response[ErrorResponse], Response[PartialResponse[T]]] = {
     if (status == 200) {
-      Right(PartialResponse(f.fromJson(body), None))
+      Right(Response(status, headers, PartialResponse(f.fromJson(body), None)))
     } else if (status == 206) {
-      Right(PartialResponse(f.fromJson(body), nextRange))
+      Right(Response(status, headers, PartialResponse(f.fromJson(body), nextRange)))
     } else {
-      Left(e.fromJson(body))
+      Left(Response(status, headers, e.fromJson(body)))
     }
   }
 
@@ -93,7 +95,7 @@ trait ErrorResponseJson {
 }
 
 object Api {
-  type FutureResponse[T] = Future[Either[ErrorResponse, T]]
+  type FutureResponse[T] = Future[Either[Response[ErrorResponse], Response[T]]]
 }
 
 trait Api {
@@ -123,8 +125,8 @@ trait Api {
   private def listAll[T](request: ListRequest[T], key: String, headers: Map[String, String], acc: List[T])(implicit f: FromJson[List[T]]): FutureResponse[List[T]] = {
     executeList(request, key).flatMap {
       case Left(e) => Future.successful(Left(e))
-      case Right(p) if p.isComplete => Future.successful(Right(acc ++ p.list))
-      case Right(p) => listAll(request.nextRequest(p.nextRange.get), key, headers, acc ++ p.list)
+      case Right(p) if p.body.isComplete => Future.successful(Right(Response(p.status, p.headers, acc ++ p.body.list)))
+      case Right(p) => listAll(request.nextRequest(p.body.nextRange.get), key, headers, acc ++ p.body.list)
     }
   }
 }

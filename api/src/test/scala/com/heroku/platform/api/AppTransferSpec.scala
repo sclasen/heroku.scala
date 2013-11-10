@@ -9,7 +9,7 @@ abstract class AppTransferSpec(aj: ApiRequestJson with ApiResponseJson) extends 
 
   import implicits._
 
-  "Spray Api for App Transfers" must {
+  "Api for App Transfers" must {
     "operate on AppTransfers" in {
       import AppTransfer._
       import primary._

@@ -76,7 +76,8 @@ class SprayApi(system: ActorSystem)(implicit erj: ErrorResponseJson) extends Api
     pipeline(HttpRequest(method, request.endpoint, sprayHeaders, HttpEntity(`application/json`, to.toJson(request.body).getBytes("UTF-8")), `HTTP/1.1`)).map {
       resp =>
         val responseHeaders = resp.headers.map(h => h.name -> h.value).toMap
-        request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
+        val response = request.getResponse(resp.status.intValue, responseHeaders, resp.entity.asString)
+        response
     }
   }
 

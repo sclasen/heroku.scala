@@ -29,7 +29,7 @@ abstract class LogDrainSpec(aj: ApiRequestJson with ApiResponseJson) extends Api
     if (tries == 0) false
     else {
       Await.result(api.execute(LogDrain.Create(app.id, drain), primaryTestApiKey), 5 seconds) match {
-        case Left(ErrorResponse(id, msg)) if msg.startsWith("Could not list logplex drains. Please try again later.") =>
+        case Left(Response(_, _, ErrorResponse(id, msg))) if msg.startsWith("Could not list logplex drains. Please try again later.") =>
           println("Could not list logplex drains. Please try again later.")
           Thread.sleep(1000)
           tryDrain(app, drain, tries - 1)
