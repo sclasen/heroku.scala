@@ -21,9 +21,9 @@ object ConfigVar {
 }
 
 trait ConfigVarResponseJson {
-  implicit def configFromJson: FromJson[Map[String, String]]
+  implicit def FromJsonConfigVar: FromJson[Map[String, String]]
 }
 
 trait ConfigVarRequestJson {
-  implicit def configToJson: ToJson[Map[String, String]]
+  implicit def ToJsonConfigVar: ToJson[Map[String, String]]
 }
