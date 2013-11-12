@@ -586,7 +586,7 @@ object ModelBoilerplateGen extends App {
 
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)
-    resFile.delete()
+    if (resFile.exists()) resFile.delete()
     val w = new FileWriter(resFile)
     w.write(tree)
     w.close()
