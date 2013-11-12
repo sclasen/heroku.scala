@@ -2,7 +2,7 @@
 
 Asynchronous Scala Client for the [Heroku Platform API](https://devcenter.heroku.com/articles/platform-api-reference).
 
-This client allows one to plug in the http client and json stack of one's choosing. A client based on spray-client and spray-json is provided. 
+This client allows one to plug in the http client and json stack of one's choosing. A client based on [spray-client](https://github.com/spray/spray) and [spray-json](https://github.com/spray/spray-json) is provided. 
 
 Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` trait, which contains 4 abstract methods.
 
