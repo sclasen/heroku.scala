@@ -18,6 +18,7 @@ object SprayJsonBoilerplateGen extends App {
     val BoilerplateObj = "SprayJsonBoilerplate"
     val BoilerplateNullsObj = "SprayJsonIgnoreNullBoilerplate"
     val ToJsonConfig = "ToJsonConfigVar"
+    val ToJsonNullSafeConfig = "ToJsonNullSafeConfigVar"
     val FromJsonConfig = "FromJsonConfigVar"
   }
 
@@ -35,22 +36,21 @@ object SprayJsonBoilerplateGen extends App {
   def ignoreNulls =
     //object SprayIgnoreNullJson omits Options that are None instead of sending null
     OBJECTDEF(sym.BoilerplateNullsObj) withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
-      Seq(nullSafeConfigToJson, configToJson) ++
-        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]])
+      reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]])
         .map {
           m => jsonFormat(m)
         }.toSeq.flatten ++
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != sym.ToJsonConfig)
         .map {
           m => toJson(m)
-        } ++ Seq(to)
+        } ++ Seq(nullSafeConfigToJson, configToJson) ++ Seq(to)
     )
 
   def sprayJson =
     //object SprayApiJson handles null attributes in Json by giving back None
     OBJECTDEF(sym.BoilerplateObj) withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
-      Seq(apiConfigToJson) ++
-        respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
+
+      respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
         .map {
           m =>
             jsonFormat(m)
@@ -58,7 +58,7 @@ object SprayJsonBoilerplateGen extends App {
         reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != sym.ToJsonConfig)
         .map {
           m => callToJson(m)
-        } ++
+        } ++ Seq(apiConfigToJson) ++
         respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
         .map {
           m => fromJson(m)
@@ -159,7 +159,7 @@ object SprayJsonBoilerplateGen extends App {
     /*
      implicit val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
     */
-    (LAZYVAL("nullSafeConfigToJson", sym.ToJson TYPE_OF TYPE_MAP("String", TYPE_OPTION("String")))
+    (LAZYVAL(sym.ToJsonNullSafeConfig, sym.ToJson TYPE_OF TYPE_MAP("String", TYPE_OPTION("String")))
       withFlags (Flags.IMPLICIT) :=
       REF("to") APPLYTYPE (TYPE_MAP("String", TYPE_OPTION("String"))): Tree)
   }
@@ -176,7 +176,7 @@ object SprayJsonBoilerplateGen extends App {
     */
     (LAZYVAL(sym.ToJsonConfig, sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
       withFlags (Flags.IMPLICIT) := NEW(ANONDEF(sym.ToJson TYPE_OF TYPE_MAP("String", "String")) := BLOCK(
-        (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF("nullSafeConfigToJson") DOT "toJson" APPLY (
+        (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF(sym.ToJsonNullSafeConfig) DOT "toJson" APPLY (
           REF("t") MAP BLOCK(
             CASE(TUPLE(ID("k"), ID("v"))) ==> (REF("k") ANY_-> (OptionClass APPLY REF("v")))
           )
