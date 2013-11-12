@@ -10,7 +10,7 @@ abstract class SslEndpointSpec(aj: ApiRequestJson with ApiResponseJson) extends 
     "operate on SslEndpoints" in {
       import primary._
       pending
-     /* val app = getApp
+      /* val app = getApp
       val crt = io.Source.fromFile("api/src/test/resources/ssl-endpoint/ssl-endpoint-server.crt").mkString
       val key = io.Source.fromFile("api/src/test/resources/ssl-endpoint/ssl-endpoint-server.key").mkString
       val addon = request(Addon.Create(app.id, "ssl:endpoint"))

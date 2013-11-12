@@ -30,7 +30,17 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
     }
 
     "operate on OAuthTokens" in {
-      pending
+      import primary._
+      import OAuthToken.models._
+      pending /*needs to do the redirect dance*/
+      /*
+      val client = request(OAuthClient.Create("test-client", "https://example.com/foo"))
+      val auth = request(OAuthAuthorization.Create(scope = Array("global"), description = Some("OAuthSpec"), client_id = Some(client.id)))
+      auth.grant.isDefined must be(true)
+      val token = request(OAuthToken.Create(OAuthTokenClient(client.secret), OAuthTokenGrant(auth.grant.get.code, "code"), OAuthTokenRefreshToken(None, auth.refresh_token.get.id, auth.refresh_token.get.token)))
+      request(OAuthAuthorization.Delete(auth.id))
+      request(OAuthClient.Delete(client.id)) must equal(client)
+      */
     }
   }
 
