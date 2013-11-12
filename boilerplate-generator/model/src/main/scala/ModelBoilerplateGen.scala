@@ -573,7 +573,7 @@ object ModelBoilerplateGen extends App {
 
     val byHand = Set("config-var")
 
-    def resources = definitions.filter(kv => !(byHand.contains(kv._1)))
+    def resources = definitions.filterNot(kv => byHand.contains(kv._1))
 
     def resource(name: String): Resource = definitions(name)
 
@@ -587,6 +587,7 @@ object ModelBoilerplateGen extends App {
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)
     if (resFile.exists()) resFile.delete()
+    resFile.createNewFile()
     val w = new FileWriter(resFile)
     w.write(tree)
     w.close()
