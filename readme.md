@@ -19,10 +19,16 @@ The code generators live in the `boilerplate-generator` project, and are driven 
 This example shows the usage of the included client implementation based on spray-client and spray-json
 
 ```scala
-
+// bring in the base api
 import com.heroku.platform.api._
+
+// bring in the implicits for json serialization/deserialization
 import com.heroku.platform.api.client.spray.SprayJsonBoilerplate._
+
+// bring in the spray client
 import com.heroku.platform.api.client.spray.SprayApi
+
+// bring in akka (used by spray)
 import akka.actor._
 
 val system = ActorSystem("api")
