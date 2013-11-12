@@ -317,7 +317,7 @@ object ModelBoilerplateGen extends App {
 
   def e(a: AnyRef) = System.err.println(a)
 
-  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = {
     val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
     if (isOptional) {
@@ -363,9 +363,9 @@ object ModelBoilerplateGen extends App {
       case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
       case ("schema/slug", "process_types") => Some((TYPE_MAP("String", "String")))
       case ("schema/slug", "blob") => Some((TYPE_MAP("String", "String")))
-      case ("schema/oauth-token", "client") => Some((TYPE_OPTION("OAuthTokenClient")))
-      case ("schema/oauth-token", "grant") => Some((TYPE_OPTION("OAuthTokenGrant")))
-      case ("schema/oauth-token", "refresh_token") => Some((TYPE_OPTION("OAuthTokenRefreshToken")))
+      case ("schema/oauth-token", "client") => Some((TYPE_REF("OAuthTokenClient")))
+      case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
+      case ("schema/oauth-token", "refresh_token") => Some((TYPE_REF("OAuthTokenRefreshToken")))
       case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
       case _ => None
     }
