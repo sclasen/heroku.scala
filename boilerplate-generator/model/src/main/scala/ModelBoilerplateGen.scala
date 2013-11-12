@@ -367,6 +367,7 @@ object ModelBoilerplateGen extends App {
       case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
       case ("schema/oauth-token", "refresh_token") => Some((TYPE_REF("OAuthTokenRefreshToken")))
       case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
+      case ("schema/log-drain", "addon") => Some((TYPE_OPTION("String")))
       case ("schema/addon", "config") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
       case _ => None
     }
@@ -394,11 +395,11 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "LogDrainRequestJson" :: aggReqJson): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "LogDrainResponseJson" :: aggRespJson): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson): Tree)
   }
 
   def apiJson(implicit root: RootSchema) = (BLOCK(reqJson, respJson).inPackage(sym.ApiPackage): Tree)
@@ -568,7 +569,7 @@ object ModelBoilerplateGen extends App {
   //root schema.json
   case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String, definitions: Map[String, Resource]) {
 
-    val byHand = Set("config-var", "log-drain")
+    val byHand = Set("config-var")
 
     def resources = definitions.filter(kv => !(byHand.contains(kv._1)))
 
