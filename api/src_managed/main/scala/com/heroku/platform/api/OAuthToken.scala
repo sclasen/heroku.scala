@@ -4,10 +4,11 @@ import com.heroku.platform.api.Request._
 
 import OAuthToken._
 
+/** OAuth tokens provide access for authorized clients to act on behalf of a Heroku user to automate, customize or extend their usage of the platform. For more information please refer to the [Heroku OAuth documentation](https://devcenter.heroku.com/articles/oauth) */
 object OAuthToken {
   import OAuthToken.models._
   object models {
-    case class CreateOAuthTokenBody(client: Option[OAuthTokenClient] = None, grant: Option[OAuthTokenGrant] = None, refresh_token: Option[OAuthTokenRefreshToken] = None)
+    case class CreateOAuthTokenBody(client: OAuthTokenClient, grant: OAuthTokenGrant, refresh_token: OAuthTokenRefreshToken)
     case class OAuthTokenAccessToken(expires_in: Option[Int], id: String, token: String)
     case class OAuthTokenRefreshToken(expires_in: Option[Int], id: String, token: String)
     case class OAuthTokenAuthorization(id: String)
@@ -16,7 +17,8 @@ object OAuthToken {
     case class OAuthTokenSession(id: String)
     case class OAuthTokenUser(id: String)
   }
-  case class Create(client: Option[OAuthTokenClient] = None, grant: Option[OAuthTokenGrant] = None, refresh_token: Option[OAuthTokenRefreshToken] = None) extends RequestWithBody[models.CreateOAuthTokenBody, OAuthToken] {
+  /** Create a new OAuth token. */
+  case class Create(client: OAuthTokenClient, grant: OAuthTokenGrant, refresh_token: OAuthTokenRefreshToken) extends RequestWithBody[models.CreateOAuthTokenBody, OAuthToken] {
     val expect: Set[Int] = expect201
     val endpoint: String = "/oauth/tokens"
     val method: String = POST
@@ -24,8 +26,10 @@ object OAuthToken {
   }
 }
 
+/** OAuth tokens provide access for authorized clients to act on behalf of a Heroku user to automate, customize or extend their usage of the platform. For more information please refer to the [Heroku OAuth documentation](https://devcenter.heroku.com/articles/oauth) */
 case class OAuthToken(access_token: models.OAuthTokenAccessToken, refresh_token: models.OAuthTokenRefreshToken, authorization: models.OAuthTokenAuthorization, id: String, client: Option[models.OAuthTokenClient], grant: models.OAuthTokenGrant, session: models.OAuthTokenSession, created_at: String, updated_at: String, user: models.OAuthTokenUser)
 
+/** json serializers related to OAuthToken */
 trait OAuthTokenRequestJson {
   implicit def ToJsonCreateOAuthTokenBody: ToJson[models.CreateOAuthTokenBody]
   implicit def ToJsonOAuthTokenAccessToken: ToJson[models.OAuthTokenAccessToken]
@@ -37,6 +41,7 @@ trait OAuthTokenRequestJson {
   implicit def ToJsonOAuthTokenUser: ToJson[models.OAuthTokenUser]
 }
 
+/** json deserializers related to OAuthToken */
 trait OAuthTokenResponseJson {
   implicit def FromJsonOAuthTokenAccessToken: FromJson[models.OAuthTokenAccessToken]
   implicit def FromJsonOAuthTokenRefreshToken: FromJson[models.OAuthTokenRefreshToken]
