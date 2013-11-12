@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class AppFeatureSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AppFeatureRequestJson with AppFeatureResponseJson = aj
+  val implicits: AppFeatureRequestJson with AppFeatureResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

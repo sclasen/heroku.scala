@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class AccountSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AccountRequestJson with AccountResponseJson = aj
+  val implicits: AccountRequestJson with AccountResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

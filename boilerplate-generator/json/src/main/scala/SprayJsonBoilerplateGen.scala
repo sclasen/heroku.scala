@@ -17,6 +17,8 @@ object SprayJsonBoilerplateGen extends App {
     val JsonFormat = RootClass.newClass("JsonFormat")
     val BoilerplateObj = "SprayJsonBoilerplate"
     val BoilerplateNullsObj = "SprayJsonIgnoreNullBoilerplate"
+    val ToJsonConfig = "ToJsonConfigVar"
+    val FromJsonConfig = "FromJsonConfigVar"
   }
 
   val respJson = classOf[ApiResponseJson]
@@ -38,7 +40,7 @@ object SprayJsonBoilerplateGen extends App {
         .map {
           m => jsonFormat(m)
         }.toSeq.flatten ++
-        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != "configToJson")
+        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != sym.ToJsonConfig)
         .map {
           m => toJson(m)
         } ++ Seq(to)
@@ -53,7 +55,7 @@ object SprayJsonBoilerplateGen extends App {
           m =>
             jsonFormat(m)
         }.toSeq.flatten ++
-        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != "configToJson")
+        reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]] && m.getName != sym.ToJsonConfig)
         .map {
           m => callToJson(m)
         } ++
@@ -172,7 +174,7 @@ object SprayJsonBoilerplateGen extends App {
        }
      }
     */
-    (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
+    (LAZYVAL(sym.ToJsonConfig, sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
       withFlags (Flags.IMPLICIT) := NEW(ANONDEF(sym.ToJson TYPE_OF TYPE_MAP("String", "String")) := BLOCK(
         (DEF("toJson") withParams (PARAM("t", TYPE_MAP("String", "String")))) := REF("nullSafeConfigToJson") DOT "toJson" APPLY (
           REF("t") MAP BLOCK(
@@ -183,8 +185,8 @@ object SprayJsonBoilerplateGen extends App {
   }
 
   def apiConfigToJson = {
-    (LAZYVAL("configToJson", sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
-      withFlags (Flags.IMPLICIT) := REF(sym.BoilerplateNullsObj) DOT "configToJson": Tree)
+    (LAZYVAL(sym.ToJsonConfig, sym.ToJson TYPE_OF TYPE_MAP("String", "String"))
+      withFlags (Flags.IMPLICIT) := REF(sym.BoilerplateNullsObj) DOT sym.ToJsonConfig: Tree)
   }
 
   println(treeToString(jsonBoilerplate))

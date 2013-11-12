@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class PlanSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AddonServiceRequestJson with AddonServiceResponseJson with PlanRequestJson with PlanResponseJson = aj
+  val implicits: AddonServiceResponseJson with PlanRequestJson with PlanResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

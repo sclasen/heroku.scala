@@ -5,7 +5,7 @@ import scala.concurrent.Await
 
 abstract class LogSessionSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: LogSessionRequestJson with LogSessionResponseJson = aj
+  val implicits: LogSessionRequestJson with LogSessionResponseJson with ErrorResponseJson = aj
 
   import implicits._
 
@@ -21,7 +21,7 @@ abstract class LogSessionSpec(aj: ApiRequestJson with ApiResponseJson) extends A
     if (tries == 0) false
     else {
       Await.result(api.execute(LogSession.Create(app.id), primaryTestApiKey), 5 seconds) match {
-        case Left(ErrorResponse(id, msg)) if msg.startsWith("Logplex was just enabled for this app") =>
+        case Left(Response(_, _, ErrorResponse(id, msg))) if msg.startsWith("Logplex was just enabled for this app") =>
           println("Logplex was just enabled for this app")
           Thread.sleep(1000)
           trySession(app, tries - 1)

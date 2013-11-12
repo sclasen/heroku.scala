@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class FormationSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: FormationRequestJson with FormationResponseJson = aj
+  val implicits: FormationRequestJson with FormationResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

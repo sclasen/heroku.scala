@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class DomainSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: DomainRequestJson with DomainResponseJson = aj
+  val implicits: DomainRequestJson with DomainResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

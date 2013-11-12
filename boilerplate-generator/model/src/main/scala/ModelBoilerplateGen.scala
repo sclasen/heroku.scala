@@ -20,6 +20,7 @@ object ModelBoilerplateGen extends App {
     val FromJson = RootClass.newClass("FromJson")
     val Request = RootClass.newClass("Request")
     val RequestWithBody = RootClass.newClass("RequestWithBody")
+    val RequestWithEmptyResponse = RootClass.newClass("RequestWithEmptyResponse")
     val ListRequest = RootClass.newClass("ListRequest")
   }
 
@@ -28,13 +29,13 @@ object ModelBoilerplateGen extends App {
     /*for each non empty resource generate the scala source*/
     root.resources.values.filter(_.nonEmpty).map {
       resource =>
-        resource.name -> (BLOCK(
+        resource.name -> (BLOCK(Seq(
           IMPORT("com.heroku.platform.api.Request._"),
           IMPORT(s"${resource.name}._"),
-          companion(resource, root),
-          model(resource),
-          reqJson(resource),
-          respJson(resource)
+          companion(resource, root) withDoc (resource.description),
+          model(resource) withDoc (resource.description)) ++
+          Seq(reqJson(resource).map(_ withDoc (s"json serializers related to ${resource.name}")),
+            respJson(resource).map(_ withDoc (s"json deserializers related to ${resource.name}"))).flatten
         ).inPackage(sym.ApiPackage): Tree)
     }
   }
@@ -51,7 +52,7 @@ object ModelBoilerplateGen extends App {
           fieldDef => fieldType(k, fieldDef)(resource)
         })
         (PARAM(k, typ).tree)
-      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" =>
+      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" => /*Hack, fix*/
         (PARAM(k, TYPE_OPTION("String")).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
         (PARAM(k, TYPE_OPTION("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
@@ -104,12 +105,14 @@ object ModelBoilerplateGen extends App {
         val paramNames = paramsMap.toSeq.map(_._1)
         val extra = extraParams(link)
 
-        link.rel match {
+        val req = link.rel match {
+          case "destroy" if resource.id == "schema/dyno" => requestWithEmptyResponse(resource, paramNames, params, extra, link, hrefParamNames)
           case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
           case x => sys.error("======> UNKNOWN link.rel:" + x)
         }
+        (req: Tree) withDoc (link.description)
     }
 
     val bodyCaseClasses = resource.links.map {
@@ -216,7 +219,7 @@ object ModelBoilerplateGen extends App {
   /*
   s"${resource.name}RequestJson" trait, holds the ToJson for the resource
    */
-  def reqJson(resource: Resource)(implicit root: RootSchema) = {
+  def reqJson(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
 
     val modelToJsons = resource.links.map {
       link =>
@@ -234,21 +237,23 @@ object ModelBoilerplateGen extends App {
         Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
-    TRAITDEF(s"${resource.name}RequestJson") := BLOCK(
-      modelToJsons.toSeq ++ nesteds.toSeq
-    )
+    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq
+
+    if (toJsons.isEmpty) None
+    else Some(TRAITDEF(s"${resource.name}RequestJson") := BLOCK(toJsons))
   }
 
   /*
    s"${resource.name}ResponseJson" trait, holds the FromJson for the resource
   */
-  def respJson(resource: Resource)(implicit root: RootSchema) = {
+  def respJson(resource: Resource)(implicit root: RootSchema): Option[Tree] = {
     val resps = resource.properties.map {
       case (k, Right(ref)) => None
       case (k, Left(nestedDef)) =>
         Some(fromJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten ++ Seq(fromJson(resource.name, resource.name), fromJson(s"List${resource.name}", s"collection.immutable.List[${resource.name}]"))
-    TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps)
+    if (resps.isEmpty) None
+    else Some(TRAITDEF(s"${resource.name}ResponseJson") := BLOCK(resps))
   }
 
   /* implicit def ToJson*s and FromJson*s */
@@ -286,6 +291,11 @@ object ModelBoilerplateGen extends App {
       (DEF("nextRequest", (sym.ListRequest TYPE_OF (resource.name))) withParams ((VAL("nextRange", "String"))) := THIS DOT "copy" APPLY (REF("range") := SOME(REF("nextRange"))))))
   }
 
+  def requestWithEmptyResponse(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithEmptyResponse) := BLOCK(
+      expect("expect202"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
+  }
+
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
 
   def endpoint(endRef: String, params: Seq[String]) = {
@@ -307,15 +317,13 @@ object ModelBoilerplateGen extends App {
 
   def e(a: AnyRef) = System.err.println(a)
 
-  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = {
     val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
-    val typez = convertTypes(fieldDef.`type`)
-    if (typez.length == 1) {
-      if (isOptional) (TYPE_OPTION(initialCap(typez(0))))
-      else (TYPE_REF(initialCap(typez(0))))
+    if (isOptional) {
+      argType(name, fieldDef)
     } else {
-      throw new IllegalStateException("encountered type with more than one non null type value")
+      requiredArg(name, fieldDef)
     }
   }
 
@@ -324,6 +332,7 @@ object ModelBoilerplateGen extends App {
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
+          //Array
           (TYPE_OPTION(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
       }.getOrElse {
         (TYPE_OPTION(initialCap(typez(0))))
@@ -338,6 +347,7 @@ object ModelBoilerplateGen extends App {
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
+          //Array
           (TYPE_REF(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
       }.getOrElse {
         (TYPE_REF(initialCap(typez(0))))
@@ -348,15 +358,19 @@ object ModelBoilerplateGen extends App {
   }
 
   /*
-  special case handling of fields that this generator cant deal with yet, or where there are incinsistencies btw doc and api behavior (stack)
+  special case handling of fields that this generator cant deal with yet, or where there are inconsistencies btw doc and api behavior (stack)
   */
   def specialCase(resource: Resource, field: String) = {
     (resource.id, field) match {
       case ("schema/dyno", "env") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
-      case ("schema/oauth-token", "client") => Some((TYPE_OPTION("OAuthTokenClient")))
-      case ("schema/oauth-token", "grant") => Some((TYPE_OPTION("OAuthTokenGrant")))
-      case ("schema/oauth-token", "refresh_token") => Some((TYPE_OPTION("OAuthTokenRefreshToken")))
+      case ("schema/slug", "process_types") => Some((TYPE_MAP("String", "String")))
+      case ("schema/slug", "blob") => Some((TYPE_MAP("String", "String")))
+      case ("schema/oauth-token", "client") => Some((TYPE_REF("OAuthTokenClient")))
+      case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
+      case ("schema/oauth-token", "refresh_token") => Some((TYPE_REF("OAuthTokenRefreshToken")))
       case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
+      case ("schema/log-drain", "addon") => Some((TYPE_OPTION("String")))
+      case ("schema/addon", "config") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
       case _ => None
     }
   }
@@ -368,22 +382,30 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def aggJson(suffix: String)(implicit root: RootSchema) = {
+  def aggReqJson(implicit root: RootSchema): List[String] = {
     root.resources.values.filter(_.nonEmpty).toList.sortBy(_.name).map {
       resource =>
-        resource.name + suffix
-    }
+        reqJson(resource).map(t => resource.name + "RequestJson")
+    }.flatten
+  }
+
+  def aggRespJson(implicit root: RootSchema): List[String] = {
+    root.resources.values.filter(_.nonEmpty).toList.sortBy(_.name).map {
+      resource =>
+        respJson(resource).map(t => resource.name + "ResponseJson")
+    }.flatten
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: "AddonRequestJson" :: "LogDrainRequestJson" :: aggJson("RequestJson")): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: "AddonResponseJson" :: "LogDrainResponseJson" :: aggJson("ResponseJson")): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson): Tree)
   }
 
-  def apiJson(implicit root: RootSchema) = (BLOCK(IMPORT("com.heroku.platform.api._"), reqJson, respJson).inPackage(sym.ApiPackage): Tree)
+  def apiJson(implicit root: RootSchema) = (BLOCK(reqJson, respJson).inPackage(sym.ApiPackage): Tree)
+
   /*schema.json parsing*/
   implicit def fmtAI: Format[ArrayItems] = Json.format[ArrayItems]
 
@@ -455,7 +477,7 @@ object ModelBoilerplateGen extends App {
   }
 
   //Endpoint
-  case class Link(title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
+  case class Link(description: String, title: String, rel: String, href: String, method: String, schema: Option[Schema]) {
     val refEx = """\{(.+)\}""".r
     val encEx = """\((.+)\)""".r
 
@@ -549,22 +571,24 @@ object ModelBoilerplateGen extends App {
   //root schema.json
   case class RootSchema(description: String, properties: Map[String, Map[String, String]], title: String, definitions: Map[String, Resource]) {
 
-    val byHand = Set("config-var", "addon", "log-drain")
+    val byHand = Set("config-var")
 
-    def resources = definitions.filter(kv => !(byHand.contains(kv._1)))
+    def resources = definitions.filterNot(kv => byHand.contains(kv._1))
 
     def resource(name: String): Resource = definitions(name)
 
   }
 
-  /*drop config vars since they yse the funky patternProperties*/
+  /*drop config vars since they use the funky patternProperties*/
   val pruneConfigVars = (__ \ "definitions" \ "config-var").json.prune
 
   def loadRoot = Json.parse(fileToString("api/src/main/resources/schema.json")).transform(pruneConfigVars).get.as[RootSchema]
 
   def writeFile(dir: File, fileName: String, tree: String) = {
     val resFile = new File(dir, fileName)
-    resFile.delete()
+    if (!dir.exists()) dir.mkdirs()
+    if (resFile.exists()) resFile.delete()
+    resFile.createNewFile()
     val w = new FileWriter(resFile)
     w.write(tree)
     w.close()

@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class CollaboratorSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: CollaboratorRequestJson with CollaboratorResponseJson = aj
+  val implicits: CollaboratorRequestJson with CollaboratorResponseJson with ErrorResponseJson = aj
 
   import implicits._
 

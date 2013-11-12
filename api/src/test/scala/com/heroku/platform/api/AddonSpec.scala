@@ -2,7 +2,7 @@ package com.heroku.platform.api
 
 abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: AddonRequestJson with AddonResponseJson = aj
+  val implicits: AddonRequestJson with AddonResponseJson with ErrorResponseJson = aj
 
   import implicits._
 
@@ -10,10 +10,10 @@ abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
     "operate on the Addons" in {
       import primary._
       val app = getApp
-      val addon = request(Addon.Create(app.id, "scheduler:standard"))
+      val addon = request(Addon.Create(app.id, plan_id_or_name = "scheduler:standard"))
       val addonList = requestAll(Addon.List(app.id))
       println(addonList)
-      addonList.contains(addon) must be(true)
+      addonList.map(_.id) must contain(addon.id)
       val addonInfo = request(Addon.Info(app.id, addon.id))
       addonInfo must equal(addon)
       request(Addon.Delete(app.id, addon.id))
