@@ -10,7 +10,7 @@ The json serializations/deserializations are driven by a granular set of implici
 
 ## code generation
 
-The heroku platform api is specified using json schema, and we take advantage of this to generate much of the boilerplate involved in the client code. Hand-coded abstractions are used as a basis for generating the code for each endpoint. The generated code is not checked in to the master branch, but is checked into the generated branch [here for the models](https://github.com/heroku/heroku.scala/tree/generated/api/src_managed/main/scala/com/heroku/platform/api) and [here for the json boilerplate](https://github.com/heroku/heroku.scala/blob/master/spray-client/src_managed/main/scala/com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala).
+The heroku platform api is specified using json schema, and we take advantage of this to generate much of the boilerplate involved in the client code. Hand-coded abstractions are used as a basis for generating the code for each endpoint. The generated code is not checked in to the master branch, but is checked into the generated branch [here for the models](https://github.com/heroku/heroku.scala/tree/generated/api/src_managed/main/scala/com/heroku/platform/api) and [here for the json boilerplate](https://github.com/heroku/heroku.scala/blob/generated/spray-client/src_managed/main/scala/com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala).
 
 The code generators live in the `boilerplate-generator` project, and are driven by sbt.
 
