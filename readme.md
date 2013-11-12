@@ -4,7 +4,7 @@ Async Scala Client for the V3 version of the [Heroku API](https://devcenter.hero
 
 This client allows one to plug in the http client and json stack of one's choosing. A client based on spray-client and spray-json is provided. 
 
-Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` which contains 4 abstract methods.
+Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` trait, which contains 4 abstract methods.
 
 The json serializations/deserializations are driven by a granular set of implicits, so if you want to implement a client for a single operation on a single endpoint, you will only need to implement a single deserializer for the response, and a serialiser for the request if it contains a body.
 
@@ -36,8 +36,10 @@ val apiKey = ...your api key...
 // Low level api
 
 api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map {
-   case Left(Response(status, headers, ErrorResponse(id, msg))) => println(s"failed to create app: $msg")
-   case Right(Response(status, headers, app)) => println(s"created app: ${app.name}, id is ${app.id}")
+   case Left(Response(status, headers, ErrorResponse(id, msg))) => 
+        println(s"failed to create app: $msg")
+   case Right(Response(status, headers, app)) => 
+        println(s"created app: ${app.name}, id is ${app.id}")
 }
 
 // simple async api, throws exceptions when an error response is recieved
@@ -48,7 +50,8 @@ simpleApi.execute(HerokuApp.Info("my-app")).map {
     app:HerokuApp => println(s"got app info for ${app.name}")
 }
 
-// synchronous api, uses SimpleApi under the hood, and wraps it in Await. Good for console usage.
+// synchronous api, uses SimpleApi under the hood, and wraps it in Await. 
+// Good for console usage.
 
 val syncApi = SyncApi(api, apiKey)
 val app = syncApi.execute(HerokuApp.Info("my-app"))
