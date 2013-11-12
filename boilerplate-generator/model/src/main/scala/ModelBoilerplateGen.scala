@@ -332,6 +332,7 @@ object ModelBoilerplateGen extends App {
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
+          //Array
           (TYPE_OPTION(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
       }.getOrElse {
         (TYPE_OPTION(initialCap(typez(0))))
@@ -346,6 +347,7 @@ object ModelBoilerplateGen extends App {
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
+          //Array
           (TYPE_REF(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
       }.getOrElse {
         (TYPE_REF(initialCap(typez(0))))
