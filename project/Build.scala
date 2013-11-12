@@ -15,7 +15,7 @@ object Build extends Build {
   //inConfig(Test)(withManaged)
 
   val buildSettings = Seq(
-    organization := "com.heroku.api",
+    organization := "com.heroku.platform.api",
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
@@ -25,7 +25,11 @@ object Build extends Build {
       "spray repo" at "http://repo.spray.io",
       "spray nightlies" at "http://nightlies.spray.io/",
       "sonatype" at "https://oss.sonatype.org/content/groups/public")
-  ) ++ Defaults.defaultSettings ++ scalariformSettings ++ Seq( testOptions in Test += Tests.Argument("-oF"),  testOptions in IntegrationTest += Tests.Argument("-oF"))
+  ) ++
+    Defaults.defaultSettings ++
+    scalariformSettings ++
+    publishSettings ++
+    Seq( testOptions in Test += Tests.Argument("-oF"),  testOptions in IntegrationTest += Tests.Argument("-oF"))
 
 
   val modelBoilerplateGen = Project(
@@ -131,5 +135,44 @@ object Build extends Build {
   val scalaTest = "org.scalatest" %% "scalatest" % "2.0" % "test"
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.3.0"
   val playJson = "com.typesafe.play" %% "play-json" % "2.2.0"
+
+
+  def publishSettings: Seq[Setting[_]] = Seq(
+    // If we want on maven central, we need to be in maven style.
+    publishMavenStyle := true,
+    publishArtifact in Test := false,
+    // The Nexus repo we're publishing to.
+    publishTo <<= version { (v: String) =>
+      val nexus = "https://oss.sonatype.org/"
+      if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
+      else                             Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+    // Maven central cannot allow other repos.  We're ok here because the artifacts we
+    // we use externally are *optional* dependencies.
+    pomIncludeRepository := { x => false },
+    // Maven central wants some extra metadata to keep things 'clean'.
+    pomExtra := (
+
+      <url>http://github.com/heroku/heroku.scala</url>
+        <licenses>
+          <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+          </license>
+        </licenses>
+        <scm>
+          <url>git@github.com:heroku/heroku.scala.git</url>
+          <connection>scm:git:git@github.com:heroku/heroku.scala.git</connection>
+        </scm>
+        <developers>
+          <developer>
+            <id>sclasen</id>
+            <name>Scott Clasen</name>
+            <url>http://github.com/sclasen</url>
+          </developer>
+        </developers>)
+  )
+
 
 }
