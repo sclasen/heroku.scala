@@ -5,12 +5,6 @@ import com.heroku.platform.api._
 import spray.json._
 
 object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequestJson {
-  implicit lazy val nullSafeConfigToJson: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
-  implicit lazy val ToJsonConfigVar: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
-    def toJson(t: Map[String, String]) = nullSafeConfigToJson.toJson(t map {
-      case (k, v) => k -> Option(v)
-    })
-  }
   implicit lazy val FormatAccountmodelsUpdateAccountBody: JsonFormat[Account.models.UpdateAccountBody] = jsonFormat4(Account.models.UpdateAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangeEmailAccountBody: JsonFormat[Account.models.ChangeEmailAccountBody] = jsonFormat2(Account.models.ChangeEmailAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangePasswordAccountBody: JsonFormat[Account.models.ChangePasswordAccountBody] = jsonFormat2(Account.models.ChangePasswordAccountBody.apply)
@@ -111,13 +105,18 @@ object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiReques
   implicit lazy val ToJsonCreateSlugBody: ToJson[Slug.models.CreateSlugBody] = to[Slug.models.CreateSlugBody]
   implicit lazy val ToJsonCreateSslEndpointBody: ToJson[SslEndpoint.models.CreateSslEndpointBody] = to[SslEndpoint.models.CreateSslEndpointBody]
   implicit lazy val ToJsonUpdateSslEndpointBody: ToJson[SslEndpoint.models.UpdateSslEndpointBody] = to[SslEndpoint.models.UpdateSslEndpointBody]
+  implicit lazy val ToJsonNullSafeConfigVar: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
+  implicit lazy val ToJsonConfigVar: ToJson[Map[String, String]] = new ToJson[Map[String, String]] {
+    def toJson(t: Map[String, String]) = ToJsonNullSafeConfigVar.toJson(t map {
+      case (k, v) => k -> Option(v)
+    })
+  }
   def to[T](implicit f: JsonFormat[T]) = new ToJson[T] {
     def toJson(t: T) = t.toJson.compactPrint
   }
 }
 
 object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
-  implicit lazy val ToJsonConfigVar: ToJson[Map[String, String]] = SprayJsonIgnoreNullBoilerplate.ToJsonConfigVar
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
   implicit lazy val FormatAccount: JsonFormat[Account] = jsonFormat8(Account.apply)
   implicit lazy val FormatAccountFeature: JsonFormat[AccountFeature] = jsonFormat7(AccountFeature.apply)
@@ -216,6 +215,7 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
   implicit lazy val ToJsonCreateSlugBody: ToJson[Slug.models.CreateSlugBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateSlugBody
   implicit lazy val ToJsonCreateSslEndpointBody: ToJson[SslEndpoint.models.CreateSslEndpointBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateSslEndpointBody
   implicit lazy val ToJsonUpdateSslEndpointBody: ToJson[SslEndpoint.models.UpdateSslEndpointBody] = SprayJsonIgnoreNullBoilerplate.ToJsonUpdateSslEndpointBody
+  implicit lazy val ToJsonConfigVar: ToJson[Map[String, String]] = SprayJsonIgnoreNullBoilerplate.ToJsonConfigVar
   implicit lazy val FromJsonErrorResponse: FromJson[ErrorResponse] = from[ErrorResponse]
   implicit lazy val FromJsonConfigVar: FromJson[Map[String,String]] = from[Map[String,String]]
   implicit lazy val FromJsonAccount: FromJson[Account] = from[Account]
