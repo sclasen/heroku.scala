@@ -11,6 +11,8 @@ import treehuggerDSL._
 this generates scala source for schema.json
 the names of the files are printed to standard out so sbt knows to compile them
 if you need debug logging use the method `e` which prints to standard err instead.
+
+also intellij doesnt much care for the code here so ignore the blood.
 */
 object ModelBoilerplateGen extends App {
 
@@ -419,14 +421,17 @@ object ModelBoilerplateGen extends App {
     js =>
       js.validate[R].fold({
         er =>
-          js.validate[L].fold({
-            el => JsError(er.toString + el.toString + Json.prettyPrint(js))
-          }, {
-            s => JsSuccess(Left[L, R](s))
-          })
-      }, {
-        r => JsSuccess(Right[L, R](r))
-      })
+          js.validate[L].fold(
+            {
+              el => JsError(er.toString + el.toString + Json.prettyPrint(js))
+            },
+            {
+              s => JsSuccess(Left[L, R](s))
+            })
+      },
+        {
+          r => JsSuccess(Right[L, R](r))
+        })
   ), Writes {
     case Right(ar) => r.writes(ar)
     case Left(al) => l.writes(al)
@@ -446,13 +451,6 @@ object ModelBoilerplateGen extends App {
     case (b, c) => b.append(c)
   }.toString
 
-  def schemaText(name: String): String = {
-    val schemaFile = s"api/src/main/resources/schema/$name.json"
-    fileToString(schemaFile)
-  }
-
-  //$ref :  #definitions/something or schema/foo#definitions/something
-  // new single file
   // #/definitions/account-feature/definitions/id
   case class Ref(`$ref`: String) {
     def path = `$ref`
@@ -462,7 +460,9 @@ object ModelBoilerplateGen extends App {
     def definition: String = path.split('/')(4)
   }
 
+  //The type of items in an array
   case class ArrayItems(`type`: String)
+
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
   case class FieldDefinition(description: Option[String], example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
 
