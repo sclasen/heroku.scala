@@ -2700,13 +2700,13 @@
                   }
                 }
               }
-            }
+            },
+            "required": [
+              "grant",
+              "client",
+              "refresh_token"
+            ]
           },
-          "required": [
-            "grant",
-            "client",
-            "refresh_token"
-          ],
           "title": "Create"
         }
       ],
@@ -3218,7 +3218,7 @@
             }
           },
           "type": [
-            "object"
+            "null","object"
           ]
         },
         "user": {
