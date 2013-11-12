@@ -58,6 +58,8 @@ class SprayDomainSpec extends DomainSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 class SprayOAuthSpec extends OAuthSpec(SprayJsonBoilerplate) with SprayApiSpec
 
+class SpraySlugSpec extends SlugSpec(SprayJsonBoilerplate) with SprayApiSpec
+
 //class PlayOAuthSpec extends OAuthSpec(PlayJsonBoilerplate) with SprayApiSpec
 
 

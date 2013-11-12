@@ -4,7 +4,7 @@ import scala.io.Source
 
 abstract class KeySpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec(aj) {
 
-  val implicits: KeyRequestJson with KeyResponseJson = aj
+  val implicits: KeyRequestJson with KeyResponseJson with ErrorResponseJson = aj
 
   import implicits._
 
