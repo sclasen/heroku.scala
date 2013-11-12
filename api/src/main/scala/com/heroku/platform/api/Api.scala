@@ -1,6 +1,6 @@
 package com.heroku.platform.api
 
-import concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import com.heroku.platform.api.Api.FutureResponse
 
 trait ToJson[T] {
@@ -144,5 +144,25 @@ case class SimpleApi(api: Api, apiKey: String) {
   def execute[I, O](request: RequestWithBody[I, O])(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): Future[O] = api.execute[I, O](request, apiKey).map(fold)
 
   def executeListAll[T](request: ListRequest[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Future[List[T]] = api.executeListAll[T](request, apiKey).map(fold)
+
+}
+
+object SyncApi {
+  def apply(api: Api, apiKey: String): SyncApi = SyncApi(SimpleApi(api, apiKey))
+}
+
+case class SyncApi(api: SimpleApi, timeoutSeconds: Int = 10) {
+  implicit val ctx = api.ctx
+  import scala.concurrent.duration._
+
+  def waitFor[T](f: Future[T]): T = Await.result(f, timeoutSeconds seconds)
+
+  def execute(request: RequestWithEmptyResponse)(implicit e: FromJson[ErrorResponse]): Unit = waitFor(api.execute(request))
+
+  def execute[T](request: Request[T])(implicit f: FromJson[T], e: FromJson[ErrorResponse]): T = waitFor(api.execute(request))
+
+  def execute[I, O](request: RequestWithBody[I, O])(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): O = waitFor(api.execute(request))
+
+  def executeListAll[T](request: ListRequest[T])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): List[T] = waitFor(api.executeListAll(request))
 
 }
