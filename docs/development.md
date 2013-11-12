@@ -4,6 +4,8 @@ The integration tests use 2 heroku accouts so copy .env.sample to .env and fill 
 
 ```
 forego run sbt
-;clean;it:compile;gen-idea
+clean
+it:compile
+gen-idea
 it:test
 ```
