@@ -511,7 +511,8 @@
               "plan": {
                 "$ref": "#/definitions/plan/definitions/identity"
               }
-            }
+            },
+            "required": ["plan"]
           },
           "title": "Create"
         },
@@ -546,7 +547,8 @@
               "plan": {
                 "$ref": "#/definitions/plan/definitions/identity"
               }
-            }
+            },
+            "required": ["plan"]
           },
           "title": "Update"
         }

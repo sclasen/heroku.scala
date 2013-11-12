@@ -18,15 +18,16 @@ val api = SprayApi(system)
 
 val apiKey = ...your api key...
 
-api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map{
+api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map {
    case Left(Response(status, headers, ErrorResponse(id, msg))) => println(s"failed to create app: $msg")
    case Right(Response(status, headers, app)) => println(s"created app: ${app.name}, id is ${app.id}")
 }
 
 val simpleApi = SimpleApi(api, apiKey)
 
-simpleApi.execute(HerokuApp.Info("my-app")).map{
+simpleApi.execute(HerokuApp.Info("my-app")).map {
     app:HerokuApp => println(s"got app info for ${app.name}")
+}
 
 
 val syncApi = SyncApi(api, apiKey)

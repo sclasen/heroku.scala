@@ -10,7 +10,7 @@ abstract class AddonSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
     "operate on the Addons" in {
       import primary._
       val app = getApp
-      val addon = request(Addon.Create(app.id, "scheduler:standard"))
+      val addon = request(Addon.Create(app.id, plan_id_or_name = "scheduler:standard"))
       val addonList = requestAll(Addon.List(app.id))
       println(addonList)
       addonList.map(_.id) must contain(addon.id)
