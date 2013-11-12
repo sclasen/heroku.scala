@@ -14,9 +14,23 @@ The heroku platform api is specified using json schema, and we take advantage of
 
 The code generators live in the `boilerplate-generator` project, and are driven by sbt.
 
+
+
 ## usage
 
-This example shows the usage of the included client implementation based on spray-client and spray-json.
+This example shows the usage of the included client implementation based on spray-client and spray-json. 
+
+Create a simple sbt project by making a directory and placing the following in `build.sbt` in that directory
+
+```scala
+scalaVersion := "2.10.2"
+
+libraryDependencies += "io.spray" %% "spray-json" % "1.2.5"
+
+libraryDependencies += "com.heroku.platform.api" %% "spray-client" % "0.0.1-SNAPSHOT"
+```
+
+then run `sbt console`
 
 ```scala
 // bring in the base api
