@@ -2,7 +2,9 @@
 
 Asynchronous Scala Client for the [Heroku Platform API](https://devcenter.heroku.com/articles/platform-api-reference).
 
-This project aims to provide a complete, typesafe and well tested scala library for interacting with the heroku platform api. The `api` module of this project provides the abstractions necessary for one to easily build a client using the http stack and json stack of one's choosing. 
+This project aims to provide a complete, typesafe and well tested scala library for interacting with the heroku platform api. 
+
+The `api` module of this project provides the abstractions necessary for one to easily build a client using the http stack and json stack of one's choosing. 
 
 The `spray-client` module of this project provides a full client implementation based on [spray-client](https://github.com/spray/spray) and [spray-json](https://github.com/spray/spray-json).
 
