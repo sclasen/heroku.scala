@@ -1,7 +1,8 @@
 package com.heroku.platform.api
 
-import scala.concurrent.{ Await, ExecutionContext, Future }
 import com.heroku.platform.api.Api.FutureResponse
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.language.postfixOps
 
 trait ToJson[T] {
   def toJson(t: T): String
@@ -153,6 +154,7 @@ object SyncApi {
 
 case class SyncApi(api: SimpleApi, timeoutSeconds: Int = 10) {
   implicit val ctx = api.ctx
+
   import scala.concurrent.duration._
 
   def waitFor[T](f: Future[T]): T = Await.result(f, timeoutSeconds seconds)

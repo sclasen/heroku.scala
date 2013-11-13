@@ -5,6 +5,7 @@ import java.lang.reflect.{ Type => JType }
 import treehugger.forest._
 import definitions._
 import treehuggerDSL._
+import scala.language.postfixOps
 
 object SprayJsonBoilerplateGen extends App {
 

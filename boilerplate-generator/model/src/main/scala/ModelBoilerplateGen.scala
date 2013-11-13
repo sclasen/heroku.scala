@@ -399,11 +399,11 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson).map(_ + "\n"): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson).map(_ + "\n"): Tree)
   }
 
   def apiJson(implicit root: RootSchema) = (BLOCK(reqJson, respJson).inPackage(sym.ApiPackage): Tree)
@@ -484,7 +484,7 @@ object ModelBoilerplateGen extends App {
     def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
       href.split('/').map {
         //decode urlencoded $refs in the href
-        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map {
+        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref, "UTF-8"))).map {
           r =>
             res.resolveFieldRef(r).fold(
               o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields,

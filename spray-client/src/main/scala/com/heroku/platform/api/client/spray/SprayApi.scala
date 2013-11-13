@@ -2,22 +2,22 @@ package com.heroku.platform.api.client.spray
 
 import _root_.spray.can.Http
 import _root_.spray.can.Http.{ HostConnectorInfo, HostConnectorSetup }
-import _root_.spray.http.HttpHeaders._
-import _root_.spray.http.MediaTypes._
-import _root_.spray.http.HttpProtocols._
-import _root_.spray.http._
-import _root_.spray.http.HttpMethods._
 import _root_.spray.client.pipelining._
-import com.heroku.platform.api._
-import scala.concurrent.Await
+import _root_.spray.http.HttpHeaders._
+import _root_.spray.http.HttpMethods._
+import _root_.spray.http.HttpProtocols._
+import _root_.spray.http.MediaTypes._
+import _root_.spray.http._
 import akka.actor.ActorSystem
-import concurrent.duration._
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
-import com.heroku.platform.api.PartialResponse
-import spray.http.HttpEntity.Empty
 import com.heroku.platform.api.Api.FutureResponse
+import com.heroku.platform.api._
+import concurrent.duration._
+import scala.concurrent.Await
+import scala.language.postfixOps
+import spray.http.HttpEntity.Empty
 
 object SprayApi {
   def apply(system: ActorSystem) = new SprayApi(system)
