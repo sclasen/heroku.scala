@@ -66,7 +66,7 @@ val simpleApi = SimpleApi(api, apiKey)
 val syncApi = SyncApi(api, apiKey)
 
 val app = syncApi.execute(HerokuApp.Create())
-println(s" synchronously got app info for ${app.name} with syncApi")
+println(s"created app ${app.name} with syncApi")
 
 
 simpleApi.execute(HerokuApp.Info(app.id)).map {
