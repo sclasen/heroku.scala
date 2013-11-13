@@ -33,8 +33,9 @@ libraryDependencies += "com.heroku.platform.api" %% "spray-client" % "0.0.1-SNAP
 then run `sbt console`
 
 ```scala
-
 val apiKey = ...your api key...
+
+//once your apiKey is set, you can cut and paste the rest
 
 // bring in the base api
 import com.heroku.platform.api._
