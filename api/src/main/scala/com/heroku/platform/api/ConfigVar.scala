@@ -1,4 +1,5 @@
 package com.heroku.platform.api
+
 import Request._
 
 object ConfigVar {

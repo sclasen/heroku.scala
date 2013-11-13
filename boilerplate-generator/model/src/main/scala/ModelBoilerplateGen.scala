@@ -11,6 +11,8 @@ import treehuggerDSL._
 this generates scala source for schema.json
 the names of the files are printed to standard out so sbt knows to compile them
 if you need debug logging use the method `e` which prints to standard err instead.
+
+also intellij doesnt much care for the code here so ignore the blood.
 */
 object ModelBoilerplateGen extends App {
 
@@ -397,11 +399,11 @@ object ModelBoilerplateGen extends App {
   }
 
   def reqJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson): Tree)
+    (TRAITDEF("ApiRequestJson") withParents ("ConfigVarRequestJson" :: aggReqJson).map(_ + "\n"): Tree)
   }
 
   def respJson(implicit root: RootSchema) = {
-    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson): Tree)
+    (TRAITDEF("ApiResponseJson") withParents ("ErrorResponseJson" :: "ConfigVarResponseJson" :: aggRespJson).map(_ + "\n"): Tree)
   }
 
   def apiJson(implicit root: RootSchema) = (BLOCK(reqJson, respJson).inPackage(sym.ApiPackage): Tree)
@@ -419,14 +421,17 @@ object ModelBoilerplateGen extends App {
     js =>
       js.validate[R].fold({
         er =>
-          js.validate[L].fold({
-            el => JsError(er.toString + el.toString + Json.prettyPrint(js))
-          }, {
-            s => JsSuccess(Left[L, R](s))
-          })
-      }, {
-        r => JsSuccess(Right[L, R](r))
-      })
+          js.validate[L].fold(
+            {
+              el => JsError(er.toString + el.toString + Json.prettyPrint(js))
+            },
+            {
+              s => JsSuccess(Left[L, R](s))
+            })
+      },
+        {
+          r => JsSuccess(Right[L, R](r))
+        })
   ), Writes {
     case Right(ar) => r.writes(ar)
     case Left(al) => l.writes(al)
@@ -446,13 +451,6 @@ object ModelBoilerplateGen extends App {
     case (b, c) => b.append(c)
   }.toString
 
-  def schemaText(name: String): String = {
-    val schemaFile = s"api/src/main/resources/schema/$name.json"
-    fileToString(schemaFile)
-  }
-
-  //$ref :  #definitions/something or schema/foo#definitions/something
-  // new single file
   // #/definitions/account-feature/definitions/id
   case class Ref(`$ref`: String) {
     def path = `$ref`
@@ -462,7 +460,9 @@ object ModelBoilerplateGen extends App {
     def definition: String = path.split('/')(4)
   }
 
+  //The type of items in an array
   case class ArrayItems(`type`: String)
+
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
   case class FieldDefinition(description: Option[String], example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
 
@@ -484,7 +484,7 @@ object ModelBoilerplateGen extends App {
     def extractHrefParams(implicit root: RootSchema, res: Resource): Seq[String] = {
       href.split('/').map {
         //decode urlencoded $refs in the href
-        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref))).map {
+        case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref, "UTF-8"))).map {
           r =>
             res.resolveFieldRef(r).fold(
               o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields,

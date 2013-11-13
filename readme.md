@@ -2,7 +2,7 @@
 
 Asynchronous Scala Client for the [Heroku Platform API](https://devcenter.heroku.com/articles/platform-api-reference).
 
-This client allows one to plug in the http client and json stack of one's choosing. A client based on spray-client and spray-json is provided. 
+This client allows one to plug in the http client and json stack of one's choosing. A client based on [spray-client](https://github.com/spray/spray) and [spray-json](https://github.com/spray/spray-json) is provided. 
 
 Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` trait, which contains 4 abstract methods.
 
@@ -14,11 +14,31 @@ The heroku platform api is specified using json schema, and we take advantage of
 
 The code generators live in the `boilerplate-generator` project, and are driven by sbt.
 
+
+
 ## usage
 
-This example shows the usage of the included client implementation based on spray-client and spray-json.
+This example shows the usage of the included client implementation based on spray-client and spray-json. 
+
+Create a simple sbt project by making a directory and placing the following in `build.sbt` in that directory
 
 ```scala
+scalaVersion := "2.10.2"
+
+resolvers += "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
+
+libraryDependencies += "io.spray" %% "spray-json" % "1.2.5"
+
+libraryDependencies += "com.heroku.platform.api" %% "spray-client" % "0.0.1-SNAPSHOT"
+```
+
+then run `sbt console`
+
+```scala
+val apiKey = ...your api key...
+
+//once your apiKey is set, you can cut and paste the rest
+
 // bring in the base api
 import com.heroku.platform.api._
 
@@ -35,33 +55,34 @@ val system = ActorSystem("api")
 
 implicit val ctx = system.dispatcher
 
-val api = SprayApi(system)
-
-val apiKey = ...your api key...
-
 // Low level api
 
-api.execute(HerokuApp.Create(name = Some("my-app")), apiKey).map {
-   case Left(Response(status, headers, ErrorResponse(id, msg))) => 
-        println(s"failed to create app: $msg")
-   case Right(Response(status, headers, app)) => 
-        println(s"created app: ${app.name}, id is ${app.id}")
-}
+val api = SprayApi(system)
 
 // simple async api, throws exceptions when an error response is recieved
 
 val simpleApi = SimpleApi(api, apiKey)
 
-simpleApi.execute(HerokuApp.Info("my-app")).map {
-    app:HerokuApp => println(s"got app info for ${app.name}")
-}
-
-// synchronous api, uses SimpleApi under the hood, and wraps it in Await. 
+// synchronous api, uses SimpleApi under the hood, and wraps it in Await.
 // Good for console usage.
 
 val syncApi = SyncApi(api, apiKey)
-val app = syncApi.execute(HerokuApp.Info("my-app"))
-println(s" synchronously got app info for ${app.name}")}
+
+val app = syncApi.execute(HerokuApp.Create())
+println(s"created app ${app.name} with syncApi")
+
+
+simpleApi.execute(HerokuApp.Info(app.id)).map {
+    appInfo:HerokuApp => println(s"got app info for ${appInfo.name} with simpleApi")
+}
+
+
+api.execute(HerokuApp.Info(app.name), apiKey).map {
+   case Left(Response(status, headers, ErrorResponse(id, msg))) => 
+        println(s"failed to get app info: $id $msg")
+   case Right(Response(status, headers, appInfo)) =>
+        println(s"got app info with api: ${appInfo.name}, id is ${appInfo.id}")
+}
 
 ```
 
