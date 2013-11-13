@@ -14,8 +14,8 @@ How does all this stuff work?
 
 * there are abstract tests in `api/src/test/scala`
 * client implementations should provide integration tests based on these by:
-* implementing a base tests trait, self typed to `ApiSpec`. See `SprayApiSpec`
-* creating concreate tests by applying this trait to each abstract test. See `IntegrationTests` in the spray-client module
+* implementing a base test trait, self typed to `ApiSpec`. See `SprayApiSpec`
+* creating concrete tests by applying this trait to each abstract test. See `IntegrationTests` in the spray-client module
 * `class SprayAccountSpec extends AccountSpec(SprayJsonBoilerplate) with SprayApiSpec`
 
 
