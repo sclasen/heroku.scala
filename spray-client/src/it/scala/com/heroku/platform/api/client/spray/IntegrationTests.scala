@@ -12,6 +12,8 @@ class SprayDynoSpec extends DynoSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 class SprayKeySpec extends KeySpec(SprayJsonBoilerplate) with SprayApiSpec
 
+class SprayFormationSpec extends FormationSpec(SprayJsonBoilerplate) with SprayApiSpec
+
 class SprayLogDrainSpec extends LogDrainSpec(SprayJsonBoilerplate) with SprayApiSpec
 
 class SprayLogSessionSpec extends LogSessionSpec(SprayJsonBoilerplate) with SprayApiSpec
