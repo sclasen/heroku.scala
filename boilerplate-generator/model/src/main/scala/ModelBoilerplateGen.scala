@@ -228,7 +228,6 @@ object ModelBoilerplateGen extends App {
         schema.properties.flatMap {
           case (name, Right(Right(fd))) => fd.items match {
             case Some(Right(ref)) =>
-              e(resource.resolveFieldRef(ref).toString)
               resource.resolveFieldRef(ref) match {
                 case (Left(Left(nestedDef))) =>
                   val params = nestedDef.properties.map {
