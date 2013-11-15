@@ -49,7 +49,7 @@ object HerokuApp {
 }
 
 /** An app represents the program that you would like to deploy and run on Heroku. */
-case class HerokuApp(name: String, repo_size: Option[Int], git_url: String, slug_size: Option[Int], maintenance: Boolean, id: String, released_at: Option[String], web_url: String, stack: Option[String], region: models.HerokuAppRegion, created_at: String, owner: models.HerokuAppOwner, updated_at: String, archived_at: Option[String], buildpack_provided_description: Option[String])
+case class HerokuApp(name: String, repo_size: Option[Int], git_url: String, slug_size: Option[Int], maintenance: Boolean, id: String, released_at: Option[String], web_url: String, stack: models.HerokuAppStack, region: models.HerokuAppRegion, created_at: String, owner: models.HerokuAppOwner, updated_at: String, archived_at: Option[String], buildpack_provided_description: Option[String])
 
 /** json serializers related to HerokuApp */
 trait HerokuAppRequestJson {
