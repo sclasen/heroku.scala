@@ -30,7 +30,7 @@ object Build extends Build {
     scalariformSettings ++
     publishSettings ++
     Seq( testOptions in Test += Tests.Argument("-oF"),  testOptions in IntegrationTest += Tests.Argument("-oF")) ++
-    Seq( scalacOptions in Compile ++= Seq("-unchecked", "-deprecation", "-feature"))
+    Seq( scalacOptions in Compile ++= Seq("-unchecked", "-deprecation", "-feature", "-language:postfixOps"))
 
 
   val modelBoilerplateGen = Project(

@@ -2,9 +2,15 @@
 
 Asynchronous Scala Client for the [Heroku Platform API](https://devcenter.heroku.com/articles/platform-api-reference).
 
-This client allows one to plug in the http client and json stack of one's choosing. A client based on [spray-client](https://github.com/spray/spray) and [spray-json](https://github.com/spray/spray-json) is provided. 
+This project aims to provide a complete, typesafe and well tested scala library for interacting with the heroku platform api. 
 
-Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` trait, which contains 4 abstract methods.
+The `api` module of this project provides the abstractions necessary for one to easily build a client using the http stack and json stack of one's choosing. 
+
+The `spray-client` module of this project provides a full client implementation based on [spray-client](https://github.com/spray/spray) and [spray-json](https://github.com/spray/spray-json).
+
+## roll your own client
+
+Plugging in one's own http client involves implementing the `com.heroku.platform.api.Api` trait, which contains 4 abstract methods. That implementation can then be used with the provided spray-json based `SprayJsonBoilerplate`, or with json serializers/deserialzers implemented with another json stack.
 
 The json serializations/deserializations are driven by a granular set of implicits, so if you want to implement a client for a single operation on a single endpoint, you will only need to implement a single deserializer for the response, and a serializer for the request if it contains a body.
 
@@ -13,8 +19,6 @@ The json serializations/deserializations are driven by a granular set of implici
 The heroku platform api is specified using json schema, and we take advantage of this to generate much of the boilerplate involved in the client code. Hand-coded abstractions are used as a basis for generating the code for each endpoint. The generated code is not checked in to the `master` branch, but is checked into the `generated` branch [here for the models](https://github.com/heroku/heroku.scala/tree/generated/api/src_managed/main/scala/com/heroku/platform/api) and [here for the json boilerplate](https://github.com/heroku/heroku.scala/blob/generated/spray-client/src_managed/main/scala/com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala).
 
 The code generators live in the `boilerplate-generator` project, and are driven by sbt.
-
-
 
 ## usage
 

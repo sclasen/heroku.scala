@@ -3,7 +3,7 @@ package com.heroku.platform.api
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
 import org.scalatest.{ BeforeAndAfterAll, WordSpec }
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import scala.collection.mutable.ListBuffer
 import org.scalatest.exceptions.TestFailedException
 import com.heroku.platform.api.Api.FutureResponse

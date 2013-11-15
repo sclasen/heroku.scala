@@ -54,8 +54,6 @@ object ModelBoilerplateGen extends App {
           fieldDef => fieldType(k, fieldDef)(resource)
         })
         (PARAM(k, typ).tree)
-      case (k, Left(nestedDef)) if resource.id == "schema/app" && k == "stack" => /*Hack, fix*/
-        (PARAM(k, TYPE_OPTION("String")).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
         (PARAM(k, TYPE_OPTION("models." + resource.name + Resource.camelify(initialCap(k)))).tree)
       case (k, Left(nestedDef)) =>
@@ -370,7 +368,6 @@ object ModelBoilerplateGen extends App {
       case ("schema/oauth-token", "client") => Some((TYPE_REF("OAuthTokenClient")))
       case ("schema/oauth-token", "grant") => Some((TYPE_REF("OAuthTokenGrant")))
       case ("schema/oauth-token", "refresh_token") => Some((TYPE_REF("OAuthTokenRefreshToken")))
-      case ("schema/app", "stack") => Some((TYPE_OPTION("String")))
       case ("schema/log-drain", "addon") => Some((TYPE_OPTION("String")))
       case ("schema/addon", "config") => Some((TYPE_OPTION(TYPE_MAP("String", "String"))))
       case _ => None
