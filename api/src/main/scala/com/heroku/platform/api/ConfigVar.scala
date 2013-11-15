@@ -4,19 +4,22 @@ import Request._
 
 object ConfigVar {
 
+  object models {
+    case class Update(name: String, value: String)
+    case class MultiUpdateConfigVarBody(`config-vars`: Seq[Update])
+  }
+
   case class Info(app_id_or_name: String) extends Request[Map[String, String]] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$app_id_or_name/config-vars"
     val method: String = GET
   }
 
-  case class Update(app_id_or_name: String, configVarsToSet: Map[String, String] = Map.empty, configVarsToRemove: Set[String] = Set.empty) extends RequestWithBody[Map[String, String], Map[String, String]] {
+  case class MultiUpdate(app_id_or_name: String, `config-vars`: Seq[models.Update]) extends RequestWithBody[models.MultiUpdateConfigVarBody, Map[String, String]] {
     val expect: Set[Int] = expect200
     val endpoint: String = s"/apps/$app_id_or_name/config-vars"
     val method: String = PATCH
-    val body = {
-      configVarsToSet ++ (configVarsToRemove.map(rem => rem -> null).toMap[String, String])
-    }
+    val body = models.MultiUpdateConfigVarBody(`config-vars`)
   }
 
 }

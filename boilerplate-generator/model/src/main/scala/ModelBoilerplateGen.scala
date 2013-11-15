@@ -82,16 +82,18 @@ object ModelBoilerplateGen extends App {
                   case Right(Right(fieldDef)) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                   case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
                     case (nk, nref) =>
-                      resource.resolveFieldRef(nref).fold({
+                      resource.resolveFieldRef(nref).fold(_.fold(
+                        nested => ???,
                         oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
-                      }, {
+                      ), {
                         fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                       })
                   }
                   case Left(Right(ref)) =>
-                    resource.resolveFieldRef(ref).fold({
+                    resource.resolveFieldRef(ref).fold(_.fold(
+                      nested => ???,
                       oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
-                    }, {
+                    ), {
                       fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                     })
                   case Left(Left(oneOf)) => argsFromAnyOf(k, oneOf, schema.isRequired(k))
@@ -125,8 +127,10 @@ object ModelBoilerplateGen extends App {
         }
     }.flatten
 
+    val multiCaseClasses = resource.links.map(link => multiUpdate(link)).flatten
+
     OBJECTDEF(name) := BLOCK(Seq(IMPORT(s"${resource.name}.models._")) ++
-      Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses))) ++ actionCaseClasses
+      Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses ++ multiCaseClasses))) ++ actionCaseClasses
     )
   }
 
@@ -198,14 +202,14 @@ object ModelBoilerplateGen extends App {
               case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
                 case (nk, nref) =>
                   resource.resolveFieldRef(nref).fold({
-                    oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
+                    oneOf => argsFromAnyOf(k, oneOf.fold(n => ???, ao => ao), schema.isRequired(k))
                   }, {
                     fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                   })
               }
               case Left(Right(ref)) =>
                 resource.resolveFieldRef(ref).fold({
-                  oneOf => bodyArgsFromAnyOf(k, oneOf, schema.isRequired(k))
+                  oneOf => bodyArgsFromAnyOf(k, oneOf.fold(n => ???, ao => ao), schema.isRequired(k))
                 }, {
                   fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
                 })
@@ -216,6 +220,35 @@ object ModelBoilerplateGen extends App {
     }.getOrElse(Seq.empty[(String, ValDef)]).map(_._2)
 
     ((CASECLASSDEF(s"${link.action}${resource.name}Body") withParams params.toIterable): Tree)
+  }
+
+  def multiUpdate(link: Link)(implicit resource: Resource, root: RootSchema): Seq[Tree] = {
+    link.schema.map {
+      schema =>
+        schema.properties.flatMap {
+          case (name, Right(Right(fd))) => fd.items match {
+            case Some(Right(ref)) =>
+              e(resource.resolveFieldRef(ref).toString)
+              resource.resolveFieldRef(ref) match {
+                case (Left(Left(nestedDef))) =>
+                  val params = nestedDef.properties.map {
+                    case (name, field) =>
+                      resource.resolveFieldRef(field).fold(
+                        eit => (PARAM(name, "String").tree),
+                        fd => (PARAM(name, fieldType(name, fd)).tree)
+                      )
+
+                  }
+                  Some((CASECLASSDEF("Update") withParams params): Tree)
+                case _ => None
+              }
+            case _ =>
+              None
+          }
+          case _ =>
+            None
+        }
+    }.getOrElse(Seq.empty)
   }
 
   /*
@@ -239,7 +272,11 @@ object ModelBoilerplateGen extends App {
         Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
-    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq
+    val updates = if (resource.links.map(multiUpdate(_)(resource, root)).flatten.nonEmpty) {
+      Seq(toJson("Update" + initialCap(resource.name), "models.Update"))
+    } else Seq.empty
+
+    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq ++ updates.toSeq
 
     if (toJsons.isEmpty) None
     else Some(TRAITDEF(s"${resource.name}RequestJson") := BLOCK(toJsons))
@@ -298,6 +335,24 @@ object ModelBoilerplateGen extends App {
       expect("expect202"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 
+  /*def requestWithMapBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    val mods = Seq()
+    (CASECLASSDEF(link.action) withParams mods withParents (sym.RequestWithBody TYPE_OF (s"Map[String, models.${link.action}${resource.name}Body]", resource.name)) := BLOCK(
+      expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
+      (VAL("body", s"Map[String, models.${link.action}${resource.name}Body]") := REF("updates") INFIX("++") REF("deletes")  MAP BLOCK(
+        REF("k") ==> REF("k") INFIX("->") REF(NULL)
+      )
+  }*/
+
+  /*
+     case class MultiUpdate(app_id_or_name: String, updates:Map[String,models.UpdateFormationBody]=Map.empty, deletes:Set[String]=Set.empty) extends RequestWithBody[Map[String,models.UpdateFormationBody],Map[String,Formation]] {
+      val expect: Set[Int] = expect200
+      val endpoint: String = "/apps/%s/formation".format(app_id_or_name)
+      val method: String = PATCH
+      val body: Map[String,models.UpdateFormationBody] = updates ++ deletes.map(key => key -> null)
+    }
+    */
+
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
 
   def endpoint(endRef: String, params: Seq[String]) = {
@@ -334,8 +389,8 @@ object ModelBoilerplateGen extends App {
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
-          //Array
-          (TYPE_OPTION(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+          items.fold(simple => (TYPE_OPTION(SeqClass TYPE_OF (initialCap(simple.`type`)))),
+            complex => (TYPE_OPTION(SeqClass TYPE_OF (s"models.${initialCap(complex.definition)}"))))
       }.getOrElse {
         (TYPE_OPTION(initialCap(typez(0))))
       }
@@ -350,7 +405,9 @@ object ModelBoilerplateGen extends App {
       fieldDef.items.map {
         items =>
           //Array
-          (TYPE_REF(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+          items.fold(simple => (SeqClass TYPE_OF (initialCap(simple.`type`))),
+            complex => (SeqClass TYPE_OF (s"models.${initialCap(complex.definition)}")))
+
       }.getOrElse {
         (TYPE_REF(initialCap(typez(0))))
       }
@@ -464,7 +521,7 @@ object ModelBoilerplateGen extends App {
   case class ArrayItems(`type`: String)
 
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
-  case class FieldDefinition(description: Option[String], example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
+  case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[Either[ArrayItems, Ref]])
 
   //these map to "inner" objects inside a top level object, like region inside app
   case class NestedDef(properties: Map[String, Ref], `type`: List[String]) {
@@ -486,11 +543,12 @@ object ModelBoilerplateGen extends App {
         //decode urlencoded $refs in the href
         case refEx(encEx(ref)) => Some(Ref(URLDecoder.decode(ref, "UTF-8"))).map {
           r =>
-            res.resolveFieldRef(r).fold(
-              o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields,
+            res.resolveFieldRef(r).fold(_.fold(
+              n => ???,
+              o => r.schema.map(_.replace("-", "_")).getOrElse(res.nameForParam.toLowerCase) + "_" + o.orFields),
               f => r.schema.map(s => s.replace("-", "_")).getOrElse(res.nameForParam) + "_" + r.definition)
         }
-        case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.orFields, f => r.definition))
+        case refEx(ref) => Some(Ref(ref)).map(r => res.resolveFieldRef(r).fold(o => o.fold(n => ???, ao => ao).orFields, f => r.definition))
         case _ => None
       }.toSeq.flatten
     }
@@ -537,8 +595,9 @@ object ModelBoilerplateGen extends App {
   }
 
   //schema for a endpoint/object type
-  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[AnyOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
-    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[AnyOf, FieldDefinition] = {
+  //TODO prefer nestedDef, since fieldDef matches only type  Either[Either[AnyOf,FieldDef],NestedDef]
+  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[Either[NestedDef, AnyOf], FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
+    def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[Either[NestedDef, AnyOf], FieldDefinition] = {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
       res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
     }

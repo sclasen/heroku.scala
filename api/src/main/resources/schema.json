@@ -1754,6 +1754,22 @@
           "type": [
             "string"
           ]
+        },
+        "update": {
+          "properties":{
+            "identity":{
+              "$ref": "#/definitions/formation/definitions/identity"
+             },
+             "quantity":{
+               "$ref": "#/definitions/formation/definitions/quantity"
+             },
+             "size":{
+               "$ref": "#/definitions/formation/definitions/size"
+             }
+          },
+          "type": [
+            "object"
+          ]
         }
       },
       "links": [
@@ -1787,6 +1803,23 @@
             }
           },
           "title": "Update"
+        },
+        {
+          "description": "Update multiple process type",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/formation",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "updates":{
+                "type":["array"],
+                "items": { "$ref": "#/definitions/formation/definitions/update"},
+                "description":"array of update objects"
+              }
+            },
+            "required":["updates"]
+          },
+          "title": "Multi Update"
         }
       ],
       "properties": {
