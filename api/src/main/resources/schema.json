@@ -1817,6 +1817,7 @@
                 "description":"array of update objects"
               }
             },
+            "example": {"updates":[{"identity":"web","quantity":2},{"identity":"worker","size":"1"},{"identity":"clock","quantity":1,"size":"2"}]},
             "required":["updates"]
           },
           "title": "Multi Update"
