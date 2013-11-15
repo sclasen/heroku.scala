@@ -335,24 +335,6 @@ object ModelBoilerplateGen extends App {
       expect("expect202"), endpoint(link.href, hrefParams), method(link.method.toUpperCase)): Tree)
   }
 
-  /*def requestWithMapBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
-    val mods = Seq()
-    (CASECLASSDEF(link.action) withParams mods withParents (sym.RequestWithBody TYPE_OF (s"Map[String, models.${link.action}${resource.name}Body]", resource.name)) := BLOCK(
-      expect("expect200"), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
-      (VAL("body", s"Map[String, models.${link.action}${resource.name}Body]") := REF("updates") INFIX("++") REF("deletes")  MAP BLOCK(
-        REF("k") ==> REF("k") INFIX("->") REF(NULL)
-      )
-  }*/
-
-  /*
-     case class MultiUpdate(app_id_or_name: String, updates:Map[String,models.UpdateFormationBody]=Map.empty, deletes:Set[String]=Set.empty) extends RequestWithBody[Map[String,models.UpdateFormationBody],Map[String,Formation]] {
-      val expect: Set[Int] = expect200
-      val endpoint: String = "/apps/%s/formation".format(app_id_or_name)
-      val method: String = PATCH
-      val body: Map[String,models.UpdateFormationBody] = updates ++ deletes.map(key => key -> null)
-    }
-    */
-
   def expect(exRef: String) = (VAL("expect", TYPE_SET(IntClass)) := REF(exRef))
 
   def endpoint(endRef: String, params: Seq[String]) = {
