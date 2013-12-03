@@ -51,7 +51,7 @@ object ModelBoilerplateGen extends App {
         val typ = resource.resolveFieldRef(ref).fold({
           oneOf => sys.error("Not expecting oneOf")
         }, {
-          fieldDef => fieldType(k, fieldDef)(resource)
+          fieldDef => fieldType(k, fieldDef)(resource, root)
         })
         (PARAM(k, typ).tree)
       case (k, Left(nestedDef)) if nestedDef.optional =>
@@ -109,6 +109,7 @@ object ModelBoilerplateGen extends App {
           case "destroy" if resource.id == "schema/dyno" => requestWithEmptyResponse(resource, paramNames, params, extra, link, hrefParamNames)
           case "self" | "delete" | "destroy" => request(resource, paramNames, params, extra, link, hrefParamNames)
           case "instances" => listRequest(resource, paramNames, params, extra, link, hrefParamNames)
+          case "update" if link.title.toLowerCase.contains("batch") => batchRequestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
           case "create" | "update" => requestWithBody(resource, paramNames, params, extra, link, hrefParamNames)
           case x => sys.error("======> UNKNOWN link.rel:" + x)
         }
@@ -124,7 +125,7 @@ object ModelBoilerplateGen extends App {
     }.flatten
 
     OBJECTDEF(name) := BLOCK(Seq(IMPORT(s"${resource.name}.models._")) ++
-      Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses))) ++ actionCaseClasses
+      Seq((OBJECTDEF("models") := BLOCK(bodyCaseClasses ++ nestedModelClasses ++ nestedArrayItems))) ++ actionCaseClasses
     )
   }
 
@@ -183,6 +184,33 @@ object ModelBoilerplateGen extends App {
     }.flatten
   }
 
+  def nestedArrayItems(implicit resource: Resource, root: RootSchema) = {
+    resource.definitions.map {
+      case (name, Left(Left(schema))) => Some {
+        val params = schema.properties.flatMap {
+          case (k, typ) =>
+            typ match {
+              case Right(Right(fieldDef)) => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+              case Right(Left(nestedDef)) => nestedDef.properties.flatMap {
+                case (nk, nref) =>
+                  resource.resolveFieldRef(nref).fold({
+                    oneOf => argsFromAnyOf(k, oneOf, schema.isRequired(k))
+                  }, {
+                    fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k))
+                  })
+              }
+              case Left(Right(ref)) =>
+                resource.resolveFieldRef(ref).fold(oneOf => Seq(k -> (PARAM(k, TYPE_REF("String")): ValDef)),
+                  fieldDef => argsFromFieldDef(k, fieldDef, schema.isRequired(k)))
+              case Left(Left(oneOf)) => argsFromAnyOf(k, oneOf, schema.isRequired(k))
+            }
+        }.map(_._2)
+        ((CASECLASSDEF(resource.name + Resource.camelify(initialCap(name))) withParams params): Tree)
+      }
+      case _ => None
+    }.flatten
+  }
+
   /*
   body for Create and Update calls
   */
@@ -237,7 +265,14 @@ object ModelBoilerplateGen extends App {
         Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
     }.flatten
 
-    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq
+    val nestedArrays = resource.definitions.map {
+      case (k, Left(Left(schema))) =>
+        Some(toJson(resource.name + Resource.camelify(initialCap(k)), "models." + resource.name + Resource.camelify(initialCap(k))))
+      case _ =>
+        None
+    }.flatten
+
+    val toJsons = modelToJsons.toSeq ++ nesteds.toSeq ++ nestedArrays.toSeq
 
     if (toJsons.isEmpty) None
     else Some(TRAITDEF(s"${resource.name}RequestJson") := BLOCK(toJsons))
@@ -285,6 +320,14 @@ object ModelBoilerplateGen extends App {
       )): Tree)
   }
 
+  def batchRequestWithBody(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
+    val exp = "expect200"
+    (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.RequestWithBody TYPE_OF (s"models.${link.action}${resource.name}Body", s"collection.immutable.List[${resource.name}]")) := BLOCK(
+      expect(exp), endpoint(link.href, hrefParams), method(link.method.toUpperCase),
+      (VAL("body", s"models.${link.action}${resource.name}Body") := (REF(s"models.${link.action}${resource.name}Body") APPLY (paramNames.map(REF(_))))
+      )): Tree)
+  }
+
   def listRequest(resource: Resource, paramNames: Iterable[String], params: Iterable[ValDef], extra: Iterable[ValDef], link: Link, hrefParams: Seq[String]) = {
     (CASECLASSDEF(link.action) withParams params ++ extra withParents (sym.ListRequest TYPE_OF (resource.name)) := BLOCK(
       endpoint(link.href, hrefParams), method(link.method.toUpperCase),
@@ -317,7 +360,7 @@ object ModelBoilerplateGen extends App {
 
   def e(a: AnyRef) = System.err.println(a)
 
-  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = {
+  def fieldType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = {
     val typ = fieldDef.`type`
     val isOptional = typ.contains("null")
     if (isOptional) {
@@ -327,13 +370,14 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def argType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+  def argType(name: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = specialCase(resource, name).getOrElse {
     val typez = convertTypes(fieldDef.`type`)
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
           //Array
-          (TYPE_OPTION(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+          val typ = items.fold(r => resource.name + initialCap(r.definition), _.`type`)
+          (TYPE_OPTION("collection.immutable.List") TYPE_OF (initialCap(typ)))
       }.getOrElse {
         (TYPE_OPTION(initialCap(typez(0))))
       }
@@ -342,13 +386,14 @@ object ModelBoilerplateGen extends App {
     }
   }
 
-  def requiredArg(name: String, fieldDef: FieldDefinition)(implicit resource: Resource) = specialCase(resource, name).getOrElse {
+  def requiredArg(name: String, fieldDef: FieldDefinition)(implicit resource: Resource, root: RootSchema) = specialCase(resource, name).getOrElse {
     val typez = convertTypes(fieldDef.`type`)
     if (typez.length == 1) {
       fieldDef.items.map {
         items =>
           //Array
-          (TYPE_REF(initialCap(typez(0))) TYPE_OF (initialCap(items.`type`)))
+          val typ = items.fold(r => resource.name + initialCap(r.definition), _.`type`)
+          (TYPE_REF("collection.immutable.List") TYPE_OF (initialCap(typ)))
       }.getOrElse {
         (TYPE_REF(initialCap(typez(0))))
       }
@@ -461,7 +506,7 @@ object ModelBoilerplateGen extends App {
   case class ArrayItems(`type`: String)
 
   //these are the fields on either a top level or inner object or schema, which hang off definitions and are resolved by $ref
-  case class FieldDefinition(description: Option[String], example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[ArrayItems])
+  case class FieldDefinition(description: String, example: Option[JsValue], format: Option[String], readOnly: Option[Boolean], `type`: List[String], items: Option[Either[Ref, ArrayItems]])
 
   //these map to "inner" objects inside a top level object, like region inside app
   case class NestedDef(properties: Map[String, Ref], `type`: List[String]) {
@@ -534,10 +579,15 @@ object ModelBoilerplateGen extends App {
   }
 
   //schema for a endpoint/object type
-  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[AnyOf, FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
+  case class Resource(description: String, id: String, title: String, definitions: Map[String, Either[Either[Schema, AnyOf], FieldDefinition]], links: List[Link], properties: Map[String, Either[NestedDef, Ref]]) {
     def resolveFieldRef(ref: Ref)(implicit root: RootSchema): Either[AnyOf, FieldDefinition] = {
       val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
-      res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res"))
+      res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res")).left.map(_.fold(_ => sys.error("unexpected schema"), ao => ao))
+    }
+
+    def resolveSchema(ref: Ref)(implicit root: RootSchema): Option[Schema] = {
+      val res: Resource = ref.schema.map(resource => root.resource(resource)).getOrElse(this)
+      res.definitions.get(ref.definition).getOrElse(sys.error(s"cant resolve ${ref} -> ${ref.definition} from $res")).left.map(_.fold(s => Some(s), _ => None)).fold(o => o, f => None)
     }
 
     def camelify(name: String) = Resource.camelify(name)

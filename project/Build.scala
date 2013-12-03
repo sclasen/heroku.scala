@@ -130,7 +130,7 @@ object Build extends Build {
 
 
 
-  val spray = "io.spray" % "spray-client" % "1.2-RC2" % "compile"
+  val spray = "io.spray" % "spray-client" % "1.2.0" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.3" % "compile"
   val scalaTest = "org.scalatest" %% "scalatest" % "2.0" % "test"
