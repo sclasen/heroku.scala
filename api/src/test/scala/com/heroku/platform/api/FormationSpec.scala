@@ -33,6 +33,9 @@ abstract class FormationSpec(aj: ApiRequestJson with ApiResponseJson) extends Ap
       formationsUpdated.size must equal(2)
       formationsUpdated.map(_.id) must contain(clock.id)
       formationsUpdated.map(_.id) must contain(echo.id)
+      import Formation.models.FormationUpdate
+      val batched = request(Formation.BatchUpdate(app.id, List(FormationUpdate("clock", quantity = Some(0)), FormationUpdate("echo", quantity = Some(0)))))
+      batched.size must be(2)
     }
   }
 

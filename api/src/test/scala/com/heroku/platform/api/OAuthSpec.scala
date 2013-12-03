@@ -9,7 +9,7 @@ abstract class OAuthSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpe
   "Api for OAuth" must {
     "operate on OAuthAuthorizations" in {
       import primary._
-      val auth = request(OAuthAuthorization.Create(scope = Array("global"), description = Some("OAuthSpec")))
+      val auth = request(OAuthAuthorization.Create(scope = List("global"), description = Some("OAuthSpec")))
       try {
         val authz = requestAll(OAuthAuthorization.List())
         authz.map(_.id) must contain(auth.id)

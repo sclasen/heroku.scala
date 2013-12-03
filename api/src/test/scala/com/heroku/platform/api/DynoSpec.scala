@@ -14,7 +14,7 @@ abstract class DynoSpec(aj: ApiRequestJson with ApiResponseJson) extends ApiSpec
       val dynoList = requestAll(Dyno.List(app.id))
       dynoList(0).id must equal(run.id)
       dynoList(0).created_at must equal(run.created_at)
-      request(Dyno.RestartAllDynos(app.id))
+      request(Dyno.RestartAll(app.id))
     }
   }
 

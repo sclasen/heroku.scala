@@ -512,7 +512,9 @@
                 "$ref": "#/definitions/plan/definitions/identity"
               }
             },
-            "required": ["plan"]
+            "required": [
+              "plan"
+            ]
           },
           "title": "Create"
         },
@@ -548,7 +550,9 @@
                 "$ref": "#/definitions/plan/definitions/identity"
               }
             },
-            "required": ["plan"]
+            "required": [
+              "plan"
+            ]
           },
           "title": "Update"
         }
@@ -1141,18 +1145,7 @@
           "$ref": "#/definitions/app/definitions/slug_size"
         },
         "stack": {
-          "description": "identity of app stack",
-          "properties": {
-            "id": {
-              "$ref": "#/definitions/stack/definitions/id"
-            },
-            "name": {
-              "$ref": "#/definitions/stack/definitions/name"
-            }
-          },
-          "type": [
-            "object"
-          ]
+          "$ref": "#/definitions/stack/definitions/name"
         },
         "updated_at": {
           "$ref": "#/definitions/app/definitions/updated_at"
@@ -1307,14 +1300,14 @@
       "links": [
         {
           "description": "Get config-vars for app.",
-          "href": "/apps/{app_id_or_name}/config-vars",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/config-vars",
           "method": "GET",
           "rel": "self",
           "title": "Info"
         },
         {
           "description": "Update config-vars for app. You can update existing config-vars by setting them again, and remove by setting it to `NULL`.",
-          "href": "/apps/{app_id_or_name}/config-vars",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/config-vars",
           "method": "PATCH",
           "rel": "update",
           "schema": {
@@ -1612,14 +1605,14 @@
           "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/dynos/{(%23%2Fdefinitions%2Fdyno%2Fdefinitions%2Fidentity)}",
           "method": "DELETE",
           "rel": "destroy",
-          "title": "Restart dyno"
+          "title": "Restart"
         },
         {
           "description": "Restart all dynos",
           "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/dynos",
           "method": "DELETE",
           "rel": "destroy",
-          "title": "Restart all dynos"
+          "title": "Restart all"
         },
         {
           "description": "Info for existing dyno.",
@@ -1754,6 +1747,26 @@
           "type": [
             "string"
           ]
+        },
+        "update": {
+          "additionalProperties": false,
+          "properties": {
+            "process": {
+              "$ref": "#/definitions/formation/definitions/identity"
+            },
+            "quantity": {
+              "$ref": "#/definitions/formation/definitions/quantity"
+            },
+            "size": {
+              "$ref": "#/definitions/formation/definitions/size"
+            }
+          },
+          "required": [
+            "process"
+          ],
+          "type": [
+            "object"
+          ]
         }
       },
       "links": [
@@ -1770,6 +1783,38 @@
           "method": "GET",
           "rel": "instances",
           "title": "List"
+        },
+        {
+          "description": "Batch update process types",
+          "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/formation",
+          "method": "PATCH",
+          "rel": "update",
+          "schema": {
+            "properties": {
+              "updates": {
+                "type": [
+                  "array"
+                ],
+                "items": {
+                  "$ref": "#/definitions/formation/definitions/update"
+                },
+                "description": "Array with formation updates. Each element must have \"process\", the id or name of the process type to be updated, and can optionally update its \"quantity\" or \"size\".",
+                "example": {
+                  "updates": [
+                    {
+                      "process": "web",
+                      "quantity": 1,
+                      "size": 2
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "updates"
+            ]
+          },
+          "title": "Batch update"
         },
         {
           "description": "Update process type",
@@ -3220,7 +3265,7 @@
             }
           },
           "type": [
-            "null","object"
+            "object", "null"
           ]
         },
         "user": {
@@ -3273,7 +3318,8 @@
           "example": "60883d9e8947a57e04dc9124f25df004866a2051",
           "readOnly": false,
           "type": [
-            "null", "string"
+            "null",
+            "string"
           ]
         },
         "created_at": {
@@ -3542,19 +3588,13 @@
         "name": {
           "$ref": "#/definitions/ssl-endpoint/definitions/name"
         },
-        "private_key": {
-          "$ref": "#/definitions/ssl-endpoint/definitions/private_key"
-        },
-        "rollback": {
-          "$ref": "#/definitions/ssl-endpoint/definitions/rollback"
-        },
         "updated_at": {
           "$ref": "#/definitions/ssl-endpoint/definitions/updated_at"
         }
       }
     },
     "stack": {
-      "description": "Stacks are the different application execution environment available in the Heroku platform.",
+      "description": "Stacks are the different application execution environments available in the Heroku platform.",
       "id": "schema/stack",
       "$schema": "http://json-schema.org/draft-04/hyper-schema",
       "title": "Heroku Platform API - Stack",
