@@ -4,7 +4,7 @@ import com.heroku.platform.api.Request._
 
 import Stack._
 
-/** Stacks are the different application execution environment available in the Heroku platform. */
+/** Stacks are the different application execution environments available in the Heroku platform. */
 object Stack {
   import Stack.models._
   object models {
@@ -24,7 +24,7 @@ object Stack {
   }
 }
 
-/** Stacks are the different application execution environment available in the Heroku platform. */
+/** Stacks are the different application execution environments available in the Heroku platform. */
 case class Stack(name: String, state: String, id: String, created_at: String, updated_at: String)
 
 /** json deserializers related to Stack */

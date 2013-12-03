@@ -8,7 +8,9 @@ import Formation._
 object Formation {
   import Formation.models._
   object models {
+    case class BatchUpdateFormationBody(updates: collection.immutable.List[FormationUpdate])
     case class UpdateFormationBody(quantity: Option[Int] = None, size: Option[String] = None)
+    case class FormationUpdate(process: String, quantity: Option[Int] = None, size: Option[String] = None)
   }
   /** Info for a process type */
   case class Info(app_id_or_name: String, formation_id_or_type: String) extends Request[Formation] {
@@ -21,6 +23,13 @@ object Formation {
     val endpoint: String = "/apps/%s/formation".format(app_id_or_name)
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[Formation] = this.copy(range = Some(nextRange))
+  }
+  /** Batch update process types */
+  case class BatchUpdate(app_id_or_name: String, updates: collection.immutable.List[FormationUpdate]) extends RequestWithBody[models.BatchUpdateFormationBody, collection.immutable.List[Formation]] {
+    val expect: Set[Int] = expect200
+    val endpoint: String = "/apps/%s/formation".format(app_id_or_name)
+    val method: String = PATCH
+    val body: models.BatchUpdateFormationBody = models.BatchUpdateFormationBody(updates)
   }
   /** Update process type */
   case class Update(app_id_or_name: String, formation_id_or_type: String, quantity: Option[Int] = None, size: Option[String] = None) extends RequestWithBody[models.UpdateFormationBody, Formation] {
@@ -36,7 +45,9 @@ case class Formation(quantity: Int, size: String, command: String, id: String, c
 
 /** json serializers related to Formation */
 trait FormationRequestJson {
+  implicit def ToJsonBatchUpdateFormationBody: ToJson[models.BatchUpdateFormationBody]
   implicit def ToJsonUpdateFormationBody: ToJson[models.UpdateFormationBody]
+  implicit def ToJsonFormationUpdate: ToJson[models.FormationUpdate]
 }
 
 /** json deserializers related to Formation */

@@ -46,7 +46,7 @@ object SslEndpoint {
 }
 
 /** [SSL Endpoint](https://devcenter.heroku.com/articles/ssl-endpoint) is a public address serving custom SSL cert for HTTPS traffic to a Heroku app. Note that an app must have the `ssl:endpoint` addon installed before it can provision an SSL Endpoint using these APIs. */
-case class SslEndpoint(cname: String, name: String, certificate_chain: String, private_key: String, rollback: Boolean, id: String, created_at: String, updated_at: String)
+case class SslEndpoint(cname: String, name: String, certificate_chain: String, id: String, created_at: String, updated_at: String)
 
 /** json serializers related to SslEndpoint */
 trait SslEndpointRequestJson {

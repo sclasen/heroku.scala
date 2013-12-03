@@ -19,13 +19,13 @@ object Dyno {
     val body: models.CreateDynoBody = models.CreateDynoBody(attach, command, env, size)
   }
   /** Restart dyno. */
-  case class RestartDyno(app_id_or_name: String, dyno_id_or_name: String) extends RequestWithEmptyResponse {
+  case class Restart(app_id_or_name: String, dyno_id_or_name: String) extends RequestWithEmptyResponse {
     val expect: Set[Int] = expect202
     val endpoint: String = "/apps/%s/dynos/%s".format(app_id_or_name, dyno_id_or_name)
     val method: String = DELETE
   }
   /** Restart all dynos */
-  case class RestartAllDynos(app_id_or_name: String) extends RequestWithEmptyResponse {
+  case class RestartAll(app_id_or_name: String) extends RequestWithEmptyResponse {
     val expect: Set[Int] = expect202
     val endpoint: String = "/apps/%s/dynos".format(app_id_or_name)
     val method: String = DELETE

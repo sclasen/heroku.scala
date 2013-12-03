@@ -8,14 +8,14 @@ import OAuthAuthorization._
 object OAuthAuthorization {
   import OAuthAuthorization.models._
   object models {
-    case class CreateOAuthAuthorizationBody(client: Option[String] = None, description: Option[String] = None, expires_in: Option[Int] = None, scope: Array[String])
+    case class CreateOAuthAuthorizationBody(client: Option[String] = None, description: Option[String] = None, expires_in: Option[Int] = None, scope: collection.immutable.List[String])
     case class OAuthAuthorizationAccessToken(expires_in: Option[Int], id: String, token: String)
     case class OAuthAuthorizationRefreshToken(expires_in: Option[Int], id: String, token: String)
     case class OAuthAuthorizationClient(id: String, name: String, redirect_uri: String)
     case class OAuthAuthorizationGrant(code: String, expires_in: Int, id: String)
   }
   /** Create a new OAuth authorization. */
-  case class Create(client_id: Option[String] = None, description: Option[String] = None, expires_in: Option[Int] = None, scope: Array[String]) extends RequestWithBody[models.CreateOAuthAuthorizationBody, OAuthAuthorization] {
+  case class Create(client_id: Option[String] = None, description: Option[String] = None, expires_in: Option[Int] = None, scope: collection.immutable.List[String]) extends RequestWithBody[models.CreateOAuthAuthorizationBody, OAuthAuthorization] {
     val expect: Set[Int] = expect201
     val endpoint: String = "/oauth/authorizations"
     val method: String = POST
@@ -42,7 +42,7 @@ object OAuthAuthorization {
 }
 
 /** OAuth authorizations represent clients that a Heroku user has authorized to automate, customize or extend their usage of the platform. For more information please refer to the [Heroku OAuth documentation](https://devcenter.heroku.com/articles/oauth) */
-case class OAuthAuthorization(access_token: Option[models.OAuthAuthorizationAccessToken], scope: Array[String], refresh_token: Option[models.OAuthAuthorizationRefreshToken], id: String, client: Option[models.OAuthAuthorizationClient], grant: Option[models.OAuthAuthorizationGrant], created_at: String, updated_at: String)
+case class OAuthAuthorization(access_token: Option[models.OAuthAuthorizationAccessToken], scope: collection.immutable.List[String], refresh_token: Option[models.OAuthAuthorizationRefreshToken], id: String, client: Option[models.OAuthAuthorizationClient], grant: Option[models.OAuthAuthorizationGrant], created_at: String, updated_at: String)
 
 /** json serializers related to OAuthAuthorization */
 trait OAuthAuthorizationRequestJson {
