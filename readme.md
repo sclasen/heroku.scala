@@ -14,6 +14,12 @@ Plugging in one's own http client involves implementing the `com.heroku.platform
 
 The json serializations/deserializations are driven by a granular set of implicits, so if you want to implement a client for a single operation on a single endpoint, you will only need to implement a single deserializer for the response, and a serializer for the request if it contains a body.
 
+There are some examples of this in the `examples` directory.
+
+the `spray-jackson` example shows using the spray http client with an implementation of the json serializers for `Key` operations based on `jackson-scala`
+
+the `finagle-spray` example shows using a finagle https client implementation with the provided `spray-json` de/serializers
+
 ## code generation
 
 The heroku platform api is specified using json schema, and we take advantage of this to generate much of the boilerplate involved in the client code. Hand-coded abstractions are used as a basis for generating the code for each endpoint. The generated code is not checked in to the `master` branch, but is checked into the `generated` branch [here for the models](https://github.com/heroku/heroku.scala/tree/generated/api/src_managed/main/scala/com/heroku/platform/api) and [here for the json boilerplate](https://github.com/heroku/heroku.scala/blob/generated/spray-client/src_managed/main/scala/com/heroku/platform/api/client/spray/SprayJsonBoilerplate.scala).
