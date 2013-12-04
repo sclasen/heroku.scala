@@ -4,7 +4,7 @@ import com.heroku.platform.api._
 
 import spray.json._
 
-object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequestJson {
+trait SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequestJson {
   implicit lazy val FormatAccountmodelsUpdateAccountBody: JsonFormat[Account.models.UpdateAccountBody] = jsonFormat4(Account.models.UpdateAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangeEmailAccountBody: JsonFormat[Account.models.ChangeEmailAccountBody] = jsonFormat2(Account.models.ChangeEmailAccountBody.apply)
   implicit lazy val FormatAccountmodelsChangePasswordAccountBody: JsonFormat[Account.models.ChangePasswordAccountBody] = jsonFormat2(Account.models.ChangePasswordAccountBody.apply)
@@ -118,7 +118,9 @@ object SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiReques
   }
 }
 
-object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
+object SprayJsonIgnoreNullBoilerplate extends SprayJsonIgnoreNullBoilerplate
+
+trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
   implicit lazy val FormatAccount: JsonFormat[Account] = jsonFormat8(Account.apply)
   implicit lazy val FormatAccountFeature: JsonFormat[AccountFeature] = jsonFormat7(AccountFeature.apply)
@@ -302,3 +304,5 @@ object SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Ap
       }
   }
 }
+
+object SprayJsonBoilerplate extends SprayJsonBoilerplate
