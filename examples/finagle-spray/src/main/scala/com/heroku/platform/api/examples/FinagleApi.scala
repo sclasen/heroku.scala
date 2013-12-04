@@ -1,6 +1,5 @@
 package com.heroku.platform.api.examples
 
-import com.heroku.platform.api.ErrorResponse
 import com.heroku.platform.api._
 import com.twitter.finagle.{ http, Http }
 import org.apache.commons.codec.binary.Base64
@@ -23,7 +22,7 @@ class FinagleApi extends Api {
     .build()
 
   def withHeaders(request: DefaultHttpRequest, key: String, headers: Map[String, String]): DefaultHttpRequest = {
-    val hdrs = Map("AUTHORIZATION" -> ("Basic " + Base64.encodeBase64String((":" + key).getBytes)), "Accept" -> Request.v3json, "Host" -> "api.heroku.com")
+    val hdrs = Map("Authorization" -> ("Basic " + Base64.encodeBase64String((":" + key).getBytes)), "Accept" -> Request.v3json, "Host" -> "api.heroku.com")
     (headers ++ hdrs).foreach {
       case (k, v) => request.addHeader(k, v)
     }
@@ -70,8 +69,10 @@ class FinagleApi extends Api {
   }
 
   def execute[I, O](request: RequestWithBody[I, O], key: String, headers: Map[String, String])(implicit to: ToJson[I], from: FromJson[O], e: FromJson[ErrorResponse]): Api.FutureResponse[O] = {
-    val req = withHeaders(new DefaultHttpRequest(HttpVersion.HTTP_1_1, getMethod(request), request.endpoint), key, headers + ("Content-Type" -> "application/json"))
-    req.setContent(ChannelBuffers.copiedBuffer(to.toJson(request.body), "UTF-8"))
+    val json = to.toJson(request.body)
+    val buf = ChannelBuffers.copiedBuffer(to.toJson(request.body), "UTF-8")
+    val req = withHeaders(new DefaultHttpRequest(HttpVersion.HTTP_1_1, getMethod(request), request.endpoint), key, headers ++ Map("Content-Type" -> "application/json", "Content-Length" -> json.length.toString))
+    req.setContent(buf)
     fromTwitter {
       client(req).map {
         resp =>

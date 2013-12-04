@@ -1,6 +1,6 @@
 package com.heroku.platform.api.examples
 
-import com.heroku.platform.api.{KeySpec, HerokuApp, ApiSpec}
+import com.heroku.platform.api.{AccountSpec, KeySpec, HerokuApp, ApiSpec}
 import com.heroku.platform.api.Api._
 import com.heroku.platform.api.client.spray.SprayJsonBoilerplate
 
@@ -24,4 +24,5 @@ trait FinagleApiSpec {
   }
 }
 
-class FinagleKeySpec extends KeySpec(SprayJsonBoilerplate) with FinagleApiSpec
+
+class FinagleAccountSpec extends AccountSpec(SprayJsonBoilerplate) with FinagleApiSpec
