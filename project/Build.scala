@@ -59,6 +59,21 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
   ).settings(Defaults.itSettings: _*).configs(IntegrationTest).settings(generateJsonBoilerplate:_*)
 
+  val spray_jackson_example = Project(
+    id = "spray-jackson-example",
+    base = file("examples/spray-jackson"),
+    dependencies = Seq(api % "it->test;test->test;compile->compile", spray_client % "it->it;test->test;compile->compile"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= sprayJacksonExampleDeps)
+  ).settings(Defaults.itSettings: _*).configs(IntegrationTest)
+
+  val finagle_spray_example = Project(
+    id = "finagle-spray-example",
+    base = file("examples/finagle-spray"),
+    dependencies = Seq(api % "it->test;test->test;compile->compile", spray_client % "it->it;test->test;compile->compile"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= finagleSprayExampleDeps)
+  ).settings(Defaults.itSettings: _*).configs(IntegrationTest)
+
+
   lazy val jsonBoilerplate = TaskKey[Seq[File]]("json-boilerplate", "Generate Json Boilerplate")
 
   lazy val generateJsonBoilerplate:Seq[Project.Setting[_]] = Seq(
@@ -128,7 +143,9 @@ object Build extends Build {
 
   def sprayDeps = Seq(spray, sprayJson % "provided", akka, scalaTest, playJson % "provided")
 
+  def sprayJacksonExampleDeps = Seq(spray, jacksonScala, sprayJson)
 
+  def finagleSprayExampleDeps = Seq(finagle, sprayJson)
 
   val spray = "io.spray" % "spray-client" % "1.2.0" % "compile"
   val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
@@ -137,6 +154,9 @@ object Build extends Build {
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.3.0"
   val playJson = "com.typesafe.play" %% "play-json" % "2.2.0"
 
+  //deps for examples
+  val jacksonScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.0"
+  val finagle = "com.twitter" %% "finagle-http" % "6.8.1"
 
   def publishSettings: Seq[Setting[_]] = Seq(
     // If we want on maven central, we need to be in maven style.
