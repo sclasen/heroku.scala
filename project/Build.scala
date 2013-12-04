@@ -16,7 +16,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.heroku.platform.api",
-    version := "0.0.1-SNAPSHOT",
+    version := "0.0.1-BETA",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
     resolvers ++= Seq(
@@ -137,7 +137,7 @@ object Build extends Build {
   }
 
 
-  val root = Project(id = "heroku-scala-project", base = file("."), settings = buildSettings).aggregate(modelBoilerplateGen, api, jsonBoilerplateGen, spray_client)
+  val root = Project(id = "heroku-scala-project", base = file("."), settings = buildSettings).aggregate(modelBoilerplateGen, api, jsonBoilerplateGen, spray_client, finagle_spray_example, spray_jackson_example)
 
   def apiDeps = Seq(scalaTest)
 

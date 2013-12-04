@@ -35,11 +35,9 @@ Create a simple sbt project by making a directory and placing the following in `
 ```scala
 scalaVersion := "2.10.2"
 
-resolvers += "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
-
 libraryDependencies += "io.spray" %% "spray-json" % "1.2.5"
 
-libraryDependencies += "com.heroku.platform.api" %% "spray-client" % "0.0.1-SNAPSHOT"
+libraryDependencies += "com.heroku.platform.api" %% "spray-client" % "0.0.1-BETA"
 ```
 
 then run `sbt console`
