@@ -81,6 +81,15 @@ class FinagleApi extends Api {
     }
   }
 
-  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Api.FutureResponse[PartialResponse[T]] = ???
+  def executeList[T](request: ListRequest[T], key: String, headers: Map[String, String])(implicit f: FromJson[List[T]], e: FromJson[ErrorResponse]): Api.FutureResponse[PartialResponse[T]] = {
+    val headersWithRange = request.range.map { next => headers + ("Range" -> next) }.getOrElse(headers)
+    val req = withHeaders(new DefaultHttpRequest(HttpVersion.HTTP_1_1, getMethod(request), request.endpoint), key, headersWithRange)
+    fromTwitter {
+      client(req).map {
+        resp =>
+          request.getResponse(resp.getStatus.getCode, Map.empty, Option(resp.headers().get("Next-Range")), resp.getContent.toString("UTF-8"))
+      }
+    }
+  }
 
 }

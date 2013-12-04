@@ -31,12 +31,14 @@ object SprayJsonBoilerplateGen extends App {
     IMPORT(sym.ApiPackage),
     IMPORT(sym.SprayPackage),
     ignoreNulls,
-    sprayJson
+    OBJECTDEF(sym.BoilerplateNullsObj) withParents (sym.BoilerplateNullsObj),
+    sprayJson,
+    OBJECTDEF(sym.BoilerplateObj) withParents (sym.BoilerplateObj)
   ).inPackage(sym.ClientPackage)
 
   def ignoreNulls =
     //object SprayIgnoreNullJson omits Options that are None instead of sending null
-    OBJECTDEF(sym.BoilerplateNullsObj) withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
+    TRAITDEF(sym.BoilerplateNullsObj) withParents ("DefaultJsonProtocol", "ApiRequestJson") := BLOCK(
       reqJson.getMethods.filter(m => m.getReturnType == classOf[ToJson[_]])
         .map {
           m => jsonFormat(m)
@@ -49,7 +51,7 @@ object SprayJsonBoilerplateGen extends App {
 
   def sprayJson =
     //object SprayApiJson handles null attributes in Json by giving back None
-    OBJECTDEF(sym.BoilerplateObj) withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
+    TRAITDEF(sym.BoilerplateObj) withParents ("DefaultJsonProtocol", "NullOptions", "ApiRequestJson", "ApiResponseJson") := BLOCK(
 
       respJson.getMethods.filter(m => m.getReturnType == classOf[FromJson[_]])
         .map {
