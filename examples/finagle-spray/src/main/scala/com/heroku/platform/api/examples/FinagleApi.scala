@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 class FinagleApi extends Api {
 
-  implicit def executionContext: ExecutionContext = ???
+  implicit def executionContext: ExecutionContext = concurrent.ExecutionContext.Implicits.global
 
   val client = ClientBuilder()
     .codec(http.Http())
