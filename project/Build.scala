@@ -16,7 +16,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.heroku.platform.api",
-    version := "0.0.2-BETA",
+    version := "0.0.3-SNAPSHOT",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
     resolvers ++= Seq(
