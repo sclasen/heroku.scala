@@ -15,7 +15,7 @@ import akka.util.Timeout
 import com.heroku.platform.api.Api.FutureResponse
 import com.heroku.platform.api._
 import concurrent.duration._
-import scala.concurrent.Await
+import scala.concurrent.{ Future, Await }
 import scala.language.postfixOps
 import spray.http.HttpEntity.Empty
 
@@ -28,16 +28,16 @@ class SprayApi(system: ActorSystem) extends Api {
   implicit val connTimeout = Timeout(10 seconds)
   implicit val executionContext = system.dispatcher
 
-  val connection = {
+  def connection = {
     implicit val s = system
-    Await.result((IO(Http) ? HostConnectorSetup(endpoint, port = 443, sslEncryption = true)).map {
+    (IO(Http) ? HostConnectorSetup(endpoint, port = 443, sslEncryption = true)).map {
       case HostConnectorInfo(hostConnector, _) => hostConnector
-    }, connTimeout.duration)
+    }
   }
 
   val log = system.log
 
-  val pipeline = sendReceive(connection)
+  def pipeline(req: HttpRequest): Future[HttpResponse] = connection.flatMap(sendReceive(_).apply(req))
 
   val ApiMediaType = MediaTypes.register(MediaType.custom(Request.v3json))
 
