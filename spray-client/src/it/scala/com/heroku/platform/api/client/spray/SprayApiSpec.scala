@@ -11,7 +11,9 @@ trait SprayApiSpec {
 
   val system = ActorSystem("test")
 
-  val api = new SprayApi(system)
+  val api = new SprayApi(system) {
+    override def endpoint: String = sys.env.get("API_ENDPOINT").getOrElse(super.endpoint)
+  }
 
   def createApp: HerokuApp = {
     import aj._
