@@ -69,6 +69,14 @@
             "string"
           ]
         },
+        "state": {
+          "description": "state of account feature",
+          "example": "public",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
         "updated_at": {
           "description": "when account feature was updated",
           "example": "2012-01-01T12:00:00Z",
@@ -130,6 +138,9 @@
         },
         "name": {
           "$ref": "#/definitions/account-feature/definitions/name"
+        },
+        "state": {
+          "$ref": "#/definitions/account-feature/definitions/state"
         },
         "updated_at": {
           "$ref": "#/definitions/account-feature/definitions/updated_at"
@@ -357,7 +368,7 @@
       "description": "Add-on services represent add-ons that may be provisioned for apps.",
       "id": "schema/addon-service",
       "$schema": "http://json-schema.org/draft-04/hyper-schema",
-      "title": "Heroku Platform API - Addon Service",
+      "title": "Heroku Platform API - Add-on Service",
       "type": [
         "object"
       ],
@@ -470,7 +481,25 @@
           "anyOf": [
             {
               "$ref": "#/definitions/addon/definitions/id"
+            },
+            {
+              "$ref": "#/definitions/addon/definitions/name"
             }
+          ]
+        },
+        "name": {
+          "description": "name of the add-on unique within its app",
+          "example": "heroku-postgresql-teal",
+          "pattern": "^[a-z][a-z0-9-]+$",
+          "type": [
+            "string"
+          ]
+        },
+        "provider_id": {
+          "description": "id of this add-on with its provider",
+          "example": "app123@heroku.com",
+          "type": [
+            "string"
           ]
         },
         "updated_at": {
@@ -564,6 +593,9 @@
         "id": {
           "$ref": "#/definitions/addon/definitions/id"
         },
+        "name": {
+          "$ref": "#/definitions/addon/definitions/name"
+        },
         "plan": {
           "description": "identity of add-on plan",
           "properties": {
@@ -577,6 +609,9 @@
           "type": [
             "object"
           ]
+        },
+        "provider_id": {
+          "$ref": "#/definitions/addon/definitions/provider_id"
         },
         "updated_at": {
           "$ref": "#/definitions/addon/definitions/updated_at"
@@ -651,6 +686,14 @@
             "string"
           ]
         },
+        "state": {
+          "description": "state of app feature",
+          "example": "public",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
         "updated_at": {
           "description": "when app feature was updated",
           "example": "2012-01-01T12:00:00Z",
@@ -713,6 +756,9 @@
         "name": {
           "$ref": "#/definitions/app-feature/definitions/name"
         },
+        "state": {
+          "$ref": "#/definitions/app-feature/definitions/state"
+        },
         "updated_at": {
           "$ref": "#/definitions/app-feature/definitions/updated_at"
         }
@@ -749,6 +795,9 @@
           "anyOf": [
             {
               "$ref": "#/definitions/app-transfer/definitions/id"
+            },
+            {
+              "$ref": "#/definitions/app/definitions/name"
             }
           ]
         },
@@ -896,7 +945,7 @@
       "description": "An app represents the program that you would like to deploy and run on Heroku.",
       "id": "schema/app",
       "$schema": "http://json-schema.org/draft-04/hyper-schema",
-      "title": "Heroku Platform API - Apps",
+      "title": "Heroku Platform API - App",
       "type": [
         "object"
       ],
@@ -1145,7 +1194,18 @@
           "$ref": "#/definitions/app/definitions/slug_size"
         },
         "stack": {
-          "$ref": "#/definitions/stack/definitions/name"
+          "description": "identity of app stack",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/stack/definitions/id"
+            },
+            "name": {
+              "$ref": "#/definitions/stack/definitions/name"
+            }
+          },
+          "type": [
+            "object"
+          ]
         },
         "updated_at": {
           "$ref": "#/definitions/app/definitions/updated_at"
@@ -2040,6 +2100,13 @@
             }
           ]
         },
+        "token": {
+          "description": "token associated with the log drain",
+          "example": "d.01234567-89ab-cdef-0123-456789abcdef",
+          "type": [
+            "string"
+          ]
+        },
         "updated_at": {
           "description": "when log drain was updated",
           "example": "2012-01-01T12:00:00Z",
@@ -2106,6 +2173,9 @@
         },
         "id": {
           "$ref": "#/definitions/log-drain/definitions/id"
+        },
+        "token": {
+          "$ref": "#/definitions/log-drain/definitions/token"
         },
         "updated_at": {
           "$ref": "#/definitions/log-drain/definitions/updated_at"
@@ -2880,6 +2950,14 @@
             "string"
           ]
         },
+        "default": {
+          "description": "whether this plan is the default for its addon service",
+          "example": false,
+          "readOnly": true,
+          "type": [
+            "boolean"
+          ]
+        },
         "description": {
           "description": "description of plan",
           "example": "Heroku Postgres Dev",
@@ -2909,7 +2987,7 @@
         },
         "name": {
           "description": "unique name of this plan",
-          "example": "heroku-postgresql",
+          "example": "heroku-postgresql:dev",
           "readOnly": true,
           "type": [
             "string"
@@ -2968,6 +3046,9 @@
       "properties": {
         "created_at": {
           "$ref": "#/definitions/plan/definitions/created_at"
+        },
+        "default": {
+          "$ref": "#/definitions/plan/definitions/default"
         },
         "description": {
           "$ref": "#/definitions/plan/definitions/description"
@@ -3207,7 +3288,7 @@
           "title": "List"
         },
         {
-          "description": "Create new release.",
+          "description": "Create new release. The API cannot be used to create releases on Bamboo apps.",
           "href": "/apps/{(%23%2Fdefinitions%2Fapp%2Fdefinitions%2Fidentity)}/releases",
           "method": "POST",
           "rel": "create",
@@ -3265,7 +3346,8 @@
             }
           },
           "type": [
-            "object", "null"
+            "object",
+            "null"
           ]
         },
         "user": {
@@ -3296,23 +3378,6 @@
         "object"
       ],
       "definitions": {
-        "blob": {
-          "additionalProperties": false,
-          "description": "HTTP verb and url where clients can fetch or store the release blob file",
-          "example": {
-            "get": "https://api.heroku.com/slugs/1234.tgz"
-          },
-          "patternProperties": {
-            "^\\w+$": {
-              "type": [
-                "string"
-              ]
-            }
-          },
-          "type": [
-            "object"
-          ]
-        },
         "commit": {
           "description": "identification of the code with your version control system (eg: SHA of the git HEAD)",
           "example": "60883d9e8947a57e04dc9124f25df004866a2051",
@@ -3347,6 +3412,14 @@
             }
           ]
         },
+        "method": {
+          "description": "method to be used to interact with the slug blob",
+          "example": "GET",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
         "process_types": {
           "additionalProperties": false,
           "description": "hash mapping process type names to their respective command",
@@ -3368,6 +3441,14 @@
           "description": "when slug was updated",
           "example": "2012-01-01T12:00:00Z",
           "format": "date-time",
+          "readOnly": true,
+          "type": [
+            "string"
+          ]
+        },
+        "url": {
+          "description": "URL to interact with the slug blob",
+          "example": "https://api.heroku.com/slugs/1234.tgz",
           "readOnly": true,
           "type": [
             "string"
@@ -3405,7 +3486,18 @@
       ],
       "properties": {
         "blob": {
-          "$ref": "#/definitions/slug/definitions/blob"
+          "description": "pointer to the url where clients can fetch or store the actual release binary",
+          "properties": {
+            "method": {
+              "$ref": "#/definitions/slug/definitions/method"
+            },
+            "url": {
+              "$ref": "#/definitions/slug/definitions/url"
+            }
+          },
+          "type": [
+            "object"
+          ]
         },
         "commit": {
           "$ref": "#/definitions/slug/definitions/commit"

@@ -14,7 +14,7 @@ abstract class FormationSpec(aj: ApiRequestJson with ApiResponseJson) extends Ap
       formations.size must equal(0)
 
       val slug = request(Slug.Create(app.id, None, Map("clock" -> "bin/clock", "echo" -> "bin/echo")))
-      val putUrl = slug.blob("put")
+      val putUrl = slug.blob.url
       val curlProc = scala.sys.process.Process(s"""curl -X PUT -H Content-Type: --data-binary @api/src/test/resources/test-slug/test-slug.tgz $putUrl""")
       (curlProc !) must equal(0)
 
