@@ -32,7 +32,7 @@ object AccountFeature {
 }
 
 /** An account feature represents a Heroku labs capability that can be enabled or disabled for an account on Heroku. */
-case class AccountFeature(name: String, description: String, enabled: Boolean, id: String, doc_url: String, created_at: String, updated_at: String)
+case class AccountFeature(name: String, state: String, description: String, enabled: Boolean, id: String, doc_url: String, created_at: String, updated_at: String)
 
 /** json serializers related to AccountFeature */
 trait AccountFeatureRequestJson {

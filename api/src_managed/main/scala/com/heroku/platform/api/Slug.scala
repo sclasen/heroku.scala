@@ -9,6 +9,7 @@ object Slug {
   import Slug.models._
   object models {
     case class CreateSlugBody(commit: Option[String] = None, process_types: Map[String, String])
+    case class SlugBlob(method: String, url: String)
   }
   /** Info for existing slug. */
   case class Info(app_id_or_name: String, slug_id: String) extends Request[Slug] {
@@ -26,15 +27,17 @@ object Slug {
 }
 
 /** A slug is a snapshot of your application code that is ready to run on the platform. */
-case class Slug(commit: Option[String], process_types: Map[String, String], id: String, created_at: String, updated_at: String, blob: Map[String, String])
+case class Slug(commit: Option[String], process_types: Map[String, String], id: String, created_at: String, updated_at: String, blob: models.SlugBlob)
 
 /** json serializers related to Slug */
 trait SlugRequestJson {
   implicit def ToJsonCreateSlugBody: ToJson[models.CreateSlugBody]
+  implicit def ToJsonSlugBlob: ToJson[models.SlugBlob]
 }
 
 /** json deserializers related to Slug */
 trait SlugResponseJson {
+  implicit def FromJsonSlugBlob: FromJson[models.SlugBlob]
   implicit def FromJsonSlug: FromJson[Slug]
   implicit def FromJsonListSlug: FromJson[collection.immutable.List[Slug]]
 }

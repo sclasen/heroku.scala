@@ -26,10 +26,11 @@ trait SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequest
   implicit lazy val FormatFormationmodelsBatchUpdateFormationBody: JsonFormat[Formation.models.BatchUpdateFormationBody] = jsonFormat1(Formation.models.BatchUpdateFormationBody.apply)
   implicit lazy val FormatFormationmodelsUpdateFormationBody: JsonFormat[Formation.models.UpdateFormationBody] = jsonFormat2(Formation.models.UpdateFormationBody.apply)
   implicit lazy val FormatFormationmodelsFormationUpdate: JsonFormat[Formation.models.FormationUpdate] = jsonFormat3(Formation.models.FormationUpdate.apply)
-  implicit lazy val FormatHerokuAppmodelsHerokuAppOwner: JsonFormat[HerokuApp.models.HerokuAppOwner] = jsonFormat2(HerokuApp.models.HerokuAppOwner.apply)
+  implicit lazy val FormatHerokuAppmodelsHerokuAppStack: JsonFormat[HerokuApp.models.HerokuAppStack] = jsonFormat2(HerokuApp.models.HerokuAppStack.apply)
   implicit lazy val FormatHerokuAppmodelsCreateHerokuAppBody: JsonFormat[HerokuApp.models.CreateHerokuAppBody] = jsonFormat3(HerokuApp.models.CreateHerokuAppBody.apply)
   implicit lazy val FormatHerokuAppmodelsUpdateHerokuAppBody: JsonFormat[HerokuApp.models.UpdateHerokuAppBody] = jsonFormat2(HerokuApp.models.UpdateHerokuAppBody.apply)
   implicit lazy val FormatHerokuAppmodelsHerokuAppRegion: JsonFormat[HerokuApp.models.HerokuAppRegion] = jsonFormat2(HerokuApp.models.HerokuAppRegion.apply)
+  implicit lazy val FormatHerokuAppmodelsHerokuAppOwner: JsonFormat[HerokuApp.models.HerokuAppOwner] = jsonFormat2(HerokuApp.models.HerokuAppOwner.apply)
   implicit lazy val FormatKeymodelsCreateKeyBody: JsonFormat[Key.models.CreateKeyBody] = jsonFormat1(Key.models.CreateKeyBody.apply)
   implicit lazy val FormatLogDrainmodelsCreateLogDrainBody: JsonFormat[LogDrain.models.CreateLogDrainBody] = jsonFormat1(LogDrain.models.CreateLogDrainBody.apply)
   implicit lazy val FormatLogSessionmodelsCreateLogSessionBody: JsonFormat[LogSession.models.CreateLogSessionBody] = jsonFormat4(LogSession.models.CreateLogSessionBody.apply)
@@ -54,6 +55,7 @@ trait SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequest
   implicit lazy val FormatReleasemodelsRollbackReleaseBody: JsonFormat[Release.models.RollbackReleaseBody] = jsonFormat1(Release.models.RollbackReleaseBody.apply)
   implicit lazy val FormatReleasemodelsReleaseUser: JsonFormat[Release.models.ReleaseUser] = jsonFormat2(Release.models.ReleaseUser.apply)
   implicit lazy val FormatSlugmodelsCreateSlugBody: JsonFormat[Slug.models.CreateSlugBody] = jsonFormat2(Slug.models.CreateSlugBody.apply)
+  implicit lazy val FormatSlugmodelsSlugBlob: JsonFormat[Slug.models.SlugBlob] = jsonFormat2(Slug.models.SlugBlob.apply)
   implicit lazy val FormatSslEndpointmodelsCreateSslEndpointBody: JsonFormat[SslEndpoint.models.CreateSslEndpointBody] = jsonFormat2(SslEndpoint.models.CreateSslEndpointBody.apply)
   implicit lazy val FormatSslEndpointmodelsUpdateSslEndpointBody: JsonFormat[SslEndpoint.models.UpdateSslEndpointBody] = jsonFormat3(SslEndpoint.models.UpdateSslEndpointBody.apply)
   implicit lazy val ToJsonUpdateAccountBody: ToJson[Account.models.UpdateAccountBody] = to[Account.models.UpdateAccountBody]
@@ -77,10 +79,11 @@ trait SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequest
   implicit lazy val ToJsonBatchUpdateFormationBody: ToJson[Formation.models.BatchUpdateFormationBody] = to[Formation.models.BatchUpdateFormationBody]
   implicit lazy val ToJsonUpdateFormationBody: ToJson[Formation.models.UpdateFormationBody] = to[Formation.models.UpdateFormationBody]
   implicit lazy val ToJsonFormationUpdate: ToJson[Formation.models.FormationUpdate] = to[Formation.models.FormationUpdate]
-  implicit lazy val ToJsonHerokuAppOwner: ToJson[HerokuApp.models.HerokuAppOwner] = to[HerokuApp.models.HerokuAppOwner]
+  implicit lazy val ToJsonHerokuAppStack: ToJson[HerokuApp.models.HerokuAppStack] = to[HerokuApp.models.HerokuAppStack]
   implicit lazy val ToJsonCreateHerokuAppBody: ToJson[HerokuApp.models.CreateHerokuAppBody] = to[HerokuApp.models.CreateHerokuAppBody]
   implicit lazy val ToJsonUpdateHerokuAppBody: ToJson[HerokuApp.models.UpdateHerokuAppBody] = to[HerokuApp.models.UpdateHerokuAppBody]
   implicit lazy val ToJsonHerokuAppRegion: ToJson[HerokuApp.models.HerokuAppRegion] = to[HerokuApp.models.HerokuAppRegion]
+  implicit lazy val ToJsonHerokuAppOwner: ToJson[HerokuApp.models.HerokuAppOwner] = to[HerokuApp.models.HerokuAppOwner]
   implicit lazy val ToJsonCreateKeyBody: ToJson[Key.models.CreateKeyBody] = to[Key.models.CreateKeyBody]
   implicit lazy val ToJsonCreateLogDrainBody: ToJson[LogDrain.models.CreateLogDrainBody] = to[LogDrain.models.CreateLogDrainBody]
   implicit lazy val ToJsonCreateLogSessionBody: ToJson[LogSession.models.CreateLogSessionBody] = to[LogSession.models.CreateLogSessionBody]
@@ -105,6 +108,7 @@ trait SprayJsonIgnoreNullBoilerplate extends DefaultJsonProtocol with ApiRequest
   implicit lazy val ToJsonRollbackReleaseBody: ToJson[Release.models.RollbackReleaseBody] = to[Release.models.RollbackReleaseBody]
   implicit lazy val ToJsonReleaseUser: ToJson[Release.models.ReleaseUser] = to[Release.models.ReleaseUser]
   implicit lazy val ToJsonCreateSlugBody: ToJson[Slug.models.CreateSlugBody] = to[Slug.models.CreateSlugBody]
+  implicit lazy val ToJsonSlugBlob: ToJson[Slug.models.SlugBlob] = to[Slug.models.SlugBlob]
   implicit lazy val ToJsonCreateSslEndpointBody: ToJson[SslEndpoint.models.CreateSslEndpointBody] = to[SslEndpoint.models.CreateSslEndpointBody]
   implicit lazy val ToJsonUpdateSslEndpointBody: ToJson[SslEndpoint.models.UpdateSslEndpointBody] = to[SslEndpoint.models.UpdateSslEndpointBody]
   implicit lazy val ToJsonNullSafeConfigVar: ToJson[Map[String, Option[String]]] = to[Map[String, Option[String]]]
@@ -123,11 +127,11 @@ object SprayJsonIgnoreNullBoilerplate extends SprayJsonIgnoreNullBoilerplate
 trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with ApiRequestJson with ApiResponseJson {
   implicit lazy val FormatErrorResponse: JsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse.apply)
   implicit lazy val FormatAccount: JsonFormat[Account] = jsonFormat8(Account.apply)
-  implicit lazy val FormatAccountFeature: JsonFormat[AccountFeature] = jsonFormat7(AccountFeature.apply)
+  implicit lazy val FormatAccountFeature: JsonFormat[AccountFeature] = jsonFormat8(AccountFeature.apply)
   implicit lazy val FormatAddonmodelsAddonPlan: JsonFormat[Addon.models.AddonPlan] = jsonFormat2(Addon.models.AddonPlan.apply)
-  implicit lazy val FormatAddon: JsonFormat[Addon] = jsonFormat4(Addon.apply)
+  implicit lazy val FormatAddon: JsonFormat[Addon] = jsonFormat6(Addon.apply)
   implicit lazy val FormatAddonService: JsonFormat[AddonService] = jsonFormat4(AddonService.apply)
-  implicit lazy val FormatAppFeature: JsonFormat[AppFeature] = jsonFormat7(AppFeature.apply)
+  implicit lazy val FormatAppFeature: JsonFormat[AppFeature] = jsonFormat8(AppFeature.apply)
   implicit lazy val FormatAppTransfermodelsAppTransferRecipient: JsonFormat[AppTransfer.models.AppTransferRecipient] = jsonFormat2(AppTransfer.models.AppTransferRecipient.apply)
   implicit lazy val FormatAppTransfermodelsAppTransferApp: JsonFormat[AppTransfer.models.AppTransferApp] = jsonFormat2(AppTransfer.models.AppTransferApp.apply)
   implicit lazy val FormatAppTransfermodelsAppTransferOwner: JsonFormat[AppTransfer.models.AppTransferOwner] = jsonFormat2(AppTransfer.models.AppTransferOwner.apply)
@@ -138,11 +142,12 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val FormatDynomodelsDynoRelease: JsonFormat[Dyno.models.DynoRelease] = jsonFormat2(Dyno.models.DynoRelease.apply)
   implicit lazy val FormatDyno: JsonFormat[Dyno] = jsonFormat10(Dyno.apply)
   implicit lazy val FormatFormation: JsonFormat[Formation] = jsonFormat7(Formation.apply)
+  implicit lazy val FormatHerokuAppmodelsHerokuAppStack: JsonFormat[HerokuApp.models.HerokuAppStack] = jsonFormat2(HerokuApp.models.HerokuAppStack.apply)
   implicit lazy val FormatHerokuAppmodelsHerokuAppRegion: JsonFormat[HerokuApp.models.HerokuAppRegion] = jsonFormat2(HerokuApp.models.HerokuAppRegion.apply)
   implicit lazy val FormatHerokuAppmodelsHerokuAppOwner: JsonFormat[HerokuApp.models.HerokuAppOwner] = jsonFormat2(HerokuApp.models.HerokuAppOwner.apply)
   implicit lazy val FormatHerokuApp: JsonFormat[HerokuApp] = jsonFormat15(HerokuApp.apply)
   implicit lazy val FormatKey: JsonFormat[Key] = jsonFormat6(Key.apply)
-  implicit lazy val FormatLogDrain: JsonFormat[LogDrain] = jsonFormat5(LogDrain.apply)
+  implicit lazy val FormatLogDrain: JsonFormat[LogDrain] = jsonFormat6(LogDrain.apply)
   implicit lazy val FormatLogSession: JsonFormat[LogSession] = jsonFormat4(LogSession.apply)
   implicit lazy val FormatOAuthAuthorizationmodelsOAuthAuthorizationAccessToken: JsonFormat[OAuthAuthorization.models.OAuthAuthorizationAccessToken] = jsonFormat3(OAuthAuthorization.models.OAuthAuthorizationAccessToken.apply)
   implicit lazy val FormatOAuthAuthorizationmodelsOAuthAuthorizationRefreshToken: JsonFormat[OAuthAuthorization.models.OAuthAuthorizationRefreshToken] = jsonFormat3(OAuthAuthorization.models.OAuthAuthorizationRefreshToken.apply)
@@ -159,12 +164,13 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val FormatOAuthTokenmodelsOAuthTokenUser: JsonFormat[OAuthToken.models.OAuthTokenUser] = jsonFormat1(OAuthToken.models.OAuthTokenUser.apply)
   implicit lazy val FormatOAuthToken: JsonFormat[OAuthToken] = jsonFormat10(OAuthToken.apply)
   implicit lazy val FormatPlanmodelsPlanPrice: JsonFormat[Plan.models.PlanPrice] = jsonFormat2(Plan.models.PlanPrice.apply)
-  implicit lazy val FormatPlan: JsonFormat[Plan] = jsonFormat7(Plan.apply)
+  implicit lazy val FormatPlan: JsonFormat[Plan] = jsonFormat8(Plan.apply)
   implicit lazy val FormatRateLimit: JsonFormat[RateLimit] = jsonFormat1(RateLimit.apply)
   implicit lazy val FormatRegion: JsonFormat[Region] = jsonFormat5(Region.apply)
   implicit lazy val FormatReleasemodelsReleaseSlug: JsonFormat[Release.models.ReleaseSlug] = jsonFormat1(Release.models.ReleaseSlug.apply)
   implicit lazy val FormatReleasemodelsReleaseUser: JsonFormat[Release.models.ReleaseUser] = jsonFormat2(Release.models.ReleaseUser.apply)
   implicit lazy val FormatRelease: JsonFormat[Release] = jsonFormat7(Release.apply)
+  implicit lazy val FormatSlugmodelsSlugBlob: JsonFormat[Slug.models.SlugBlob] = jsonFormat2(Slug.models.SlugBlob.apply)
   implicit lazy val FormatSlug: JsonFormat[Slug] = jsonFormat6(Slug.apply)
   implicit lazy val FormatSslEndpoint: JsonFormat[SslEndpoint] = jsonFormat6(SslEndpoint.apply)
   implicit lazy val FormatStack: JsonFormat[Stack] = jsonFormat5(Stack.apply)
@@ -189,10 +195,11 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val ToJsonBatchUpdateFormationBody: ToJson[Formation.models.BatchUpdateFormationBody] = SprayJsonIgnoreNullBoilerplate.ToJsonBatchUpdateFormationBody
   implicit lazy val ToJsonUpdateFormationBody: ToJson[Formation.models.UpdateFormationBody] = SprayJsonIgnoreNullBoilerplate.ToJsonUpdateFormationBody
   implicit lazy val ToJsonFormationUpdate: ToJson[Formation.models.FormationUpdate] = SprayJsonIgnoreNullBoilerplate.ToJsonFormationUpdate
-  implicit lazy val ToJsonHerokuAppOwner: ToJson[HerokuApp.models.HerokuAppOwner] = SprayJsonIgnoreNullBoilerplate.ToJsonHerokuAppOwner
+  implicit lazy val ToJsonHerokuAppStack: ToJson[HerokuApp.models.HerokuAppStack] = SprayJsonIgnoreNullBoilerplate.ToJsonHerokuAppStack
   implicit lazy val ToJsonCreateHerokuAppBody: ToJson[HerokuApp.models.CreateHerokuAppBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateHerokuAppBody
   implicit lazy val ToJsonUpdateHerokuAppBody: ToJson[HerokuApp.models.UpdateHerokuAppBody] = SprayJsonIgnoreNullBoilerplate.ToJsonUpdateHerokuAppBody
   implicit lazy val ToJsonHerokuAppRegion: ToJson[HerokuApp.models.HerokuAppRegion] = SprayJsonIgnoreNullBoilerplate.ToJsonHerokuAppRegion
+  implicit lazy val ToJsonHerokuAppOwner: ToJson[HerokuApp.models.HerokuAppOwner] = SprayJsonIgnoreNullBoilerplate.ToJsonHerokuAppOwner
   implicit lazy val ToJsonCreateKeyBody: ToJson[Key.models.CreateKeyBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateKeyBody
   implicit lazy val ToJsonCreateLogDrainBody: ToJson[LogDrain.models.CreateLogDrainBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateLogDrainBody
   implicit lazy val ToJsonCreateLogSessionBody: ToJson[LogSession.models.CreateLogSessionBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateLogSessionBody
@@ -217,6 +224,7 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val ToJsonRollbackReleaseBody: ToJson[Release.models.RollbackReleaseBody] = SprayJsonIgnoreNullBoilerplate.ToJsonRollbackReleaseBody
   implicit lazy val ToJsonReleaseUser: ToJson[Release.models.ReleaseUser] = SprayJsonIgnoreNullBoilerplate.ToJsonReleaseUser
   implicit lazy val ToJsonCreateSlugBody: ToJson[Slug.models.CreateSlugBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateSlugBody
+  implicit lazy val ToJsonSlugBlob: ToJson[Slug.models.SlugBlob] = SprayJsonIgnoreNullBoilerplate.ToJsonSlugBlob
   implicit lazy val ToJsonCreateSslEndpointBody: ToJson[SslEndpoint.models.CreateSslEndpointBody] = SprayJsonIgnoreNullBoilerplate.ToJsonCreateSslEndpointBody
   implicit lazy val ToJsonUpdateSslEndpointBody: ToJson[SslEndpoint.models.UpdateSslEndpointBody] = SprayJsonIgnoreNullBoilerplate.ToJsonUpdateSslEndpointBody
   implicit lazy val ToJsonConfigVar: ToJson[Map[String, String]] = SprayJsonIgnoreNullBoilerplate.ToJsonConfigVar
@@ -248,6 +256,7 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val FromJsonListDyno: FromJson[List[Dyno]] = from[List[Dyno]]
   implicit lazy val FromJsonFormation: FromJson[Formation] = from[Formation]
   implicit lazy val FromJsonListFormation: FromJson[List[Formation]] = from[List[Formation]]
+  implicit lazy val FromJsonHerokuAppStack: FromJson[HerokuApp.models.HerokuAppStack] = from[HerokuApp.models.HerokuAppStack]
   implicit lazy val FromJsonHerokuAppRegion: FromJson[HerokuApp.models.HerokuAppRegion] = from[HerokuApp.models.HerokuAppRegion]
   implicit lazy val FromJsonHerokuAppOwner: FromJson[HerokuApp.models.HerokuAppOwner] = from[HerokuApp.models.HerokuAppOwner]
   implicit lazy val FromJsonHerokuApp: FromJson[HerokuApp] = from[HerokuApp]
@@ -286,6 +295,7 @@ trait SprayJsonBoilerplate extends DefaultJsonProtocol with NullOptions with Api
   implicit lazy val FromJsonReleaseUser: FromJson[Release.models.ReleaseUser] = from[Release.models.ReleaseUser]
   implicit lazy val FromJsonRelease: FromJson[Release] = from[Release]
   implicit lazy val FromJsonListRelease: FromJson[List[Release]] = from[List[Release]]
+  implicit lazy val FromJsonSlugBlob: FromJson[Slug.models.SlugBlob] = from[Slug.models.SlugBlob]
   implicit lazy val FromJsonSlug: FromJson[Slug] = from[Slug]
   implicit lazy val FromJsonListSlug: FromJson[List[Slug]] = from[List[Slug]]
   implicit lazy val FromJsonSslEndpoint: FromJson[SslEndpoint] = from[SslEndpoint]

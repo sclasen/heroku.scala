@@ -25,7 +25,7 @@ object Plan {
 }
 
 /** Plans represent different configurations of add-ons that may be added to apps. */
-case class Plan(name: String, state: String, description: String, price: models.PlanPrice, id: String, created_at: String, updated_at: String)
+case class Plan(name: String, state: String, description: String, price: models.PlanPrice, id: String, default: Boolean, created_at: String, updated_at: String)
 
 /** json serializers related to Plan */
 trait PlanRequestJson {

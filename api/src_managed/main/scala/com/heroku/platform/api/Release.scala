@@ -25,7 +25,7 @@ object Release {
     val method: String = GET
     def nextRequest(nextRange: String): ListRequest[Release] = this.copy(range = Some(nextRange))
   }
-  /** Create new release. */
+  /** Create new release. The API cannot be used to create releases on Bamboo apps. */
   case class Create(app_id_or_name: String, description: Option[String] = None, slug_id: String) extends RequestWithBody[models.CreateReleaseBody, Release] {
     val expect: Set[Int] = expect201
     val endpoint: String = "/apps/%s/releases".format(app_id_or_name)

@@ -32,7 +32,7 @@ object AppFeature {
 }
 
 /** An app feature represents a Heroku labs capability that can be enabled or disabled for an app on Heroku. */
-case class AppFeature(name: String, description: String, enabled: Boolean, id: String, doc_url: String, created_at: String, updated_at: String)
+case class AppFeature(name: String, state: String, description: String, enabled: Boolean, id: String, doc_url: String, created_at: String, updated_at: String)
 
 /** json serializers related to AppFeature */
 trait AppFeatureRequestJson {

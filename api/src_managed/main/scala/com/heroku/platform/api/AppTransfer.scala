@@ -22,15 +22,15 @@ object AppTransfer {
     val body: models.CreateAppTransferBody = models.CreateAppTransferBody(app_id_or_name, recipient_email_or_id)
   }
   /** Delete an existing app transfer */
-  case class Delete(app_transfer_id: String) extends Request[AppTransfer] {
+  case class Delete(app_transfer_id_or_name: String) extends Request[AppTransfer] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id)
+    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id_or_name)
     val method: String = DELETE
   }
   /** Info for existing app transfer. */
-  case class Info(app_transfer_id: String) extends Request[AppTransfer] {
+  case class Info(app_transfer_id_or_name: String) extends Request[AppTransfer] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id)
+    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id_or_name)
     val method: String = GET
   }
   /** List existing apps transfers. */
@@ -40,9 +40,9 @@ object AppTransfer {
     def nextRequest(nextRange: String): ListRequest[AppTransfer] = this.copy(range = Some(nextRange))
   }
   /** Update an existing app transfer. */
-  case class Update(app_transfer_id: String, state: String) extends RequestWithBody[models.UpdateAppTransferBody, AppTransfer] {
+  case class Update(app_transfer_id_or_name: String, state: String) extends RequestWithBody[models.UpdateAppTransferBody, AppTransfer] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id)
+    val endpoint: String = "/account/app-transfers/%s".format(app_transfer_id_or_name)
     val method: String = PATCH
     val body: models.UpdateAppTransferBody = models.UpdateAppTransferBody(state)
   }

@@ -20,15 +20,15 @@ object Addon {
     val body: models.CreateAddonBody = models.CreateAddonBody(config, plan_id_or_name)
   }
   /** Delete an existing add-on. */
-  case class Delete(app_id_or_name: String, addon_id: String) extends Request[Addon] {
+  case class Delete(app_id_or_name: String, addon_id_or_name: String) extends Request[Addon] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id)
+    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id_or_name)
     val method: String = DELETE
   }
   /** Info for an existing add-on. */
-  case class Info(app_id_or_name: String, addon_id: String) extends Request[Addon] {
+  case class Info(app_id_or_name: String, addon_id_or_name: String) extends Request[Addon] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id)
+    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id_or_name)
     val method: String = GET
   }
   /** List existing add-ons. */
@@ -38,16 +38,16 @@ object Addon {
     def nextRequest(nextRange: String): ListRequest[Addon] = this.copy(range = Some(nextRange))
   }
   /** Update an existing add-on. */
-  case class Update(app_id_or_name: String, addon_id: String, plan_id_or_name: String) extends RequestWithBody[models.UpdateAddonBody, Addon] {
+  case class Update(app_id_or_name: String, addon_id_or_name: String, plan_id_or_name: String) extends RequestWithBody[models.UpdateAddonBody, Addon] {
     val expect: Set[Int] = expect200
-    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id)
+    val endpoint: String = "/apps/%s/addons/%s".format(app_id_or_name, addon_id_or_name)
     val method: String = PATCH
     val body: models.UpdateAddonBody = models.UpdateAddonBody(plan_id_or_name)
   }
 }
 
 /** Add-ons represent add-ons that have been provisioned for an app. */
-case class Addon(created_at: String, id: String, plan: models.AddonPlan, updated_at: String)
+case class Addon(name: String, provider_id: String, id: String, created_at: String, updated_at: String, plan: models.AddonPlan)
 
 /** json serializers related to Addon */
 trait AddonRequestJson {

@@ -10,6 +10,7 @@ object HerokuApp {
   object models {
     case class CreateHerokuAppBody(name: Option[String] = None, region: Option[String] = None, stack: Option[String] = None)
     case class UpdateHerokuAppBody(maintenance: Option[Boolean] = None, name: Option[String] = None)
+    case class HerokuAppStack(id: String, name: String)
     case class HerokuAppRegion(id: String, name: String)
     case class HerokuAppOwner(email: String, id: String)
   }
@@ -48,18 +49,20 @@ object HerokuApp {
 }
 
 /** An app represents the program that you would like to deploy and run on Heroku. */
-case class HerokuApp(name: String, repo_size: Option[Int], git_url: String, slug_size: Option[Int], maintenance: Boolean, id: String, released_at: Option[String], web_url: String, stack: String, region: models.HerokuAppRegion, created_at: String, owner: models.HerokuAppOwner, updated_at: String, archived_at: Option[String], buildpack_provided_description: Option[String])
+case class HerokuApp(name: String, repo_size: Option[Int], git_url: String, slug_size: Option[Int], maintenance: Boolean, id: String, released_at: Option[String], web_url: String, stack: models.HerokuAppStack, region: models.HerokuAppRegion, created_at: String, owner: models.HerokuAppOwner, updated_at: String, archived_at: Option[String], buildpack_provided_description: Option[String])
 
 /** json serializers related to HerokuApp */
 trait HerokuAppRequestJson {
   implicit def ToJsonCreateHerokuAppBody: ToJson[models.CreateHerokuAppBody]
   implicit def ToJsonUpdateHerokuAppBody: ToJson[models.UpdateHerokuAppBody]
+  implicit def ToJsonHerokuAppStack: ToJson[models.HerokuAppStack]
   implicit def ToJsonHerokuAppRegion: ToJson[models.HerokuAppRegion]
   implicit def ToJsonHerokuAppOwner: ToJson[models.HerokuAppOwner]
 }
 
 /** json deserializers related to HerokuApp */
 trait HerokuAppResponseJson {
+  implicit def FromJsonHerokuAppStack: FromJson[models.HerokuAppStack]
   implicit def FromJsonHerokuAppRegion: FromJson[models.HerokuAppRegion]
   implicit def FromJsonHerokuAppOwner: FromJson[models.HerokuAppOwner]
   implicit def FromJsonHerokuApp: FromJson[HerokuApp]

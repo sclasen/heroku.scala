@@ -38,7 +38,7 @@ object LogDrain {
 }
 
 /** [Log drains](https://devcenter.heroku.com/articles/logging#syslog-drains) provide a way to forward your Heroku logs to an external syslog server for long-term archiving. This external service must be configured to receive syslog packets from Heroku, whereupon its URL can be added to an app using this API. */
-case class LogDrain(url: String, addon: Option[String], id: String, created_at: String, updated_at: String)
+case class LogDrain(url: String, addon: Option[String], id: String, token: String, created_at: String, updated_at: String)
 
 /** json serializers related to LogDrain */
 trait LogDrainRequestJson {
