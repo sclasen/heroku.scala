@@ -16,9 +16,9 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.heroku.platform.api",
-    version := "0.0.4-SNAPSHOT",
-    scalaVersion := "2.10.2",
-    crossScalaVersions := Seq("2.10.2"),
+    version := "0.0.5-SNAPSHOT",
+    scalaVersion := "2.10.4",
+    crossScalaVersions := Seq("2.10.4", "2.11.1"),
     resolvers ++= Seq(
       "TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
@@ -56,14 +56,14 @@ object Build extends Build {
     id = "spray-client",
     base = file("spray-client"),
     dependencies = Seq(api % "it->test;test->test;compile->compile"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps)
+    settings = buildSettings ++ Seq(libraryDependencies ++= sprayDeps) ++ spray
   ).settings(Defaults.itSettings: _*).configs(IntegrationTest).settings(generateJsonBoilerplate:_*)
 
   val spray_jackson_example = Project(
     id = "spray-jackson-example",
     base = file("examples/spray-jackson"),
     dependencies = Seq(api % "it->test;test->test;compile->compile", spray_client % "it->it;test->test;compile->compile"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= sprayJacksonExampleDeps)
+    settings = buildSettings ++ Seq(libraryDependencies ++= sprayJacksonExampleDeps) ++ spray
   ).settings(Defaults.itSettings: _*).configs(IntegrationTest)
 
   val finagle_spray_example = Project(
@@ -141,22 +141,30 @@ object Build extends Build {
 
   def apiDeps = Seq(scalaTest)
 
-  def sprayDeps = Seq(spray, sprayJson % "provided", akka, scalaTest, playJson % "provided")
+  def sprayDeps = Seq(sprayJson % "provided", akka, scalaTest, playJson % "provided")
 
-  def sprayJacksonExampleDeps = Seq(spray, jacksonScala, sprayJson)
+  def sprayJacksonExampleDeps = Seq(jacksonScala, sprayJson)
 
   def finagleSprayExampleDeps = Seq(finagle, sprayJson)
 
-  val spray = "io.spray" % "spray-client" % "1.2.0" % "compile"
-  val sprayJson = "io.spray" %% "spray-json" % "1.2.5"
-  val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.3" % "compile"
-  val scalaTest = "org.scalatest" %% "scalatest" % "2.0" % "test"
+  //val spray = "io.spray" % "spray-client" % "1.3.1" % "compile"
+
+  def spray:Seq[Setting[Seq[ModuleID]]] = Seq(libraryDependencies <+= scalaVersion(sprayDependency(_)))
+
+  def sprayDependency(scalaVersion: String) = scalaVersion match {
+    case "2.10.4" => "io.spray" % "spray-client" % "1.3.1" % "compile"
+    case "2.11.1" => "io.spray" % "spray-client_2.11" % "1.3.1-20140423" % "compile"
+  }
+
+  val sprayJson = "io.spray" %% "spray-json" % "1.2.6"
+  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.4" % "compile"
+  val scalaTest = "org.scalatest" %% "scalatest" % "2.2.0" % "test"
   val treehugger = "com.eed3si9n" %% "treehugger" % "0.3.0"
-  val playJson = "com.typesafe.play" %% "play-json" % "2.2.0"
+  val playJson = "com.typesafe.play" %% "play-json" % "2.3.2"
 
   //deps for examples
-  val jacksonScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.3.0"
-  val finagle = "com.twitter" %% "finagle-http" % "6.8.1"
+  val jacksonScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.4.1"
+  val finagle = "com.twitter" % "finagle-http_2.10" % "6.8.1"
 
   def publishSettings: Seq[Setting[_]] = Seq(
     // If we want on maven central, we need to be in maven style.
@@ -194,6 +202,7 @@ object Build extends Build {
           </developer>
         </developers>)
   )
+
 
 
 }
